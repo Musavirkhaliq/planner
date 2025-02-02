@@ -1,0 +1,19 @@
+.
+├── backend
+│   ├── crud.py
+│   ├── database.py
+│   ├── __init__.py
+│   ├── main.py
+│   ├── models.py
+│   └── schemas.py
+├── frontend
+│   ├── index.html
+│   └── static
+│       ├── css
+│       │   └── styles.css
+│       └── js
+│           └── script.js
+├── README.md
+└── structure
+
+7 directories, 15 files
