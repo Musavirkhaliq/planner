@@ -129,31 +129,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 });
 
-// ---------- POMODORO TIMER -----------
-let workTime = 25 * 60; // default 25 minutes (can be made configurable)
-let breakTime = 5 * 60; // default 5 minutes break
-let isWorking = true;
 
-function startTimer(duration, display) {
-    let timer = duration, minutes, seconds;
-    const interval = setInterval(function () {
-        minutes = parseInt(timer / 60, 10);
-        seconds = parseInt(timer % 60, 10);
-        display.textContent = (minutes < 10 ? "0" + minutes : minutes) + ":" + (seconds < 10 ? "0" + seconds : seconds);
-        if (--timer < 0) {
-            isWorking = !isWorking;
-            timer = isWorking ? workTime : breakTime;
-            alert(isWorking ? "Time to work!" : "Time for a break!");
-        }
-    }, 1000);
-}
-
-window.onload = function () {
-    const display = document.querySelector('#time');
-    if (display) {
-        startTimer(workTime, display);
-    }
-};
 // frontend/static/script.js
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -365,19 +341,70 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
   
-  // Update a single field (for example, the "done" status) of a booking.
-  async function updateTimeSlotField(slotId, updatePayload) {
-    const token = localStorage.getItem("access_token");
-    const response = await fetch(`/time_slots/${slotId}`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(updatePayload),
-    });
-    if (!response.ok) {
-      alert("Failed to update time slot");
-    }
-  }
+// ---------- POMODORO TIMER -----------
+let workTime = 25 * 60; // default 25 minutes
+let breakTime = 5 * 60; // default 5 minutes break
+let timer;
+let isWorking = true;
+
+// Function to start the timer
+function startTimer(duration, display, progressBar) {
+  let timerDuration = duration, minutes, seconds;
+  let progressInterval;
   
+  clearInterval(timer); // Clear existing timer if any
+  clearInterval(progressInterval); // Clear previous progress bar interval
+
+  // Start the countdown timer
+  timer = setInterval(function () {
+    minutes = parseInt(timerDuration / 60, 10);
+    seconds = parseInt(timerDuration % 60, 10);
+    display.textContent = (minutes < 10 ? "0" + minutes : minutes) + ":" + (seconds < 10 ? "0" + seconds : seconds);
+
+    // Update the progress bar
+    let progress = (duration - timerDuration) / duration * 100;
+    progressBar.style.width = progress + "%";
+
+    if (--timerDuration < 0) {
+      clearInterval(timer); // Stop the timer when the session ends
+      isWorking = !isWorking;
+      timerDuration = isWorking ? workTime : breakTime;
+      alert(isWorking ? "Time to work!" : "Time for a break!");
+      startTimer(timerDuration, display, progressBar); // Restart the timer for the next session
+    }
+  }, 1000);
+
+  // Update the progress bar for each second
+  progressInterval = setInterval(function() {
+    let progress = (duration - timerDuration) / duration * 100;
+    progressBar.style.width = progress + "%";
+  }, 1000);
+}
+
+// Function to reset the timer
+function resetTimer(display, progressBar) {
+  clearInterval(timer);
+  isWorking = true;
+  workTime = document.getElementById('workTime').value * 60; // Update work time
+  breakTime = document.getElementById('breakTime').value * 60; // Update break time
+  display.textContent = "25:00"; // Reset display to default time
+  progressBar.style.width = "0%"; // Reset progress bar
+}
+
+// Initialize on window load
+window.onload = function () {
+  const display = document.querySelector('#time');
+  const progressBar = document.querySelector('#progress');
+  const startBtn = document.getElementById('startBtn');
+  const resetBtn = document.getElementById('resetBtn');
+
+  // Start the timer when the user clicks "Start"
+  startBtn.addEventListener('click', function () {
+    startTimer(workTime, display, progressBar);
+  });
+
+  // Reset the timer when the user clicks "Reset"
+  resetBtn.addEventListener('click', function () {
+    resetTimer(display, progressBar);
+  });
+};

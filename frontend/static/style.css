@@ -225,3 +225,275 @@
       border-radius: 12px;
     }
   }
+
+/* General table styling */
+#timeSlotTable {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #fff;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Table header */
+  #timeSlotTable thead {
+    background-color: #007bff;
+    color: white;
+    text-transform: uppercase;
+  }
+  
+  #timeSlotTable th {
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+  }
+  
+  /* Table rows */
+  #timeSlotTable tbody tr {
+    border-bottom: 1px solid #dee2e6;
+    transition: background 0.3s;
+  }
+  
+  #timeSlotTable tbody tr:hover {
+    background-color: #f8f9fa;
+  }
+  
+  /* Table cells */
+  #timeSlotTable td {
+    padding: 12px;
+    vertical-align: middle;
+  }
+  
+  /* Column-specific styling */
+  #timeSlotTable td:nth-child(1) { /* Time */
+    font-weight: bold;
+    color: #343a40;
+  }
+  
+  #timeSlotTable td:nth-child(2) { /* Done? */
+    text-align: center;
+  }
+  
+  #timeSlotTable td:nth-child(3) { /* To-Do List */
+    font-style: italic;
+  }
+  
+  #timeSlotTable td:nth-child(4) { /* Report */
+    text-align: center;
+    font-weight: 500;
+    color: #6c757d;
+  }
+  
+  #timeSlotTable td:nth-child(5) { /* Progress */
+    text-align: center;
+  }
+  
+  #timeSlotTable td:nth-child(6) { /* Rating */
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #ffc107;
+  }
+  
+  /* Checkbox and progress bar */
+  #timeSlotTable input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+  }
+  
+
+  .timer-display {
+    font-size: 3rem;
+    font-weight: bold;
+    color: #007bff;
+    transition: transform 0.3s ease-in-out, color 0.3s ease-in-out;
+  }
+  
+  .timer-running {
+    transform: scale(1.1);
+    color: #dc3545;
+  }
+  
+  @keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.05); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  
+  #timeDisplay.pulsing {
+    animation: pulse 1s infinite;
+  }
+
+/* Timer Display */
+#time {
+    font-size: 48px;
+    color: #333;
+    font-weight: bold;
+    margin: 20px 0;
+    transition: all 0.3s ease-in-out;
+    background: #f5a623; /* Adding a background color for contrast */
+    padding: 20px;
+    border-radius: 10px;
+  }
+  
+  /* Button Styles
+  .btn {
+    padding: 12px 20px;
+    border: none;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+  
+  .btn-primary {
+    background: #f5a623;
+    color: white;
+  }
+  
+  .btn-primary:hover {
+    background: #e17f1d;
+  }
+  
+  .btn-secondary {
+    background: #ccc;
+    color: #333;
+  }
+  
+  .btn-secondary:hover {
+    background: #999;
+  } */
+  
+  /* Controls Row */
+  .controls {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 15px 0;
+  }
+  
+  /* Time Settings Section */
+  .time-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .time-settings label {
+    font-weight: bold;
+  }
+  
+  .time-settings input {
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+    width: 80px; /* Fixed width for consistency */
+    text-align: center;
+  }
+  
+  /* Media Queries for Responsiveness */
+  @media (max-width: 600px) {
+    #time {
+      font-size: 36px;
+      padding: 15px;
+    }
+  
+    .controls {
+      flex-direction: column;
+    }
+  
+    .btn {
+      width: 100%;
+      margin: 5px 0;
+    }
+  
+    .time-settings {
+      gap: 8px;
+    }
+  }
+  
+
+  /* Timer Container */
+.timer-container {
+    position: relative;
+    margin-bottom: 20px;
+  }
+  
+  /* Timer Display */
+  #time {
+    font-size: 48px;
+    color: #333;
+    font-weight: bold;
+    margin: 20px 0;
+    transition: all 0.3s ease-in-out;
+    background: #f5a623;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+  }
+  
+  /* Progress Bar Container */
+  .progress-bar {
+    position: absolute;
+    width: 100%;
+    height: 10px;
+    background-color: #db3838;
+    bottom: 0;
+    left: 0;
+    border-radius: 5px;
+  }
+
+
+  
+  /* Controls Row */
+  .controls {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 15px 0;
+  }
+  
+  /* Time Settings Section */
+  .time-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .time-settings label {
+    font-weight: bold;
+  }
+  
+  .time-settings input {
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #3cd312;
+    font-size: 16px;
+    width: 80px; /* Fixed width for consistency */
+    text-align: center;
+  }
+  
+  /* Media Queries for Responsiveness */
+  @media (max-width: 600px) {
+    #time {
+      font-size: 36px;
+      padding: 15px;
+    }
+  
+    .controls {
+      flex-direction: column;
+    }
+  
+    .btn {
+      width: 100%;
+      margin: 5px 0;
+    }
+  
+    .time-settings {
+      gap: 8px;
+    }
+  }
+  
