@@ -11,6 +11,7 @@ from .dependencies import get_db
 
 from app import models, database
 models.Base.metadata.create_all(bind=database.engine)
+from typing import Optional
 
 
 app = FastAPI()
@@ -168,3 +169,4 @@ def patch_time_slot(
     if not slot:
         raise HTTPException(status_code=404, detail="Time slot not found")
     return crud.update_time_slot(db, slot, update)
+
