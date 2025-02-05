@@ -34,3 +34,26 @@ button {
 button:hover {
     background-color: #0056b3;
 }
+
+#time {
+    font-size: 2em;
+    text-align: center;
+    margin-top: 20px;
+}
+
+/* frontend/static/style.css */
+table {
+    font-size: 0.9rem;
+  }
+  .progress {
+    background-color: #e9ecef;
+  }
+  .progress-bar {
+    background-color: #28a745;
+    font-weight: bold;
+  }
+  .ratingStars {
+    font-size: 1.2rem;
+    color: #f1c40f;
+  }
+  

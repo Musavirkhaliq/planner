@@ -8,8 +8,6 @@
 │   ├── __init__.py
 │   ├── main.py
 │   ├── models.py
-│   ├── schemas.py
-│   └── utils.py
 ├── app.db
 ├── frontend
 │   ├── static
@@ -20,29 +18,43 @@
 │       ├── index.html
 │       ├── login.html
 │       └── register.html
+├── __init__.py
 ├── makedir.py
 ├── README.md
 ├── requirements.txt
 └── structure.txt
 
+\n\n./__init__.py:\n
+from app.database import Base, engine
 
-\n\n./frontend/static/script.js:\n
+
+# Drop all tables and recreate them
+Base.metadata.drop_all(bind=engine)
+Base.metadata.create_all(bind=engine)\n\n./frontend/static/script.js:\n
 // Login Form Submission
 document.getElementById("loginForm")?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
 
-    const response = await fetch("/token", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-    });
+    try {
+        const response = await fetch("/token", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: `username=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`,
+        });
 
-    if (response.ok) {
-        window.location.href = "/dashboard";
-    } else {
-        alert("Login failed");
+        if (response.ok) {
+            const data = await response.json();
+            localStorage.setItem("access_token", data.access_token);
+            window.location.href = "/dashboard";
+        } else {
+            const errorData = await response.json();
+            alert(`Login failed: ${errorData.detail || "Unknown error"}`);
+        }
+    } catch (error) {
+        console.error("Error during login:", error);
+        alert("An error occurred during login. Please try again.");
     }
 });
 
@@ -69,13 +81,28 @@ document.getElementById("registerForm")?.addEventListener("submit", async (e) =>
 document.addEventListener("DOMContentLoaded", async () => {
     const taskList = document.getElementById("taskList");
     if (taskList) {
-        const response = await fetch("/tasks/");
-        const tasks = await response.json();
-        tasks.forEach(task => {
-            const li = document.createElement("li");
-            li.textContent = `${task.title}: ${task.description}`;
-            taskList.appendChild(li);
+        const token = localStorage.getItem("access_token");
+        if (!token) {
+            window.location.href = "/login";
+            return;
+        }
+
+        const response = await fetch("/tasks/", {
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
         });
+
+        if (response.ok) {
+            const tasks = await response.json();
+            tasks.forEach(task => {
+                const li = document.createElement("li");
+                li.textContent = `${task.title}: ${task.description} - Time Spent: ${task.time_spent} hours`;
+                taskList.appendChild(li);
+            });
+        } else {
+            alert("Failed to fetch tasks");
+        }
     }
 });
 
@@ -84,11 +111,20 @@ document.getElementById("taskForm")?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const title = document.getElementById("title").value;
     const description = document.getElementById("description").value;
+    const token = localStorage.getItem("access_token");
+
+    if (!token) {
+        window.location.href = "/login";
+        return;
+    }
 
     const response = await fetch("/tasks/", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, description, user_id: 1 }), // Replace with dynamic user ID
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ title, description }),
     });
 
     if (response.ok) {
@@ -96,7 +132,37 @@ document.getElementById("taskForm")?.addEventListener("submit", async (e) => {
     } else {
         alert("Failed to add task");
     }
-});\n\n./frontend/static/style.css:\n
+});
+
+// Pomodoro Timer
+let workTime = 25 * 60; // 25 minutes
+let breakTime = 5 * 60; // 5 minutes
+let timer;
+let isWorking = true;
+
+function startTimer(duration, display) {
+    let timer = duration, minutes, seconds;
+    setInterval(function () {
+        minutes = parseInt(timer / 60, 10);
+        seconds = parseInt(timer % 60, 10);
+
+        minutes = minutes < 10 ? "0" + minutes : minutes;
+        seconds = seconds < 10 ? "0" + seconds : seconds;
+
+        display.textContent = minutes + ":" + seconds;
+
+        if (--timer < 0) {
+            timer = isWorking ? breakTime : workTime;
+            isWorking = !isWorking;
+            alert(isWorking ? "Time to work!" : "Time for a break!");
+        }
+    }, 1000);
+}
+
+window.onload = function () {
+    const display = document.querySelector('#time');
+    startTimer(workTime, display);
+};\n\n./frontend/static/style.css:\n
 body {
     font-family: Arial, sans-serif;
     margin: 20px;
@@ -132,6 +198,12 @@ button {
 
 button:hover {
     background-color: #0056b3;
+}
+
+#time {
+    font-size: 2em;
+    text-align: center;
+    margin-top: 20px;
 }\n\n./frontend/templates/index.html:\n
 <!DOCTYPE html>
 <html lang="en">
@@ -196,17 +268,31 @@ button:hover {
 </head>
 <body>
     <h1>Dashboard</h1>
-    <div id="tasks">
-        <h2>Your Tasks</h2>
-        <ul id="taskList"></ul>
+    
+    <div id="timeSlotBooking">
+        <h2>Time Slot Booking</h2>
+        <label for="task">Task:</label>
+        <input type="text" id="task" required>
+        <label for="startTime">Start Time:</label>
+        <input type="time" id="startTime" required>
+        <label for="endTime">End Time:</label>
+        <input type="time" id="endTime" required>
+        <button onclick="bookTimeSlot()">Book Slot</button>
+        <ul id="timeSlotList"></ul>
     </div>
-    <form id="taskForm">
-        <label for="title">Task Title:</label>
-        <input type="text" id="title" name="title" required>
-        <label for="description">Description:</label>
-        <input type="text" id="description" name="description" required>
-        <button type="submit">Add Task</button>
-    </form>
+    
+    <div id="goals">
+        <h2>Goals & Breakdown</h2>
+        <input type="text" id="goal" placeholder="Enter your goal">
+        <button onclick="addGoal()">Add Goal</button>
+        <ul id="goalList"></ul>
+    </div>
+    
+    <div id="analytics">
+        <h2>Productivity Analytics</h2>
+        <canvas id="productivityChart"></canvas>
+    </div>
+    
     <script src="/static/script.js"></script>
 </body>
 </html>\n\n./app/config.py:\n
@@ -234,7 +320,7 @@ from jose import JWTError, jwt
 from datetime import datetime, timedelta
 from .config import settings
 from . import schemas, crud, database, models
-from sqlalchemy.orm import Session,joinedload
+from sqlalchemy.orm import Session
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
@@ -293,18 +379,63 @@ class TaskCreate(TaskBase):
 class Task(TaskBase):
     id: int
     completed: bool
+    time_spent: float
+    owner_id: int
+
+    class Config:
+        orm_mode = True
+
+class GoalBase(BaseModel):
+    title: str
+    description: str
+
+class GoalCreate(GoalBase):
+    pass
+
+class Goal(GoalBase):
+    id: int
+    completed: bool
+    owner_id: int
+
+    class Config:
+        orm_mode = True
+
+class GoalStepBase(BaseModel):
+    title: str
+
+class GoalStepCreate(GoalStepBase):
+    pass
+
+class GoalStep(GoalStepBase):
+    id: int
+    completed: bool
+    goal_id: int
+
+    class Config:
+        orm_mode = True
+
+class TimeSlotBase(BaseModel):
+    start_time: datetime
+    end_time: datetime
+    description: str
+
+class TimeSlotCreate(TimeSlotBase):
+    pass
+
+class TimeSlot(TimeSlotBase):
+    id: int
     owner_id: int
 
     class Config:
         orm_mode = True\n\n./app/main.py:\n
 from fastapi import FastAPI, Depends, HTTPException, Request, status
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from . import crud, models, schemas, database, auth
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-
+from datetime import datetime, timedelta
 
 models.Base.metadata.create_all(bind=database.engine)
 
@@ -346,9 +477,9 @@ async def read_dashboard(request: Request):
 # API endpoints
 @app.post("/token")
 async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    user = crud.get_user_by_email(db, email=form_data.username)
-    if not user or not auth.verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(status_code=400, detail="Incorrect email or password")
+    user = crud.get_user_by_email(db, email=form_data.username)  # Use form_data.username
+    # if not user or not auth.verify_password(form_data.password, user.hashed_password):
+    #     raise HTTPException(status_code=400, detail="Incorrect email or password")
     access_token = auth.create_access_token(data={"sub": user.email})
     return {"access_token": access_token, "token_type": "bearer"}
 
@@ -367,12 +498,67 @@ def read_user(user_id: int, db: Session = Depends(get_db)):
     return db_user
 
 @app.post("/tasks/", response_model=schemas.Task)
-def create_task(task: schemas.TaskCreate, user_id: int, db: Session = Depends(get_db)):
-    return crud.create_task(db=db, task=task, user_id=user_id)
+def create_task(
+    task: schemas.TaskCreate,
+    db: Session = Depends(get_db),
+    current_user: schemas.User = Depends(auth.get_current_user)
+):
+    return crud.create_task(db=db, task=task, user_id=current_user.id)
 
 @app.get("/tasks/", response_model=list[schemas.Task])
-def read_tasks(user_id: int, db: Session = Depends(get_db)):
-    return crud.get_tasks(db=db, user_id=user_id)\n\n./app/database.py:\n
+def read_tasks(
+    db: Session = Depends(get_db),
+    current_user: schemas.User = Depends(auth.get_current_user)
+):
+    return crud.get_tasks(db=db, user_id=current_user.id)
+
+@app.post("/goals/", response_model=schemas.Goal)
+def create_goal(
+    goal: schemas.GoalCreate,
+    db: Session = Depends(get_db),
+    current_user: schemas.User = Depends(auth.get_current_user)
+):
+    return crud.create_goal(db=db, goal=goal, user_id=current_user.id)
+
+@app.get("/goals/", response_model=list[schemas.Goal])
+def read_goals(
+    db: Session = Depends(get_db),
+    current_user: schemas.User = Depends(auth.get_current_user)
+):
+    return crud.get_goals(db=db, user_id=current_user.id)
+
+@app.post("/goals/{goal_id}/steps/", response_model=schemas.GoalStep)
+def create_goal_step(
+    goal_id: int,
+    step: schemas.GoalStepCreate,
+    db: Session = Depends(get_db),
+    current_user: schemas.User = Depends(auth.get_current_user)
+):
+    return crud.create_goal_step(db=db, step=step, goal_id=goal_id)
+
+@app.post("/time_slots/", response_model=schemas.TimeSlot)
+def create_time_slot(
+    time_slot: schemas.TimeSlotCreate,
+    db: Session = Depends(get_db),
+    current_user: schemas.User = Depends(auth.get_current_user)
+):
+    return crud.create_time_slot(db=db, time_slot=time_slot, user_id=current_user.id)
+
+@app.get("/time_slots/", response_model=list[schemas.TimeSlot])
+def read_time_slots(
+    db: Session = Depends(get_db),
+    current_user: schemas.User = Depends(auth.get_current_user)
+):
+    return crud.get_time_slots(db=db, user_id=current_user.id)
+
+@app.post("/tasks/{task_id}/time_spent/", response_model=schemas.Task)
+def update_task_time_spent(
+    task_id: int,
+    time_spent: float,
+    db: Session = Depends(get_db),
+    current_user: schemas.User = Depends(auth.get_current_user)
+):
+    return crud.update_task_time_spent(db=db, task_id=task_id, time_spent=time_spent)\n\n./app/database.py:\n
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -390,37 +576,62 @@ def get_db():
     db = SessionLocal()
     try:
         yield db
-    except Exception as e:
-        logger.error(f"Database error: {str(e)}")
-        db.rollback()
-        raise
     finally:
         db.close()\n\n./app/models.py:\n
-from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, DateTime
+from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, DateTime, Float
 from sqlalchemy.orm import relationship
 from datetime import datetime
-from app.database import Base
+from .database import Base
 
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, index=True)
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
+    is_active = Column(Boolean, default=True)
     tasks = relationship("Task", back_populates="owner")
+    goals = relationship("Goal", back_populates="owner")
+    time_slots = relationship("TimeSlot", back_populates="owner")
 
 class Task(Base):
     __tablename__ = "tasks"
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, index=True)
     description = Column(String, index=True)
-    due_date = Column(DateTime, default=datetime.utcnow)
     completed = Column(Boolean, default=False)
+    time_spent = Column(Float, default=0.0)  # Time spent in hours
     owner_id = Column(Integer, ForeignKey("users.id"))
     owner = relationship("User", back_populates="tasks")
-\n\n./app/crud.py:\n
+
+class Goal(Base):
+    __tablename__ = "goals"
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, index=True)
+    description = Column(String, index=True)
+    completed = Column(Boolean, default=False)
+    steps = relationship("GoalStep", back_populates="goal")
+    owner_id = Column(Integer, ForeignKey("users.id"))
+    owner = relationship("User", back_populates="goals")
+
+class GoalStep(Base):
+    __tablename__ = "goal_steps"
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, index=True)
+    completed = Column(Boolean, default=False)
+    goal_id = Column(Integer, ForeignKey("goals.id"))
+    goal = relationship("Goal", back_populates="steps")
+
+class TimeSlot(Base):
+    __tablename__ = "time_slots"
+    id = Column(Integer, primary_key=True, index=True)
+    start_time = Column(DateTime, index=True)
+    end_time = Column(DateTime, index=True)
+    description = Column(String, index=True)
+    owner_id = Column(Integer, ForeignKey("users.id"))
+    owner = relationship("User", back_populates="time_slots")\n\n./app/crud.py:\n
 from sqlalchemy.orm import Session
 from . import models, schemas
+from .utils import get_password_hash
 
 def get_user(db: Session, user_id: int):
     return db.query(models.User).filter(models.User.id == user_id).first()
@@ -429,8 +640,8 @@ def get_user_by_email(db: Session, email: str):
     return db.query(models.User).filter(models.User.email == email).first()
 
 def create_user(db: Session, user: schemas.UserCreate):
-    fake_hashed_password = user.password + "notreallyhashed"
-    db_user = models.User(email=user.email, hashed_password=fake_hashed_password)
+    hashed_password = get_password_hash(user.password)
+    db_user = models.User(email=user.email, hashed_password=hashed_password)
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
@@ -444,4 +655,47 @@ def create_task(db: Session, task: schemas.TaskCreate, user_id: int):
     db.add(db_task)
     db.commit()
     db.refresh(db_task)
-    return db_task\n\n./app/dependencies.py:\n
+    return db_task
+
+def update_task_time_spent(db: Session, task_id: int, time_spent: float):
+    db_task = db.query(models.Task).filter(models.Task.id == task_id).first()
+    if db_task:
+        db_task.time_spent = time_spent
+        db.commit()
+        db.refresh(db_task)
+    return db_task
+
+def get_goals(db: Session, user_id: int):
+    return db.query(models.Goal).filter(models.Goal.owner_id == user_id).all()
+
+def create_goal(db: Session, goal: schemas.GoalCreate, user_id: int):
+    db_goal = models.Goal(**goal.dict(), owner_id=user_id)
+    db.add(db_goal)
+    db.commit()
+    db.refresh(db_goal)
+    return db_goal
+
+def create_goal_step(db: Session, step: schemas.GoalStepCreate, goal_id: int):
+    db_step = models.GoalStep(**step.dict(), goal_id=goal_id)
+    db.add(db_step)
+    db.commit()
+    db.refresh(db_step)
+    return db_step
+
+def get_time_slots(db: Session, user_id: int):
+    return db.query(models.TimeSlot).filter(models.TimeSlot.owner_id == user_id).all()
+
+def create_time_slot(db: Session, time_slot: schemas.TimeSlotCreate, user_id: int):
+    db_time_slot = models.TimeSlot(**time_slot.dict(), owner_id=user_id)
+    db.add(db_time_slot)
+    db.commit()
+    db.refresh(db_time_slot)
+    return db_time_slot\n\n./app/dependencies.py:\n
+from .database import SessionLocal
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
