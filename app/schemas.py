@@ -1,6 +1,6 @@
 # app/schemas.py
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime,date
 from typing import Optional
 
 class UserBase(BaseModel):
@@ -70,9 +70,12 @@ class GoalStep(GoalStepBase):
         orm_mode = True
 
 class TimeSlotBase(BaseModel):
+    date: date  # New field
     start_time: datetime
     end_time: datetime
     description: str
+    report_minutes: int = 0
+    done: bool = False
 
 class TimeSlotCreate(TimeSlotBase):
     pass

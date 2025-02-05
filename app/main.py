@@ -122,7 +122,7 @@ def create_time_slot(
     db: Session = Depends(get_db),
     current_user: schemas.User = Depends(auth.get_current_user)
 ):
-    return crud.create_time_slot(db=db, time_slot=time_slot, user_id=current_user.id)
+    return crud.create_time_slot(db=db, time_slot=time_slot, owner_id=current_user.id)
 
 @app.get("/time_slots/", response_model=list[schemas.TimeSlot])
 def read_time_slots(

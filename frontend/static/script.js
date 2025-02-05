@@ -88,6 +88,63 @@ async function addGoal() {
         alert("Failed to add goal");
     }
 }
+//on clicking done insert the  data
+
+document.addEventListener("DOMContentLoaded", () => {
+  const checkboxes = document.querySelectorAll('.doneCheckbox');
+
+  checkboxes.forEach(checkbox => {
+      checkbox.addEventListener('click', async (event) => {
+          const row = event.target.closest('tr');
+          const time = row.cells[0].textContent;
+          const done = event.target.checked;
+          const task = row.cells[2].textContent;
+          const report = row.cells[3].querySelector('.reportInput').value;
+          const progress = row.cells[4].querySelector('progress').value;
+          const rating = row.cells[5].querySelector('.ratingInput').value;
+
+          if (done) {
+              const taskData = {
+                  time,
+                  task,
+                  report,
+                  progress,
+                  rating
+              };
+
+              // Send data to server
+              const response = await fetchWithAuth('/tasks/', {
+                  method: 'POST',
+                  headers: {
+                      'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify(taskData)
+              });
+
+              if (response.ok) {
+                  alert('Task marked as done and report submitted successfully!');
+                  // Optionally, refresh the dashboard or update the UI
+              } else {
+                  alert('Failed to submit report');
+              }
+          }
+      });
+  });
+
+  async function fetchWithAuth(url, options = {}) {
+      // Add authentication headers if needed
+      const token = localStorage.getItem('token');
+      if (token) {
+          options.headers = {
+              ...options.headers,
+              'Authorization': `Bearer ${token}`
+          };
+      }
+      const response = await fetch(url, options);
+      return response;
+  }
+});
+
 
 // Load Tasks for the To-Do List
 document.addEventListener("DOMContentLoaded", async () => {
@@ -341,70 +398,114 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
   
-// ---------- POMODORO TIMER -----------
-let workTime = 25 * 60; // default 25 minutes
-let breakTime = 5 * 60; // default 5 minutes break
-let timer;
+// --------------------------
+// POMODORO TIMER FUNCTIONS
+// --------------------------
+let workTime = 25 * 60; // default work time in seconds
+let breakTime = 5 * 60; // default break time in seconds
+let timerInterval;
 let isWorking = true;
 
-// Function to start the timer
+/**
+ * Reads the user-specified times from input fields (in minutes)
+ * and updates the global workTime and breakTime values (in seconds).
+ */
+function updateTimerDurationsFromInputs() {
+  const workInput = document.getElementById("workTime");
+  const breakInput = document.getElementById("breakTime");
+
+  // Parse the input values (if provided) or use defaults.
+  const workMinutes = workInput && workInput.value ? parseInt(workInput.value, 10) : 25;
+  const breakMinutes = breakInput && breakInput.value ? parseInt(breakInput.value, 10) : 5;
+
+  workTime = workMinutes * 60;
+  breakTime = breakMinutes * 60;
+}
+
+/**
+ * Starts the Pomodoro timer for a given session.
+ * @param {number} duration - Duration of the current session in seconds.
+ * @param {HTMLElement} display - Element to display the remaining time.
+ * @param {HTMLElement} progressBar - Element to show progress.
+ */
 function startTimer(duration, display, progressBar) {
-  let timerDuration = duration, minutes, seconds;
-  let progressInterval;
-  
-  clearInterval(timer); // Clear existing timer if any
-  clearInterval(progressInterval); // Clear previous progress bar interval
+  let remainingTime = duration;
+  clearInterval(timerInterval);
 
-  // Start the countdown timer
-  timer = setInterval(function () {
-    minutes = parseInt(timerDuration / 60, 10);
-    seconds = parseInt(timerDuration % 60, 10);
-    display.textContent = (minutes < 10 ? "0" + minutes : minutes) + ":" + (seconds < 10 ? "0" + seconds : seconds);
+  timerInterval = setInterval(() => {
+    // Format minutes and seconds for display.
+    const minutes = Math.floor(remainingTime / 60);
+    const seconds = remainingTime % 60;
+    display.textContent = `${minutes < 10 ? "0" + minutes : minutes}:${seconds < 10 ? "0" + seconds : seconds}`;
 
-    // Update the progress bar
-    let progress = (duration - timerDuration) / duration * 100;
-    progressBar.style.width = progress + "%";
+    // Update progress bar based on elapsed time.
+    const progress = ((duration - remainingTime) / duration) * 100;
+    progressBar.style.width = `${progress}%`;
 
-    if (--timerDuration < 0) {
-      clearInterval(timer); // Stop the timer when the session ends
+    // When the timer runs out, switch modes and restart.
+    if (remainingTime <= 0) {
+      clearInterval(timerInterval);
       isWorking = !isWorking;
-      timerDuration = isWorking ? workTime : breakTime;
+      // Set the new session duration based on the mode.
+      remainingTime = isWorking ? workTime : breakTime;
       alert(isWorking ? "Time to work!" : "Time for a break!");
-      startTimer(timerDuration, display, progressBar); // Restart the timer for the next session
+      // Start the next session.
+      startTimer(remainingTime, display, progressBar);
     }
-  }, 1000);
-
-  // Update the progress bar for each second
-  progressInterval = setInterval(function() {
-    let progress = (duration - timerDuration) / duration * 100;
-    progressBar.style.width = progress + "%";
+    remainingTime--;
   }, 1000);
 }
 
-// Function to reset the timer
+/**
+ * Resets the Pomodoro timer display and progress.
+ * Also updates the work and break durations from user inputs.
+ * @param {HTMLElement} display - Timer display element.
+ * @param {HTMLElement} progressBar - Progress bar element.
+ */
 function resetTimer(display, progressBar) {
-  clearInterval(timer);
+  clearInterval(timerInterval);
   isWorking = true;
-  workTime = document.getElementById('workTime').value * 60; // Update work time
-  breakTime = document.getElementById('breakTime').value * 60; // Update break time
-  display.textContent = "25:00"; // Reset display to default time
-  progressBar.style.width = "0%"; // Reset progress bar
+  updateTimerDurationsFromInputs();
+  // Reset display to the new work time.
+  const minutes = Math.floor(workTime / 60);
+  const seconds = workTime % 60;
+  display.textContent = `${minutes < 10 ? "0" + minutes : minutes}:${seconds < 10 ? "0" + seconds : seconds}`;
+  progressBar.style.width = "0%";
 }
 
-// Initialize on window load
-window.onload = function () {
-  const display = document.querySelector('#time');
-  const progressBar = document.querySelector('#progress');
-  const startBtn = document.getElementById('startBtn');
-  const resetBtn = document.getElementById('resetBtn');
+// --------------------------
+// INITIALIZATION
+// --------------------------
+document.addEventListener("DOMContentLoaded", () => {
+  // Get references to DOM elements.
+  const display = document.querySelector("#time");
+  const progressBar = document.querySelector("#progress");
+  const startBtn = document.getElementById("startBtn");
+  const resetBtn = document.getElementById("resetBtn");
 
-  // Start the timer when the user clicks "Start"
-  startBtn.addEventListener('click', function () {
-    startTimer(workTime, display, progressBar);
-  });
+  // If user inputs exist, update durations immediately.
+  updateTimerDurationsFromInputs();
+  
+  // Display the initial work time.
+  const minutes = Math.floor(workTime / 60);
+  const seconds = workTime % 60;
+  if (display) {
+    display.textContent = `${minutes < 10 ? "0" + minutes : minutes}:${seconds < 10 ? "0" + seconds : seconds}`;
+  }
 
-  // Reset the timer when the user clicks "Reset"
-  resetBtn.addEventListener('click', function () {
-    resetTimer(display, progressBar);
-  });
-};
+  // Start button: update times from inputs and start the timer.
+  if (startBtn && display && progressBar) {
+    startBtn.addEventListener("click", () => {
+      updateTimerDurationsFromInputs();
+      // Start with workTime if beginning a new session.
+      startTimer(workTime, display, progressBar);
+    });
+  }
+
+  // Reset button: clear the timer and update the display.
+  if (resetBtn && display && progressBar) {
+    resetBtn.addEventListener("click", () => {
+      resetTimer(display, progressBar);
+    });
+  }
+});

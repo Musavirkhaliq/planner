@@ -48,15 +48,18 @@ from sqlalchemy.orm import relationship
 from datetime import datetime
 from .database import Base
 
+from sqlalchemy import Date
+
 class TimeSlot(Base):
     __tablename__ = "time_slots"
     id = Column(Integer, primary_key=True, index=True)
+    date = Column(Date, index=True)  # New column to store the date
     start_time = Column(DateTime, index=True)
     end_time = Column(DateTime, index=True)
     description = Column(String, index=True)
     owner_id = Column(Integer, ForeignKey("users.id"))
     owner = relationship("User", back_populates="time_slots")
-    
-    # New columns for reporting and status.
+
     report_minutes = Column(Integer, default=0)
     done = Column(Boolean, default=False)
+

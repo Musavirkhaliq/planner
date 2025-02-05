@@ -59,12 +59,21 @@ def create_goal_step(db: Session, step: schemas.GoalStepCreate, goal_id: int):
 def get_time_slots(db: Session, user_id: int):
     return db.query(models.TimeSlot).filter(models.TimeSlot.owner_id == user_id).all()
 
-def create_time_slot(db: Session, time_slot: schemas.TimeSlotCreate, user_id: int):
-    db_time_slot = models.TimeSlot(**time_slot.dict(), owner_id=user_id)
+def create_time_slot(db: Session, time_slot: schemas.TimeSlotCreate, owner_id: int):
+    db_time_slot = models.TimeSlot(
+        date=time_slot.date,  # Ensure this field is passed
+        start_time=time_slot.start_time,
+        end_time=time_slot.end_time,
+        description=time_slot.description,
+        owner_id=owner_id,
+        report_minutes=time_slot.report_minutes,
+        done=time_slot.done
+    )
     db.add(db_time_slot)
     db.commit()
     db.refresh(db_time_slot)
     return db_time_slot
+
 
 def get_time_slot(db: Session, slot_id: int, user_id: int):
     return db.query(models.TimeSlot).filter(
