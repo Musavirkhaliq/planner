@@ -134,17 +134,32 @@ def read_time_slots(
 # Analytics endpoint: returns productivity metrics (e.g. total tasks and hours spent)
 @app.get("/analytics/")
 def get_analytics(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
     db: Session = Depends(get_db),
     current_user: schemas.User = Depends(auth.get_current_user)
 ):
     tasks = crud.get_tasks(db=db, user_id=current_user.id)
+    time_slots = crud.get_time_slots(db=db, user_id=current_user.id)
+
+    if start_date and end_date:
+        start_date = datetime.strptime(start_date, "%Y-%m-%d")
+        end_date = datetime.strptime(end_date, "%Y-%m-%d")
+        tasks = [task for task in tasks if start_date <= task.created_at <= end_date]
+        time_slots = [slot for slot in time_slots if start_date <= slot.date <= end_date]
+
     total_tasks = len(tasks)
     completed_tasks = sum(1 for t in tasks if t.completed)
     total_time = sum(t.time_spent for t in tasks)
+    total_time_slots = len(time_slots)
+    completed_time_slots = sum(1 for slot in time_slots if slot.done)
+
     return {
         "total_tasks": total_tasks,
         "completed_tasks": completed_tasks,
         "total_time_spent": total_time,
+        "total_time_slots": total_time_slots,
+        "completed_time_slots": completed_time_slots,
     }
 
 # Stub: Customizable Dashboard Settings
@@ -157,6 +172,15 @@ def update_dashboard_settings(
     # In a full implementation, save settings (theme, layout, etc.) in the DB.
     return {"msg": "Settings updated", "settings": settings}
 
+@app.get("/time_slots/by_date/")
+def get_time_slots_by_date(
+    date: str,
+    db: Session = Depends(get_db),
+    current_user: schemas.User = Depends(auth.get_current_user)
+):
+    date = datetime.strptime(date, "%Y-%m-%d").date()
+    time_slots = crud.get_time_slots_by_date(db=db, user_id=current_user.id, date=date)
+    return time_slots
 
 @app.patch("/time_slots/{slot_id}", response_model=schemas.TimeSlot)
 def patch_time_slot(

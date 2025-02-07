@@ -2,6 +2,7 @@
 from sqlalchemy.orm import Session
 from . import models, schemas
 from .utils import get_password_hash
+from datetime import date
 
 def get_user(db: Session, user_id: int):
     return db.query(models.User).filter(models.User.id == user_id).first()
@@ -89,3 +90,8 @@ def update_time_slot(db: Session, slot: models.TimeSlot, update: schemas.TimeSlo
     db.commit()
     db.refresh(slot)
     return slot
+def get_time_slots_by_date(db: Session, user_id: int, date: date):
+    return db.query(models.TimeSlot).filter(
+        models.TimeSlot.owner_id == user_id,
+        models.TimeSlot.date == date
+    ).all()

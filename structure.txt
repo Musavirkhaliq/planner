@@ -8,6 +8,8 @@
 │   ├── __init__.py
 │   ├── main.py
 │   ├── models.py
+│   ├── schemas.py
+│   └── utils.py
 ├── app.db
 ├── frontend
 │   ├── static
@@ -25,7 +27,7 @@
 ├── requirements.txt
 └── structure.txt
 
-\n\n./__init__.py:\n
+/__init__.py:\n
 from app.database import Base, engine
 
 # Drop all tables and recreate them
@@ -122,6 +124,63 @@ async function addGoal() {
         alert("Failed to add goal");
     }
 }
+//on clicking done insert the  data
+
+document.addEventListener("DOMContentLoaded", () => {
+  const checkboxes = document.querySelectorAll('.doneCheckbox');
+
+  checkboxes.forEach(checkbox => {
+      checkbox.addEventListener('click', async (event) => {
+          const row = event.target.closest('tr');
+          const time = row.cells[0].textContent;
+          const done = event.target.checked;
+          const task = row.cells[2].textContent;
+          const report = row.cells[3].querySelector('.reportInput').value;
+          const progress = row.cells[4].querySelector('progress').value;
+          const rating = row.cells[5].querySelector('.ratingInput').value;
+
+          if (done) {
+              const taskData = {
+                  time,
+                  task,
+                  report,
+                  progress,
+                  rating
+              };
+
+              // Send data to server
+              const response = await fetchWithAuth('/tasks/', {
+                  method: 'POST',
+                  headers: {
+                      'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify(taskData)
+              });
+
+              if (response.ok) {
+                  alert('Task marked as done and report submitted successfully!');
+                  // Optionally, refresh the dashboard or update the UI
+              } else {
+                  alert('Failed to submit report');
+              }
+          }
+      });
+  });
+
+  async function fetchWithAuth(url, options = {}) {
+      // Add authentication headers if needed
+      const token = localStorage.getItem('token');
+      if (token) {
+          options.headers = {
+              ...options.headers,
+              'Authorization': `Bearer ${token}`
+          };
+      }
+      const response = await fetch(url, options);
+      return response;
+  }
+});
+
 
 // Load Tasks for the To-Do List
 document.addEventListener("DOMContentLoaded", async () => {
@@ -163,31 +222,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 });
 
-// ---------- POMODORO TIMER -----------
-let workTime = 25 * 60; // default 25 minutes (can be made configurable)
-let breakTime = 5 * 60; // default 5 minutes break
-let isWorking = true;
 
-function startTimer(duration, display) {
-    let timer = duration, minutes, seconds;
-    const interval = setInterval(function () {
-        minutes = parseInt(timer / 60, 10);
-        seconds = parseInt(timer % 60, 10);
-        display.textContent = (minutes < 10 ? "0" + minutes : minutes) + ":" + (seconds < 10 ? "0" + seconds : seconds);
-        if (--timer < 0) {
-            isWorking = !isWorking;
-            timer = isWorking ? workTime : breakTime;
-            alert(isWorking ? "Time to work!" : "Time for a break!");
-        }
-    }, 1000);
-}
-
-window.onload = function () {
-    const display = document.querySelector('#time');
-    if (display) {
-        startTimer(workTime, display);
-    }
-};
 // frontend/static/script.js
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -399,38 +434,600 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
   
-  // Update a single field (for example, the "done" status) of a booking.
-  async function updateTimeSlotField(slotId, updatePayload) {
-    const token = localStorage.getItem("access_token");
-    const response = await fetch(`/time_slots/${slotId}`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(updatePayload),
+// --------------------------
+// POMODORO TIMER FUNCTIONS
+// --------------------------
+let workTime = 25 * 60; // default work time in seconds
+let breakTime = 5 * 60; // default break time in seconds
+let timerInterval;
+let isWorking = true;
+
+/**
+ * Reads the user-specified times from input fields (in minutes)
+ * and updates the global workTime and breakTime values (in seconds).
+ */
+function updateTimerDurationsFromInputs() {
+  const workInput = document.getElementById("workTime");
+  const breakInput = document.getElementById("breakTime");
+
+  // Parse the input values (if provided) or use defaults.
+  const workMinutes = workInput && workInput.value ? parseInt(workInput.value, 10) : 25;
+  const breakMinutes = breakInput && breakInput.value ? parseInt(breakInput.value, 10) : 5;
+
+  workTime = workMinutes * 60;
+  breakTime = breakMinutes * 60;
+}
+
+/**
+ * Starts the Pomodoro timer for a given session.
+ * @param {number} duration - Duration of the current session in seconds.
+ * @param {HTMLElement} display - Element to display the remaining time.
+ * @param {HTMLElement} progressBar - Element to show progress.
+ */
+function startTimer(duration, display, progressBar) {
+  let remainingTime = duration;
+  clearInterval(timerInterval);
+
+  timerInterval = setInterval(() => {
+    // Format minutes and seconds for display.
+    const minutes = Math.floor(remainingTime / 60);
+    const seconds = remainingTime % 60;
+    display.textContent = `${minutes < 10 ? "0" + minutes : minutes}:${seconds < 10 ? "0" + seconds : seconds}`;
+
+    // Update progress bar based on elapsed time.
+    const progress = ((duration - remainingTime) / duration) * 100;
+    progressBar.style.width = `${progress}%`;
+
+    // When the timer runs out, switch modes and restart.
+    if (remainingTime <= 0) {
+      clearInterval(timerInterval);
+      isWorking = !isWorking;
+      // Set the new session duration based on the mode.
+      remainingTime = isWorking ? workTime : breakTime;
+      alert(isWorking ? "Time to work!" : "Time for a break!");
+      // Start the next session.
+      startTimer(remainingTime, display, progressBar);
+    }
+    remainingTime--;
+  }, 1000);
+}
+
+/**
+ * Resets the Pomodoro timer display and progress.
+ * Also updates the work and break durations from user inputs.
+ * @param {HTMLElement} display - Timer display element.
+ * @param {HTMLElement} progressBar - Progress bar element.
+ */
+function resetTimer(display, progressBar) {
+  clearInterval(timerInterval);
+  isWorking = true;
+  updateTimerDurationsFromInputs();
+  // Reset display to the new work time.
+  const minutes = Math.floor(workTime / 60);
+  const seconds = workTime % 60;
+  display.textContent = `${minutes < 10 ? "0" + minutes : minutes}:${seconds < 10 ? "0" + seconds : seconds}`;
+  progressBar.style.width = "0%";
+}
+
+// --------------------------
+// INITIALIZATION
+// --------------------------
+document.addEventListener("DOMContentLoaded", () => {
+  // Get references to DOM elements.
+  const display = document.querySelector("#time");
+  const progressBar = document.querySelector("#progress");
+  const startBtn = document.getElementById("startBtn");
+  const resetBtn = document.getElementById("resetBtn");
+
+  // If user inputs exist, update durations immediately.
+  updateTimerDurationsFromInputs();
+  
+  // Display the initial work time.
+  const minutes = Math.floor(workTime / 60);
+  const seconds = workTime % 60;
+  if (display) {
+    display.textContent = `${minutes < 10 ? "0" + minutes : minutes}:${seconds < 10 ? "0" + seconds : seconds}`;
+  }
+
+  // Start button: update times from inputs and start the timer.
+  if (startBtn && display && progressBar) {
+    startBtn.addEventListener("click", () => {
+      updateTimerDurationsFromInputs();
+      // Start with workTime if beginning a new session.
+      startTimer(workTime, display, progressBar);
     });
-    if (!response.ok) {
-      alert("Failed to update time slot");
+  }
+
+  // Reset button: clear the timer and update the display.
+  if (resetBtn && display && progressBar) {
+    resetBtn.addEventListener("click", () => {
+      resetTimer(display, progressBar);
+    });
+  }
+});
+\n\n./frontend/static/style.css:\n
+:root {
+    --primary-color: #6366f1;
+    --secondary-color: #818cf8;
+    --background: #f8fafc;
+    --card-bg: rgba(255, 255, 255, 0.9);
+    --text-color: #1e293b;
+    --text-light: #64748b;
+    --shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.1);
+    --radius: 16px;
+  }
+  
+  body {
+    background: linear-gradient(135deg, var(--background) 0%, #e2e8f0 100%);
+    min-height: 100vh;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--text-color);
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+  }
+  
+  /* Decorative shapes for a modern look */
+  .bg-shapes {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+  }
+  
+  .bg-shape {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.3;
+  }
+  
+  .shape-1 {
+    width: 300px;
+    height: 300px;
+    background: rgba(99, 102, 241, 0.2);
+    top: -100px;
+    right: -100px;
+  }
+  
+  .shape-2 {
+    width: 400px;
+    height: 400px;
+    background: rgba(129, 140, 248, 0.2);
+    bottom: -200px;
+    left: -200px;
+  }
+  
+  /* Navbar styling */
+  .navbar {
+    background: rgba(255, 255, 255, 0.9) !important;
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 1rem 2rem;
+  }
+  
+  .navbar-brand {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-weight: 800;
+    font-size: 1.5rem;
+  }
+  
+  .nav-link {
+    color: var(--text-light) !important;
+    font-weight: 500;
+    padding: 0.5rem 1rem !important;
+    margin: 0 0.25rem;
+    border-radius: var(--radius);
+    transition: all 0.2s ease;
+  }
+  
+  .nav-link:hover {
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--primary-color) !important;
+  }
+  
+  /* Hero section styling */
+  .hero-section {
+    padding: 8rem 0;
+    text-align: center;
+    position: relative;
+  }
+  
+  .hero-title {
+    font-size: 3.5rem;
+    font-weight: 800;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  
+  .hero-subtitle {
+    font-size: 1.25rem;
+    color: var(--text-light);
+    margin-bottom: 2.5rem;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  /* Card styling */
+  .card {
+    background: var(--card-bg);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  
+  .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 32px -3px rgba(0, 0, 0, 0.15);
+  }
+  
+  .card-header {
+    background: transparent;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius) var(--radius) 0 0 !important;
+  }
+  
+  /* Form styling */
+  .form-control {
+    border-radius: var(--radius);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 0.75rem 1rem;
+    background: rgba(255, 255, 255, 0.9);
+    transition: all 0.2s ease;
+  }
+  
+  .form-control:focus {
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    border-color: var(--primary-color);
+    background: white;
+  }
+  
+  /* Button styling */
+  .btn {
+    border-radius: var(--radius);
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+  }
+  
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border: none;
+    box-shadow: 0 2px 12px -3px var(--primary-color);
+    color: white;
+  }
+  
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px -3px var(--primary-color);
+  }
+  
+  .btn-outline-primary {
+    border: 2px solid var(--primary-color);
+    color: var(--primary-color);
+  }
+  
+  .btn-outline-primary:hover {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-color: transparent;
+    color: white;
+    transform: translateY(-2px);
+  }
+  
+  /* Table styling */
+  .table {
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  
+  .table thead th {
+    background: rgba(248, 250, 252, 0.8);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+  }
+  
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: rgba(99, 102, 241, 0.3);
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(99, 102, 241, 0.5);
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .hero-title {
+      font-size: 2.5rem;
+    }
+  
+    .hero-subtitle {
+      font-size: 1.125rem;
+    }
+  
+    .card {
+      border-radius: 12px;
+    }
+  }
+
+/* General table styling */
+#timeSlotTable {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #fff;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Table header */
+  #timeSlotTable thead {
+    background-color: #007bff;
+    color: white;
+    text-transform: uppercase;
+  }
+  
+  #timeSlotTable th {
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+  }
+  
+  /* Table rows */
+  #timeSlotTable tbody tr {
+    border-bottom: 1px solid #dee2e6;
+    transition: background 0.3s;
+  }
+  
+  #timeSlotTable tbody tr:hover {
+    background-color: #f8f9fa;
+  }
+  
+  /* Table cells */
+  #timeSlotTable td {
+    padding: 12px;
+    vertical-align: middle;
+  }
+  
+  /* Column-specific styling */
+  #timeSlotTable td:nth-child(1) { /* Time */
+    font-weight: bold;
+    color: #343a40;
+  }
+  
+  #timeSlotTable td:nth-child(2) { /* Done? */
+    text-align: center;
+  }
+  
+  #timeSlotTable td:nth-child(3) { /* To-Do List */
+    font-style: italic;
+  }
+  
+  #timeSlotTable td:nth-child(4) { /* Report */
+    text-align: center;
+    font-weight: 500;
+    color: #6c757d;
+  }
+  
+  #timeSlotTable td:nth-child(5) { /* Progress */
+    text-align: center;
+  }
+  
+  #timeSlotTable td:nth-child(6) { /* Rating */
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #ffc107;
+  }
+  
+  /* Checkbox and progress bar */
+  #timeSlotTable input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+  }
+  
+
+  .timer-display {
+    font-size: 3rem;
+    font-weight: bold;
+    color: #007bff;
+    transition: transform 0.3s ease-in-out, color 0.3s ease-in-out;
+  }
+  
+  .timer-running {
+    transform: scale(1.1);
+    color: #dc3545;
+  }
+  
+  @keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.05); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  
+  #timeDisplay.pulsing {
+    animation: pulse 1s infinite;
+  }
+
+/* Timer Display */
+#time {
+    font-size: 48px;
+    color: #333;
+    font-weight: bold;
+    margin: 20px 0;
+    transition: all 0.3s ease-in-out;
+    background: #f5a623; /* Adding a background color for contrast */
+    padding: 20px;
+    border-radius: 10px;
+  }
+  
+  /* Button Styles
+  .btn {
+    padding: 12px 20px;
+    border: none;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+  
+  .btn-primary {
+    background: #f5a623;
+    color: white;
+  }
+  
+  .btn-primary:hover {
+    background: #e17f1d;
+  }
+  
+  .btn-secondary {
+    background: #ccc;
+    color: #333;
+  }
+  
+  .btn-secondary:hover {
+    background: #999;
+  } */
+  
+  /* Controls Row */
+  .controls {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 15px 0;
+  }
+  
+  /* Time Settings Section */
+  .time-settings {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .time-settings label {
+    margin-right: 10px;
+  }
+  
+  .time-settings input {
+    width: 50px;
+    height: 25px;
+    margin-right: 20px;
+  }
+  
+  /* Media Queries for Responsiveness */
+  @media (max-width: 600px) {
+    #time {
+      font-size: 36px;
+      padding: 15px;
+    }
+  
+    .controls {
+      flex-direction: column;
+    }
+  
+    .btn {
+      width: 100%;
+      margin: 5px 0;
+    }
+  
+    .time-settings {
+      gap: 8px;
     }
   }
   
 
+  /* Timer Container */
+.timer-container {
+    position: relative;
+    margin-bottom: 20px;
+  }
+  
+  /* Timer Display */
+  #time {
+    font-size: 48px;
+    color: #333;
+    font-weight: bold;
+    margin: 20px 0;
+    transition: all 0.3s ease-in-out;
+    background: #f5a623;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+  }
 
-  async function updateTimeSlotField(slotId, updatedData) {
-    const token = localStorage.getItem("access_token");
   
-    const response = await fetch(`/time_slots/${slotId}`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(updatedData),
-    });
+  /* Controls Row */
+  .controls {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 15px 0;
+  }
   
-    if (!response.ok) {
-      alert("Failed to update time slot");
+  /* Time Settings Section */
+  .time-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .time-settings label {
+    font-weight: bold;
+  }
+  
+  .time-settings input {
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #3cd312;
+    font-size: 16px;
+    width: 80px; /* Fixed width for consistency */
+    text-align: center;
+  }
+  
+  /* Media Queries for Responsiveness */
+  @media (max-width: 600px) {
+    #time {
+      font-size: 36px;
+      padding: 15px;
+    }
+  
+    .controls {
+      flex-direction: column;
+    }
+  
+    .btn {
+      width: 100%;
+      margin: 5px 0;
+    }
+  
+    .time-settings {
+      gap: 8px;
     }
   }
   \n\n./frontend/templates/index.html:\n
@@ -645,6 +1242,30 @@ document.addEventListener("DOMContentLoaded", () => {
   </nav>
 
   <main class="container" style="margin-top: 6rem;">
+    <!-- pomodoro timer -->
+    <div class="container">
+      <div class="timer">
+        <h2>Pomodoro Timer</h2>
+        <!-- Timer Display with Progress Bar -->
+        <div class="timer-container">
+          <div id="time">25:00</div>
+          <div class="progress-bar">
+            <div id="progress" class="progress"></div>
+          </div>
+        </div>
+        <div class="controls">
+          <button class="btn btn-primary" id="startBtn">Start</button>
+          <button class="btn btn-secondary" id="resetBtn">Reset</button>
+        </div>
+        <div class="time-settings">
+          <label for="workTime">Work Time (min):</label>
+          <input type="number" id="workTime" value="25" min="1" />
+          <label for="breakTime">Break Time (min):</label>
+          <input type="number" id="breakTime" value="5" min="1" />
+        </div>
+      </div>
+    </div>
+
     <div class="row g-4">
       <section class="col-12">
         <div class="card">
@@ -654,7 +1275,7 @@ document.addEventListener("DOMContentLoaded", () => {
               <div class="d-flex align-items-center">
                 <label for="bookingDate" class="form-label me-2 mb-0">Select Date:</label>
                 <input type="date" id="bookingDate" class="form-control form-control-sm w-auto" />
-              </div>
+            </div>
             </div>
           </div>
           <div class="card-body">
@@ -678,15 +1299,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
             <div class="table-responsive">
               <table class="table table-hover" id="timeSlotTable">
-                <thead>
-                  <tr>
-                    <th scope="col">TIME</th>
-                    <th scope="col">DONE?</th>
-                    <th scope="col">TO-DO LIST</th>
-                    <th scope="col">REPORT (Min)</th>
-                    <th scope="col">PROGRESS</th>
-                    <th scope="col">RATING</th>
-                  </tr>
+                  <thead>
+                      <tr>
+                          <th scope="col">TIME</th>
+                          <th scope="col">DONE?</th>
+                          <th scope="col">TO-DO LIST</th>
+                          <th scope="col">REPORT (Min)</th>
+                          <th scope="col">PROGRESS</th>
+                          <th scope="col">RATING</th>
+                      </tr>
                 </thead>
                 <tbody>
                 </tbody>
@@ -695,21 +1316,6 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
         </div>
       </section>
-
-      <div class="col-lg-6">
-        <div class="card">
-          <div class="card-header py-3 d-flex justify-content-between align-items-center">
-            <h5 class="card-title mb-0 fw-bold">Focus Timer</h5>
-            <div>
-              <button class="btn btn-sm btn-primary" id="startTimerBtn">Start</button>
-              <button class="btn btn-sm btn-outline-secondary ms-2" id="resetTimerBtn">Reset</button>
-            </div>
-          </div>
-          <div class="card-body text-center py-5">
-            <div id="time">25:00</div>
-          </div>
-        </div>
-      </div>
 
       <div class="col-12">
         <div class="card">
@@ -867,7 +1473,7 @@ Base.metadata.create_all(bind=engine)
 \n\n./app/schemas.py:\n
 # app/schemas.py
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime,date
 from typing import Optional
 
 class UserBase(BaseModel):
@@ -937,9 +1543,12 @@ class GoalStep(GoalStepBase):
         orm_mode = True
 
 class TimeSlotBase(BaseModel):
+    date: date  # New field
     start_time: datetime
     end_time: datetime
     description: str
+    report_minutes: int = 0
+    done: bool = False
 
 class TimeSlotCreate(TimeSlotBase):
     pass
@@ -972,6 +1581,7 @@ from .dependencies import get_db
 
 from app import models, database
 models.Base.metadata.create_all(bind=database.engine)
+from typing import Optional
 
 
 app = FastAPI()
@@ -1082,7 +1692,7 @@ def create_time_slot(
     db: Session = Depends(get_db),
     current_user: schemas.User = Depends(auth.get_current_user)
 ):
-    return crud.create_time_slot(db=db, time_slot=time_slot, user_id=current_user.id)
+    return crud.create_time_slot(db=db, time_slot=time_slot, owner_id=current_user.id)
 
 @app.get("/time_slots/", response_model=list[schemas.TimeSlot])
 def read_time_slots(
@@ -1130,12 +1740,7 @@ def patch_time_slot(
         raise HTTPException(status_code=404, detail="Time slot not found")
     return crud.update_time_slot(db, slot, update)
 
-@app.patch("/time_slots/{slot_id}")
-def mark_time_slot_done(slot_id: int, done: bool, db: Session = Depends(get_db)):
-    updated_slot = update_time_slot_done(db, slot_id, done)
-    if updated_slot:
-        return {"message": "Time slot updated successfully"}
-    raise HTTPException(status_code=404, detail="Time slot not found")\n\n./app/database.py:\n
+\n\n./app/database.py:\n
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -1205,18 +1810,21 @@ from sqlalchemy.orm import relationship
 from datetime import datetime
 from .database import Base
 
+from sqlalchemy import Date
+
 class TimeSlot(Base):
     __tablename__ = "time_slots"
     id = Column(Integer, primary_key=True, index=True)
+    date = Column(Date, index=True)  # New column to store the date
     start_time = Column(DateTime, index=True)
     end_time = Column(DateTime, index=True)
     description = Column(String, index=True)
     owner_id = Column(Integer, ForeignKey("users.id"))
     owner = relationship("User", back_populates="time_slots")
-    
-    # New columns for reporting and status.
+
     report_minutes = Column(Integer, default=0)
     done = Column(Boolean, default=False)
+
 \n\n./app/crud.py:\n
 # app/crud.py
 from sqlalchemy.orm import Session
@@ -1279,12 +1887,21 @@ def create_goal_step(db: Session, step: schemas.GoalStepCreate, goal_id: int):
 def get_time_slots(db: Session, user_id: int):
     return db.query(models.TimeSlot).filter(models.TimeSlot.owner_id == user_id).all()
 
-def create_time_slot(db: Session, time_slot: schemas.TimeSlotCreate, user_id: int):
-    db_time_slot = models.TimeSlot(**time_slot.dict(), owner_id=user_id)
+def create_time_slot(db: Session, time_slot: schemas.TimeSlotCreate, owner_id: int):
+    db_time_slot = models.TimeSlot(
+        date=time_slot.date,  # Ensure this field is passed
+        start_time=time_slot.start_time,
+        end_time=time_slot.end_time,
+        description=time_slot.description,
+        owner_id=owner_id,
+        report_minutes=time_slot.report_minutes,
+        done=time_slot.done
+    )
     db.add(db_time_slot)
     db.commit()
     db.refresh(db_time_slot)
     return db_time_slot
+
 
 def get_time_slot(db: Session, slot_id: int, user_id: int):
     return db.query(models.TimeSlot).filter(
@@ -1300,16 +1917,7 @@ def update_time_slot(db: Session, slot: models.TimeSlot, update: schemas.TimeSlo
     db.commit()
     db.refresh(slot)
     return slot
-
-
-def update_time_slot_done(db: Session, slot_id: int, done: bool):
-    time_slot = db.query(models.TimeSlot).filter(models.TimeSlot.id == slot_id).first()
-    if time_slot:
-        time_slot.done = done
-        db.commit()
-        db.refresh(time_slot)
-        return time_slot
-    return None\n\n./app/dependencies.py:\n
+\n\n./app/dependencies.py:\n
 from .database import SessionLocal
 
 def get_db():
