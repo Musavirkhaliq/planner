@@ -338,33 +338,6 @@
     border-radius: 10px;
   }
   
-  /* Button Styles
-  .btn {
-    padding: 12px 20px;
-    border: none;
-    font-size: 16px;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background 0.3s ease;
-  }
-  
-  .btn-primary {
-    background: #f5a623;
-    color: white;
-  }
-  
-  .btn-primary:hover {
-    background: #e17f1d;
-  }
-  
-  .btn-secondary {
-    background: #ccc;
-    color: #333;
-  }
-  
-  .btn-secondary:hover {
-    background: #999;
-  } */
   
   /* Controls Row */
   .controls {
@@ -411,6 +384,31 @@
     .time-settings {
       gap: 8px;
     }
+  }
+
+  .feature-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .feature-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  }
+
+  .feature-card h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 15px;
+  }
+
+  .feature-card p {
+    font-size: 1rem;
+    color: #6b7280;
   }
   
 

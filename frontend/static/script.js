@@ -165,40 +165,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // Load Analytics Chart if canvas present
-    const chartCanvas = document.getElementById("productivityChart");
-    if (chartCanvas) {
-        const response = await fetchWithAuth("/analytics/");
-        if (response.ok) {
-            const analytics = await response.json();
-            // Using Chart.js (make sure to include its script in your HTML)
-            new Chart(chartCanvas, {
-                type: 'bar',
-                data: {
-                    labels: ['Total Tasks', 'Completed Tasks', 'Time Spent (hrs)'],
-                    datasets: [{
-                        label: 'Productivity Analytics',
-                        data: [analytics.total_tasks, analytics.completed_tasks, analytics.total_time_spent],
-                        backgroundColor: ['#007BFF', '#28a745', '#ffc107']
-                    }]
-                }
-            });
-        }
-    }
+
 });
 
 
 // frontend/static/script.js
 
 document.addEventListener("DOMContentLoaded", () => {
-    initAuth();
-    initTimeSlotForm();
-    initBookingDatePicker();
-    // Initially load bookings for today
-    const today = new Date().toISOString().split("T")[0];
-    document.getElementById("bookingDate").value = today;
-    loadTimeSlotsByDate(today);
-    // ... (other initializations, e.g., goals, pomodoro, analytics)
-  });
+  initAuth();
+  initTimeSlotForm();
+  initBookingDatePicker();
+  // Initially load bookings for today
+  const today = new Date().toISOString().split("T")[0];
+  document.getElementById("bookingDate").value = today;
+  loadTimeSlotsByDate(today);
+  fetchAnalytics(today, today);
+});
   
   // ---------- AUTH FUNCTIONS ----------
   function initAuth() {
@@ -217,11 +199,13 @@ document.addEventListener("DOMContentLoaded", () => {
   function initBookingDatePicker() {
     const bookingDateInput = document.getElementById("bookingDate");
     if (bookingDateInput) {
-      bookingDateInput.addEventListener("change", (e) => {
-        loadTimeSlotsByDate(e.target.value);
-      });
+        bookingDateInput.addEventListener("change", (e) => {
+            const selectedDate = e.target.value;
+            loadTimeSlotsByDate(selectedDate);
+            fetchAnalytics(selectedDate, selectedDate);
+        });
     }
-  }
+}
   
   // Submit the new time slot form.
   function initTimeSlotForm() {
@@ -262,21 +246,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
   }
-  
-  // Load time slots for the selected date.
-  async function loadTimeSlotsByDate(date) {
-    const token = localStorage.getItem("access_token");
-    // Assuming the API supports filtering by date: /time_slots/?date=YYYY-MM-DD
-    const response = await fetch(`/time_slots/?date=${date}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (response.ok) {
-      const slots = await response.json();
-      renderTimeSlotTable(slots);
-    } else {
-      alert("Failed to load time slots");
-    }
-  }
+
   
   // Render the time slot table rows.
   function renderTimeSlotTable(slots) {
@@ -509,3 +479,55 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+
+
+async function loadTimeSlotsByDate(date) {
+  const token = localStorage.getItem("access_token");
+  const response = await fetch(`/time_slots/by_date/?date=${date}`, {
+      headers: { Authorization: `Bearer ${token}` },
+  });
+  if (response.ok) {
+      const slots = await response.json();
+      renderTimeSlotTable(slots);
+  } else {
+      alert("Failed to load time slots");
+  }
+}
+
+
+async function fetchAnalytics(startDate, endDate) {
+  const token = localStorage.getItem("access_token");
+  const response = await fetch(`/analytics/?start=${startDate}&end=${endDate}`, {
+      headers: { Authorization: `Bearer ${token}` },
+  });
+  if (response.ok) {
+      const analytics = await response.json();
+      updateAnalyticsChart(analytics);
+  } else {
+      alert("Failed to fetch analytics");
+  }
+}
+
+function updateAnalyticsChart(analytics) {
+  const chartCanvas = document.getElementById("productivityChart");
+  if (chartCanvas) {
+      new Chart(chartCanvas, {
+          type: 'bar',
+          data: {
+              labels: ['Total Tasks', 'Completed Tasks', 'Time Spent (hrs)', 'Total Time Slots', 'Completed Time Slots'],
+              datasets: [{
+                  label: 'Productivity Analytics',
+                  data: [
+                      analytics.total_tasks,
+                      analytics.completed_tasks,
+                      analytics.total_time_spent,
+                      analytics.total_time_slots,
+                      analytics.completed_time_slots
+                  ],
+                  backgroundColor: ['#007BFF', '#28a745', '#ffc107', '#17a2b8', '#6c757d']
+              }]
+          }
+      });
+  }
+}
+
