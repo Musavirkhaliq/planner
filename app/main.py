@@ -115,21 +115,21 @@ def create_goal_step(
 ):
     return crud.create_goal_step(db=db, step=step, goal_id=goal_id)
 
-# Time Slot endpoints (for booking and reading slots)
-@app.post("/time_slots/", response_model=schemas.TimeSlot)
-def create_time_slot(
-    time_slot: schemas.TimeSlotCreate,
-    db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(auth.get_current_user)
-):
-    return crud.create_time_slot(db=db, time_slot=time_slot, owner_id=current_user.id)
+# # Time Slot endpoints (for booking and reading slots)
+# @app.post("/time_slots/", response_model=schemas.TimeSlot)
+# def create_time_slot(
+#     time_slot: schemas.TimeSlotCreate,
+#     db: Session = Depends(get_db),
+#     current_user: schemas.User = Depends(auth.get_current_user)
+# ):
+#     return crud.create_time_slot(db=db, time_slot=time_slot, owner_id=current_user.id)
 
-@app.get("/time_slots/", response_model=list[schemas.TimeSlot])
-def read_time_slots(
-    db: Session = Depends(get_db),
-    current_user: schemas.User = Depends(auth.get_current_user)
-):
-    return crud.get_time_slots(db=db, user_id=current_user.id)
+# @app.get("/time_slots/", response_model=list[schemas.TimeSlot])
+# def read_time_slots(
+#     db: Session = Depends(get_db),
+#     current_user: schemas.User = Depends(auth.get_current_user)
+# ):
+#     return crud.get_time_slots(db=db, user_id=current_user.id)
 
 # Analytics endpoint: returns productivity metrics (e.g. total tasks and hours spent)
 @app.get("/analytics/")
@@ -158,6 +158,21 @@ def update_dashboard_settings(
     return {"msg": "Settings updated", "settings": settings}
 
 
+
+
+
+from datetime import date
+from typing import Optional
+from fastapi import Query
+
+@app.get("/time_slots/", response_model=list[schemas.TimeSlot])
+def read_time_slots(
+    date: Optional[date] = Query(None, description="Filter time slots by date"),
+    db: Session = Depends(get_db),
+    current_user: schemas.User = Depends(auth.get_current_user)
+):
+    return crud.get_time_slots(db=db, user_id=current_user.id, date=date)
+
 @app.patch("/time_slots/{slot_id}", response_model=schemas.TimeSlot)
 def patch_time_slot(
     slot_id: int,
@@ -170,3 +185,10 @@ def patch_time_slot(
         raise HTTPException(status_code=404, detail="Time slot not found")
     return crud.update_time_slot(db, slot, update)
 
+@app.post("/time_slots/", response_model=schemas.TimeSlot)
+def create_time_slot(
+    time_slot: schemas.TimeSlotCreate,
+    db: Session = Depends(get_db),
+    current_user: schemas.User = Depends(auth.get_current_user)
+):
+    return crud.create_time_slot(db=db, time_slot=time_slot, owner_id=current_user.id)

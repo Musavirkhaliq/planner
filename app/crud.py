@@ -56,22 +56,22 @@ def create_goal_step(db: Session, step: schemas.GoalStepCreate, goal_id: int):
     db.refresh(db_step)
     return db_step
 
-def get_time_slots(db: Session, user_id: int):
-    return db.query(models.TimeSlot).filter(models.TimeSlot.owner_id == user_id).all()
+# def get_time_slots(db: Session, user_id: int):
+#     return db.query(models.TimeSlot).filter(models.TimeSlot.owner_id == user_id).all()
 
-def create_time_slot(db: Session, time_slot: schemas.TimeSlotCreate, owner_id: int):
-    db_time_slot = models.TimeSlot(
-        date=time_slot.date,  # Ensure this field is passed
-        start_time=time_slot.start_time,
-        end_time=time_slot.end_time,
-        description=time_slot.description,
-        owner_id=owner_id,
-        report_minutes=time_slot.report_minutes,
-        done=time_slot.done
-    )
-    db.add(db_time_slot)
-    db.commit()
-    db.refresh(db_time_slot)
+# def create_time_slot(db: Session, time_slot: schemas.TimeSlotCreate, owner_id: int):
+#     db_time_slot = models.TimeSlot(
+#         date=time_slot.date,  # Ensure this field is passed
+#         start_time=time_slot.start_time,
+#         end_time=time_slot.end_time,
+#         description=time_slot.description,
+#         owner_id=owner_id,
+#         report_minutes=time_slot.report_minutes,
+#         done=time_slot.done
+#     )
+#     db.add(db_time_slot)
+#     db.commit()
+#     db.refresh(db_time_slot)
     return db_time_slot
 
 
@@ -81,11 +81,47 @@ def get_time_slot(db: Session, slot_id: int, user_id: int):
         models.TimeSlot.owner_id == user_id
     ).first()
 
+# def update_time_slot(db: Session, slot: models.TimeSlot, update: schemas.TimeSlotUpdate):
+#     if update.report_minutes is not None:
+#         slot.report_minutes = update.report_minutes
+#     if update.done is not None:
+#         slot.done = update.done
+#     db.commit()
+#     db.refresh(slot)
+#     return slot
+
+
+
+
+
+from datetime import date, datetime
+from sqlalchemy import func
+from typing import Optional
+
+def get_time_slots(db: Session, user_id: int, date: Optional[date] = None):
+    query = db.query(models.TimeSlot).filter(models.TimeSlot.owner_id == user_id)
+    
+    if date:
+        # Convert the start_time and end_time to date for comparison
+        query = query.filter(
+            func.date(models.TimeSlot.start_time) == date
+        )
+    
+    return query.order_by(models.TimeSlot.start_time).all()
+
+def create_time_slot(db: Session, time_slot: schemas.TimeSlotCreate, owner_id: int):
+    db_time_slot = models.TimeSlot(
+        **time_slot.dict(),
+        owner_id=owner_id
+    )
+    db.add(db_time_slot)
+    db.commit()
+    db.refresh(db_time_slot)
+    return db_time_slot
+
 def update_time_slot(db: Session, slot: models.TimeSlot, update: schemas.TimeSlotUpdate):
-    if update.report_minutes is not None:
-        slot.report_minutes = update.report_minutes
-    if update.done is not None:
-        slot.done = update.done
+    for key, value in update.dict(exclude_unset=True).items():
+        setattr(slot, key, value)
     db.commit()
     db.refresh(slot)
     return slot

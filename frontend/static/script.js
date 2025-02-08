@@ -483,16 +483,41 @@ document.addEventListener("DOMContentLoaded", () => {
 
 async function loadTimeSlotsByDate(date) {
   const token = localStorage.getItem("access_token");
-  const response = await fetch(`/time_slots/by_date/?date=${date}`, {
-      headers: { Authorization: `Bearer ${token}` },
-  });
-  if (response.ok) {
-      const slots = await response.json();
-      renderTimeSlotTable(slots);
-  } else {
-      alert("Failed to load time slots");
+  try {
+      const response = await fetch(`/time_slots/?date=${date}`, {
+          headers: { 
+              Authorization: `Bearer ${token}`,
+              'Accept': 'application/json'
+          }
+      });
+      
+      if (response.ok) {
+          const slots = await response.json();
+          renderTimeSlotTable(slots);
+      } else {
+          const error = await response.json();
+          alert(`Failed to load time slots: ${error.detail || 'Unknown error'}`);
+      }
+  } catch (error) {
+      console.error("Error loading time slots:", error);
+      alert("Failed to load time slots. Please try again.");
   }
 }
+
+// Initialize date picker and load today's slots
+document.addEventListener("DOMContentLoaded", () => {
+  const today = new Date().toISOString().split('T')[0];
+  const dateInput = document.getElementById("bookingDate");
+  if (dateInput) {
+      dateInput.value = today;
+      loadTimeSlotsByDate(today);
+      
+      // Add event listener for date changes
+      dateInput.addEventListener("change", (e) => {
+          loadTimeSlotsByDate(e.target.value);
+      });
+  }
+});
 
 
 async function fetchAnalytics(startDate, endDate) {
@@ -530,4 +555,3 @@ function updateAnalyticsChart(analytics) {
       });
   }
 }
-
