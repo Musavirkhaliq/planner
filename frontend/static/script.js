@@ -25,7 +25,7 @@ async function submitForm(e, url, formData, isJson = true) {
 document.getElementById("loginForm")?.addEventListener("submit", async (e) => {
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
-    const data = await submitForm(e, "/token", { username: email, password: password }, false);
+    const data = await submitForm(e, "/api/auth/token", { username: email, password: password }, false);
     if (data && data.access_token) {
         localStorage.setItem("access_token", data.access_token);
         window.location.href = "/dashboard";
@@ -36,7 +36,7 @@ document.getElementById("loginForm")?.addEventListener("submit", async (e) => {
 document.getElementById("registerForm")?.addEventListener("submit", async (e) => {
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
-    const data = await submitForm(e, "/users/", { email, password });
+    const data = await submitForm(e, "/api/users/", { email, password });
     if (data) window.location.href = "/login";
 });
 
@@ -51,7 +51,7 @@ async function fetchWithAuth(url, options = {}) {
         ...(options.headers || {}),
         "Authorization": `Bearer ${token}`
     };
-    return await fetch(url, options);
+    return await fetch(`/api${url}`, options);
 }
 
 // Time Slot Booking
@@ -61,7 +61,7 @@ async function bookTimeSlot() {
     const endTime = document.getElementById("endTime").value;
     // Create a description from the task
     const description = task;
-    const response = await fetchWithAuth("/time_slots/", {
+    const response = await fetchWithAuth("/api/time_slots/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ start_time: startTime, end_time: endTime, description })
@@ -226,7 +226,7 @@ document.addEventListener("DOMContentLoaded", () => {
           date: bookingDate  // assuming the API accepts a date field
         };
   
-        const response = await fetch("/time_slots/", {
+        const response = await fetch("/api/time_slots/", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -355,7 +355,7 @@ document.addEventListener("DOMContentLoaded", () => {
   
     // Send the updated report value to the back‑end.
     // (Assuming your back‑end supports PATCH updates for time slot bookings.)
-    const response = await fetch(`/time_slots/${slotId}`, {
+    const response = await fetch(`/api/time_slots/${slotId}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -484,7 +484,7 @@ document.addEventListener("DOMContentLoaded", () => {
 async function loadTimeSlotsByDate(date) {
   const token = localStorage.getItem("access_token");
   try {
-      const response = await fetch(`/time_slots/?date=${date}`, {
+      const response = await fetch(`/api/time_slots/?date=${date}`, {
           headers: { 
               Authorization: `Bearer ${token}`,
               'Accept': 'application/json'
@@ -522,7 +522,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 async function fetchAnalytics(startDate, endDate) {
   const token = localStorage.getItem("access_token");
-  const response = await fetch(`/analytics/?start=${startDate}&end=${endDate}`, {
+  const response = await fetch(`/api/analytics/?start=${startDate}&end=${endDate}`, {
       headers: { Authorization: `Bearer ${token}` },
   });
   if (response.ok) {
