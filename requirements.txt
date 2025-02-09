@@ -4,3 +4,6 @@ SQLAlchemy
 python-jose[cryptography]
 passlib[bcrypt]
 pydantic
+pydantic_settings
+jinja2
+python-multipart
