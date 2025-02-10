@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="static/style.css">
+    <style>
+        .loading-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: var(--light-bg);
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-container">
+        <div class="spinner-border text-primary spinner" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="h4 mb-3">Authenticating...</p>
+        <p class="text-muted">Please wait while we complete the process.</p>
+    </div>
+
+    <div id="auth-data" 
+         data-token="{{ access_token }}" 
+         data-type="{{ token_type }}" 
+         data-error="{{ detail if detail is defined else '' }}">
+    </div>
+
+    <script>
+        const authData = document.getElementById('auth-data');
+        const token = authData.dataset.token;
+        const error = authData.dataset.error;
+        
+        setTimeout(() => {
+            if (token) {
+                localStorage.setItem('access_token', token);
+                window.location.href = '/dashboard';
+            } else {
+                window.location.href = '/login?error=' + encodeURIComponent(error || 'Authentication failed');
+            }
+        }, 1500); // Add a small delay for better UX
+    </script>
+</body>
+</html> 

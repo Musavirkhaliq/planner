@@ -1,334 +1,353 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Dashboard | Productivity Planner</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="static/style.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  
-  <style>
-    :root {
-      --primary-color: #4f46e5;
-      --secondary-color: #10b981;
-      --light-bg: #f9fafb;
-      --text-muted: #6b7280;
-    }
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Modern Dashboard | Productivity Planner</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --secondary-color: #10b981;
+            --accent-color: #f59e0b;
+            --light-bg: #f9fafb;
+            --text-muted: #6b7280;
+            --border-radius: 16px;
+            --box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+        }
 
-    body {
-      background-color: #f3f4f6;
-    }
+        body {
+            background-color: #f3f4f6;
+            font-family: 'Inter', sans-serif;
+        }
 
-    .navbar {
-      background-color: white;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
+        .navbar {
+            background-color: white;
+            box-shadow: var(--box-shadow);
+            padding: 1rem 2rem;
+        }
 
-    .navbar-brand {
-      font-weight: 700;
-      color: var(--primary-color);
-    }
+        .navbar-brand {
+            font-weight: 700;
+            color: var(--primary-color);
+            font-size: 1.5rem;
+        }
 
-    .card {
-      border: none;
-      border-radius: 12px;
-      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-      transition: transform 0.2s ease-in-out;
-    }
+        .navbar-logo {
+            width: 3rem;
+            height: 3rem;
+            margin-right: 1rem;
+        }
 
-    .card:hover {
-      transform: translateY(-2px);
-    }
+        .timer-section {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
 
-    .timer {
-      background: white;
-      border-radius: 12px;
-      padding: 2rem;
-      margin-bottom: 2rem;
-      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-    }
+        .timer-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            align-items: center;
+        }
 
-    .timer-container {
-      text-align: center;
-      margin: 2rem 0;
-    }
+        .timer-settings {
+            padding: 2rem;
+            background: var(--light-bg);
+            border-radius: var(--border-radius);
+        }
 
-    #time {
-      font-size: 3.5rem;
-      font-weight: 700;
-      color: var(--primary-color);
-      margin-bottom: 1rem;
-    }
+        .timer-display {
+            text-align: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, var(--primary-color), #6366f1);
+            border-radius: var(--border-radius);
+            color: white;
+        }
 
-    .progress-bar {
-      height: 25px;
-      background-color: #0bdc27;
-      border-radius: 4px;
-      overflow: hidden;
-      margin: 1rem 0;
-    }
+        #time {
+            font-size: 4rem;
+            font-weight: 700;
+            margin: 1rem 0;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
 
-    .progress {
-      height: 100%;
-      background-color: var(--primary-color);
-      transition: width 1s linear;
-    }
+        .progress-container {
+            background: rgba(255,255,255,0.2);
+            border-radius: 100px;
+            height: 8px;
+            margin: 1rem 0;
+            overflow: hidden;
+        }
 
-    .controls {
-      display: flex;
-      gap: 1rem;
-      justify-content: center;
-      margin-bottom: 1.5rem;
-    }
+        .progress {
+            background: var(--accent-color);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
 
-    .controls .btn {
-      padding: 0.5rem 2rem;
-      border-radius: 25px;
-      font-weight: 600;
-    }
+        .timer-controls {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1.5rem;
+        }
 
-    .time-settings {
-      display: grid;
-      grid-template-columns: auto 100px;
-      gap: 1rem;
-      align-items: center;
-      max-width: 400px;
-      margin: 0 auto;
-    }
+        .btn-timer {
+            padding: 0.75rem 2rem;
+            border-radius: 100px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+        }
 
-    .time-settings input {
-      border: 1px solid #e5e7eb;
-      border-radius: 6px;
-      padding: 0.5rem;
-    }
+        .btn-start {
+            background: var(--accent-color);
+            color: white;
+        }
 
-    .table {
-      border-collapse: separate;
-      border-spacing: 0 0.5rem;
-    }
+        .btn-reset {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
 
-    .table thead th {
-      border: none;
-      background-color: #f9fafb;
-      padding: 1rem;
-      font-weight: 600;
-      color: #6b7280;
-    }
+        .time-input-group {
+            margin-bottom: 1.5rem;
+        }
 
-    .table tbody tr {
-      background-color: white;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      transition: transform 0.2s ease-in-out;
-    }
+        .time-input-group label {
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
 
-    .table tbody tr:hover {
-      transform: translateX(4px);
-    }
+        .time-input-group input {
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 0.75rem;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
 
-    .table td {
-      padding: 1rem;
-      vertical-align: middle;
-    }
+        .time-input-group input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+            outline: none;
+        }
 
-    .btn-outline-danger {
-      border-radius: 20px;
-      padding: 0.4rem 1.5rem;
-      font-weight: 500;
-    }
+        .task-section {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
 
-    #timeSlotForm {
-      background-color: #f8fafc;
-      padding: 1.5rem;
-      border-radius: 8px;
-      margin-bottom: 2rem;
-    }
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
 
-    #timeSlotForm .form-control {
-      border-radius: 6px;
-      border: 1px solid #e5e7eb;
-    }
+        .date-picker {
+            background: var(--light-bg);
+            border-radius: 12px;
+            padding: 0.5rem 1rem;
+            border: 2px solid #e5e7eb;
+        }
 
-    #timeSlotForm .btn-primary {
-      border-radius: 6px;
-      padding: 0.6rem 1rem;
-    }
+        .task-form {
+            background: var(--light-bg);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
 
-    .rating-stars {
-      color: #fbbf24;
-    }
+        .task-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 0.75rem;
+        }
 
-    .progress-badge {
-      padding: 0.4rem 1rem;
-      border-radius: 20px;
-      font-size: 0.875rem;
-      font-weight: 500;
-    }
+        .task-table th {
+            font-weight: 600;
+            padding: 1rem;
+            text-transform: uppercase;
+            font-size: 0.875rem;
+        }
 
-    .progress-badge.not-started {
-      background-color: #f3f4f6;
-      color: #6b7280;
-    }
+        .task-table td {
+            background: var(--light-bg);
+            padding: 1rem;
+            border-radius: 8px;
+            transition: transform 0.2s ease;
+        }
 
-    .progress-badge.in-progress {
-      background-color: #dbeafe;
-      color: #2563eb;
-    }
+        .task-table tr:hover td {
+            transform: translateX(4px);
+            background: #f0f1f5;
+        }
 
-    .progress-badge.completed {
-      background-color: #dcfce7;
-      color: #16a34a;
-    } 
+        .progress-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 100px;
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
 
-    @media (max-width: 768px) {
-      .time-settings {
-        grid-template-columns: 1fr;
-      }
-      
-      #time {
-        font-size: 2.5rem;
-      }
-    }
-  </style>
+        .progress-badge.not-started { background: #f3f4f6; color: #6b7280; }
+        .progress-badge.in-progress { background: #dbeafe; color: #2563eb; }
+        .progress-badge.completed { background: #dcfce7; color: #16a34a; }
+
+        .rating-stars {
+            color: var(--accent-color);
+            font-size: 1.25rem;
+        }
+
+        .analytics-section {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .timer-container {
+                grid-template-columns: 1fr;
+            }
+            
+            #time {
+                font-size: 3rem;
+            }
+
+            .task-table {
+                display: block;
+                overflow-x: auto;
+            }
+        }
+    </style>
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg navbar-light fixed-top">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="/">
-        <i class="fas fa-chart-line me-2"></i>Productivity Planner
-      </a>
-      <div class="ms-auto">
-        <button class="btn btn-outline-danger btn-sm" id="logoutBtn">
-          <i class="fas fa-sign-out-alt me-1"></i>Logout
-        </button>
-      </div>
-    </div>
-  </nav>
-
-  <main class="container" style="margin-top: 6rem;">
-    <div class="container">
-      <div class="timer">
-        <h2 class="text-center fw-bold mb-4">
-          <i class="fas fa-clock me-2"></i>Pomodoro Timer
-        </h2>
-        <div class="timer-container">
-          <div id="time">25:00</div>
-          <div class="progress-bar">
-            <div id="progress" class="progress" style="width: 0%"></div>
-          </div>
-        </div>
-        <div class="controls">
-          <button class="btn btn-primary" id="startBtn">
-            <i class="fas fa-play me-2"></i>Start
-          </button>
-          <button class="btn btn-secondary" id="resetBtn">
-            <i class="fas fa-redo me-2"></i>Reset
-          </button>
-        </div>
-        <div class="time-settings">
-          <label for="workTime" class="form-label">Work Time (min):</label>
-          <input type="number" id="workTime" value="25" min="1" class="form-control" />
-          <label for="breakTime" class="form-label">Break Time (min):</label>
-          <input type="number" id="breakTime" value="5" min="1" class="form-control" />
-        </div>
-      </div>
-    </div>
-
-    <div class="row g-4">
-      <section class="col-12">
-        <div class="card">
-          <div class="card-header py-3">
-            <div class="d-flex justify-content-between align-items-center">
-              <h5 class="card-title mb-0 fw-bold">
-                <i class="fas fa-tasks me-2"></i>Time Slot Booking
-              </h5>
-              <div class="d-flex align-items-center">
-                <label for="bookingDate" class="form-label me-2 mb-0">Select Date:</label>
-                <input type="date" id="bookingDate" class="form-control form-control-sm w-auto" />
-              </div>
-            </div>
-          </div>
-          <div class="card-body">
-            <form id="timeSlotForm" class="row g-3 mb-4">
-              <div class="col-md-3">
-                <label for="startTime" class="form-label">Start Time</label>
-                <input type="time" id="startTime" class="form-control" required />
-              </div>
-              <div class="col-md-3">
-                <label for="endTime" class="form-label">End Time</label>
-                <input type="time" id="endTime" class="form-control" required />
-              </div>
-              <div class="col-md-4">
-                <label for="task" class="form-label">Task Description</label>
-                <input type="text" id="task" class="form-control" placeholder="Enter task details" required />
-              </div>
-              <div class="col-md-2 d-flex align-items-end">
-                <button type="submit" class="btn btn-primary w-100">
-                  <i class="fas fa-plus me-2"></i>Add Slot
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <img src="/static/img/planner_logo_100x100.png" alt="Planner Logo" class="navbar-logo">
+                Productivity Planner
+            </a>
+            <div class="ms-auto">
+                <button class="btn btn-outline-danger btn-sm rounded-pill px-4" id="logoutBtn">
+                    <i class="fas fa-sign-out-alt me-1"></i>Logout
                 </button>
-              </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container" style="margin-top: 6rem;">
+        <!-- Timer Section -->
+        <section class="timer-section">
+            <h2 class="text-center fw-bold mb-4">
+                <i class="fas fa-clock me-2"></i>Pomodoro Timer
+            </h2>
+            <div class="timer-container">
+                <div class="timer-settings">
+                    <div class="time-input-group">
+                        <label for="workTime">Work Duration (min)</label>
+                        <input type="number" id="workTime" value="25" min="1" class="form-control">
+                    </div>
+                    <div class="time-input-group">
+                        <label for="breakTime">Break Duration (min)</label>
+                        <input type="number" id="breakTime" value="5" min="1" class="form-control">
+                    </div>
+                </div>
+                <div class="timer-display">
+                    <h3 class="mb-3">Current Session</h3>
+                    <div id="time">25:00</div>
+                    <div class="progress-container">
+                        <div id="progress" class="progress" style="width: 0%"></div>
+                    </div>
+                    <div class="timer-controls">
+                        <button class="btn-timer btn-start" id="startBtn">
+                            <i class="fas fa-play me-2"></i>Start
+                        </button>
+                        <button class="btn-timer btn-reset" id="resetBtn">
+                            <i class="fas fa-redo me-2"></i>Reset
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Task Management Section -->
+        <section class="task-section">
+            <div class="task-header">
+                <h2 class="fw-bold mb-0">
+                    <i class="fas fa-tasks me-2"></i>Time Slots
+                </h2>
+                <div class="d-flex align-items-center">
+                    <label for="bookingDate" class="me-2 mb-0">Date:</label>
+                    <input type="date" id="bookingDate" class="date-picker">
+                </div>
+            </div>
+
+            <form id="timeSlotForm" class="task-form">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label for="startTime" class="form-label">Start Time</label>
+                        <input type="time" id="startTime" class="form-control" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="endTime" class="form-label">End Time</label>
+                        <input type="time" id="endTime" class="form-control" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="task" class="form-label">Task Description</label>
+                        <input type="text" id="task" class="form-control" placeholder="What are you planning to do?" required>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100 rounded-pill">
+                            <i class="fas fa-plus me-2"></i>Add
+                        </button>
+                    </div>
+                </div>
             </form>
 
             <div class="table-responsive">
-              <table class="table" id="timeSlotTable">
-                <thead>
-                  <tr>
-                    <th scope="col">TIME</th>
-                    <th scope="col">DONE?</th>
-                    <th scope="col">TO-DO LIST</th>
-                    <th scope="col">REPORT (Min)</th>
-                    <th scope="col">PROGRESS</th>
-                    <th scope="col">RATING</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <!-- Example row -->
-                  <tr>
-                    <td>09:00 - 10:30</td>
-                    <td>
-                      <div class="form-check">
-                        <input class="form-check-input" type="checkbox" value="">
-                      </div>
-                    </td>
-                    <td>Complete project documentation</td>
-                    <td>90</td>
-                    <td>
-                      <span class="progress-badge in-progress">In Progress</span>
-                    </td>
-                    <td>
-                      <div class="rating-stars">
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="fas fa-star"></i>
-                        <i class="far fa-star"></i>
-                        <i class="far fa-star"></i>
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+                <table class="task-table" id="timeSlotTable">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Status</th>
+                            <th>Task</th>
+                            <th>Report (Min)</th>
+                            <th>Progress</th>
+                            <th>Rating</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Time slots will be populated here -->
+                    </tbody>
+                </table>
             </div>
-          </div>
-        </div>
-      </section>
+        </section>
 
-      <div class="col-12">
-        <div class="card">
-          <div class="card-header py-3">
-            <h5 class="card-title mb-0 fw-bold">
-              <i class="fas fa-chart-bar me-2"></i>Productivity Analytics
-            </h5>
-          </div>
-          <div class="card-body">
+        <!-- Analytics Section -->
+        <section class="analytics-section">
+            <h2 class="fw-bold mb-4">
+                <i class="fas fa-chart-bar me-2"></i>Productivity Analytics
+            </h2>
             <canvas id="productivityChart"></canvas>
-          </div>
-        </div>
-      </div>
-    </div>
-  </main>
+        </section>
+    </main>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="/static/script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/script.js"></script>
 </body>
-</html>
+</html> 
