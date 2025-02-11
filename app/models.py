@@ -61,5 +61,6 @@ class TimeSlot(Base):
     owner = relationship("User", back_populates="time_slots")
 
     report_minutes = Column(Integer, default=0)
-    done = Column(Boolean, default=False)
+    status = Column(String, default="not_started", nullable=False)  # New field
+
 

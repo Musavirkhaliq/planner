@@ -21,3 +21,7 @@ async def read_register(request: Request):
 @router.get("/dashboard", response_class=HTMLResponse)
 async def read_dashboard(request: Request):
     return templates.TemplateResponse("dashboard.html", {"request": request}) 
+
+@router.get("/analytics", response_class=HTMLResponse)
+async def read_dashboard(request: Request):
+    return templates.TemplateResponse("analytics.html", {"request": request}) 

@@ -345,8 +345,8 @@
 
 .floating-timer {
   position: fixed;
-  bottom: 30px;
-  right: 30px;
+  bottom: 40px;
+  right: 40px;
   background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
   border-radius: var(--radius);
   box-shadow: var(--shadow);
@@ -362,7 +362,7 @@
 .digital-clock {
   text-align: center;
   font-family: 'Inter', sans-serif;
-  font-size: 1.5rem;
+  font-size: 1.0rem;
   font-weight: bold;
   margin-bottom: 1.5rem;
   padding: 1rem;
@@ -736,4 +736,71 @@
 
 .task-section {
   animation: fadeInUp 0.5s ease-out forwards;
+}
+
+
+
+/* Base style for the status dropdown */
+.statusSelect {
+  appearance: none; /* Remove default arrow */
+  -webkit-appearance: none; /* For Safari */
+  -moz-appearance: none; /* For Firefox */
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  background-color: #e9ecef; /* Default background color */
+  color: #495057; /* Default text color */
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Style for the dropdown arrow */
+.statusSelect {
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23495057"><path d="M7 10l5 5 5-5z"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 12px;
+  padding-right: 30px; /* Add space for the arrow */
+}
+
+/* Style for the dropdown when it's focused */
+.statusSelect:focus {
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+/* Style for the dropdown options */
+.statusSelect option {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Custom styles for each status */
+.statusSelect option[value="completed"] {
+  background-color: #28a745; /* Green for Completed */
+  color: white;
+}
+
+.statusSelect option[value="in_progress"] {
+  background-color: #ffc107; /* Yellow for In Progress */
+  color: black;
+}
+
+.statusSelect option[value="not_started"] {
+  background-color: #dc3545; /* Red for Not Started */
+  color: white;
+}
+
+/* Hover effect for dropdown options */
+.statusSelect option:hover {
+  background-color: #007bff; /* Blue for hover */
+  color: white;
+}
+
+/* Style for the dropdown when an option is selected */
+.statusSelect option:checked {
+  background-color: #007bff; /* Blue for selected option */
+  color: white;
 }

@@ -26,7 +26,23 @@
       </div>
     </div>
 
-    <canvas id="customAnalyticsChart"></canvas>
+    <div class="row">
+      <div class="col-md-6">
+        <canvas id="focusTimeChart"></canvas>
+      </div>
+      <div class="col-md-6">
+        <canvas id="productivityTrendsChart"></canvas>
+      </div>
+    </div>
+
+    <div class="row mt-4">
+      <div class="col-md-6">
+        <canvas id="utilizationChart"></canvas>
+      </div>
+      <div class="col-md-6">
+        <canvas id="completionRateChart"></canvas>
+      </div>
+    </div>
   </main>
 
   <script>
@@ -39,21 +55,29 @@
             return;
         }
 
-        fetch(`/analytics?start=${startDate}&end=${endDate}`)
+        fetch(`/time_slots/analytics?start=${startDate}&end=${endDate}`)
             .then(response => response.json())
-            .then(data => updateCustomAnalyticsChart(data))
+            .then(data => {
+                updateFocusTimeChart(data);
+                updateProductivityTrendsChart(data);
+                updateUtilizationChart(data);
+                updateCompletionRateChart(data);
+            })
             .catch(error => console.error("Error fetching analytics:", error));
     }
 
-    function updateCustomAnalyticsChart(data) {
-        const ctx = document.getElementById("customAnalyticsChart").getContext("2d");
+    function updateFocusTimeChart(data) {
+        const ctx = document.getElementById("focusTimeChart").getContext("2d");
+        const labels = data.timeslot_analytics.map(slot => slot.start_time);
+        const minutes = data.timeslot_analytics.map(slot => slot.minutes_focused);
+
         new Chart(ctx, {
             type: "line",
             data: {
-                labels: data.labels,
+                labels: labels,
                 datasets: [{
                     label: "Minutes Focused",
-                    data: data.minutes,
+                    data: minutes,
                     backgroundColor: "rgba(255, 99, 132, 0.6)",
                     borderColor: "rgba(255, 99, 132, 1)",
                     borderWidth: 1,
@@ -64,6 +88,78 @@
                 responsive: true,
                 scales: {
                     y: { beginAtZero: true }
+                }
+            }
+        });
+    }
+
+    function updateProductivityTrendsChart(data) {
+        const ctx = document.getElementById("productivityTrendsChart").getContext("2d");
+        const labels = data.productivity_trends.map(trend => trend.date);
+        const focusTime = data.productivity_trends.map(trend => trend.focus_time);
+
+        new Chart(ctx, {
+            type: "bar",
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: "Daily Focus Time",
+                    data: focusTime,
+                    backgroundColor: "rgba(54, 162, 235, 0.6)",
+                    borderColor: "rgba(54, 162, 235, 1)",
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    }
+
+    function updateUtilizationChart(data) {
+        const ctx = document.getElementById("utilizationChart").getContext("2d");
+        new Chart(ctx, {
+            type: "doughnut",
+            data: {
+                labels: ["Utilized", "Wasted"],
+                datasets: [{
+                    data: [data.time_slot_utilization, 100 - data.time_slot_utilization],
+                    backgroundColor: ["#28a745", "#dc3545"]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: "Time Slot Utilization"
+                    }
+                }
+            }
+        });
+    }
+
+    function updateCompletionRateChart(data) {
+        const ctx = document.getElementById("completionRateChart").getContext("2d");
+        new Chart(ctx, {
+            type: "doughnut",
+            data: {
+                labels: ["Completed", "Incomplete"],
+                datasets: [{
+                    data: [data.task_completion_rate, 100 - data.task_completion_rate],
+                    backgroundColor: ["#007BFF", "#6c757d"]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: "Task Completion Rate"
+                    }
                 }
             }
         });

@@ -179,7 +179,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const today = new Date().toISOString().split("T")[0];
   document.getElementById("bookingDate").value = today;
   loadTimeSlotsByDate(today);
-  fetchAnalytics(today, today);
+  // fetchAnalytics(today, today);
 });
   
   // ---------- AUTH FUNCTIONS ----------
@@ -202,7 +202,7 @@ document.addEventListener("DOMContentLoaded", () => {
         bookingDateInput.addEventListener("change", (e) => {
             const selectedDate = e.target.value;
             loadTimeSlotsByDate(selectedDate);
-            fetchAnalytics(selectedDate, selectedDate);
+            // fetchAnalytics(selectedDate, selectedDate);
         });
     }
 }
@@ -252,86 +252,100 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderTimeSlotTable(slots) {
     const tableBody = document.querySelector("#timeSlotTable tbody");
     tableBody.innerHTML = "";
-  
+
     slots.forEach((slot) => {
-      // Calculate total allotted minutes from start and end times.
-      const start = new Date(slot.start_time);
-      const end = new Date(slot.end_time);
-      const allottedMinutes = Math.round((end - start) / 60000); // convert ms to minutes
-  
-      // Use the stored "report" (in minutes) if available; otherwise default to 0.
-      const reportedMinutes = slot.report_minutes || 0;
-      const progressPercent = Math.min(
-        100,
-        Math.round((reportedMinutes / allottedMinutes) * 100)
-      );
-      const ratingStars = "★".repeat(Math.max(1, Math.round(progressPercent / 20)));
-  
-      const tr = document.createElement("tr");
-      tr.setAttribute("data-slot-id", slot.id);
-  
-      // TIME (formatted as e.g., 06:00AM-07:00AM)
-      const timeTd = document.createElement("td");
-      timeTd.textContent = `${start.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      })} - ${end.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      })}`;
-      tr.appendChild(timeTd);
-  
-      // DONE? (checkbox – optionally update on click)
-      const doneTd = document.createElement("td");
-      const doneCheckbox = document.createElement("input");
-      doneCheckbox.type = "checkbox";
-      doneCheckbox.checked = slot.done || false;
-      doneCheckbox.addEventListener("change", () => {
-        updateTimeSlotField(slot.id, { done: doneCheckbox.checked });
-      });
-      doneTd.appendChild(doneCheckbox);
-      tr.appendChild(doneTd);
-  
-      // TO-DO LIST (Task description)
-      const descTd = document.createElement("td");
-      descTd.textContent = slot.description;
-      tr.appendChild(descTd);
-  
-      // REPORT (Min) – input for minutes reported
-      const reportTd = document.createElement("td");
-      const reportInput = document.createElement("input");
-      reportInput.type = "number";
-      reportInput.min = 0;
-      reportInput.value = reportedMinutes;
-      reportInput.className = "form-control form-control-sm";
-      reportInput.style.width = "80px";
-      // Update the booking when the report input loses focus
-      reportInput.addEventListener("change", () => {
-        updateTimeSlotReport(slot.id, parseInt(reportInput.value), allottedMinutes);
-      });
-      reportTd.appendChild(reportInput);
-      tr.appendChild(reportTd);
-  
-      // PROGRESS – a Bootstrap progress bar
-      const progressTd = document.createElement("td");
-      const progressDiv = document.createElement("div");
-      progressDiv.className = "progress";
-      const progressBar = document.createElement("div");
-      progressBar.className = "progress-bar";
-      progressBar.style.width = `${progressPercent}%`;
-      progressBar.textContent = `${progressPercent}%`;
-      progressDiv.appendChild(progressBar);
-      progressTd.appendChild(progressDiv);
-      tr.appendChild(progressTd);
-  
-      // RATING – display star icons
-      const ratingTd = document.createElement("td");
-      ratingTd.textContent = ratingStars;
-      tr.appendChild(ratingTd);
-  
-      tableBody.appendChild(tr);
+        const start = new Date(slot.start_time);
+        const end = new Date(slot.end_time);
+        const allottedMinutes = Math.round((end - start) / 60000);
+        const reportedMinutes = slot.report_minutes || 0;
+        const progressPercent = Math.min(100, Math.round((reportedMinutes / allottedMinutes) * 100));
+        const ratingStars = "★".repeat(Math.max(1, Math.round(progressPercent / 20)));
+
+        const tr = document.createElement("tr");
+        tr.setAttribute("data-slot-id", slot.id);
+
+        // TIME
+        const timeTd = document.createElement("td");
+        timeTd.textContent = `${start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} - ${end.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+        tr.appendChild(timeTd);
+
+        // STATUS (Dropdown)
+        const statusTd = document.createElement("td");
+        const statusSelect = document.createElement("select");
+        statusSelect.className = "statusSelect";
+        statusSelect.innerHTML = `
+            <option value="completed" ${slot.status === 'completed' ? 'selected' : ''}>Completed</option>
+            <option value="in_progress" ${slot.status === 'in_progress' ? 'selected' : ''}>In Progress</option>
+            <option value="not_started" ${slot.status === 'not_started' ? 'selected' : ''}>Not Started</option>
+        `;
+        statusSelect.addEventListener("change", async () => {
+            const newStatus = statusSelect.value;
+            await updateTimeSlotField(slot.id, { status: newStatus }); // Update status on the server
+        });
+        statusTd.appendChild(statusSelect);
+        tr.appendChild(statusTd);
+
+        // TO-DO LIST (Task description)
+        const descTd = document.createElement("td");
+        descTd.textContent = slot.description;
+        tr.appendChild(descTd);
+
+        // REPORT (Min)
+        const reportTd = document.createElement("td");
+        const reportInput = document.createElement("input");
+        reportInput.type = "number";
+        reportInput.min = 0;
+        reportInput.value = reportedMinutes;
+        reportInput.className = "form-control form-control-sm";
+        reportInput.style.width = "80px";
+        reportInput.addEventListener("change", () => {
+            updateTimeSlotReport(slot.id, parseInt(reportInput.value), allottedMinutes);
+        });
+        reportTd.appendChild(reportInput);
+        tr.appendChild(reportTd);
+
+        // PROGRESS (Progress bar)
+        const progressTd = document.createElement("td");
+        const progressDiv = document.createElement("div");
+        progressDiv.className = "progress";
+        const progressBar = document.createElement("div");
+        progressBar.className = "progress-bar";
+        progressBar.style.width = `${progressPercent}%`;
+        progressBar.textContent = `${progressPercent}%`;
+        progressDiv.appendChild(progressBar);
+        progressTd.appendChild(progressDiv);
+        tr.appendChild(progressTd);
+
+        // RATING (Stars)
+        const ratingTd = document.createElement("td");
+        ratingTd.textContent = ratingStars;
+        tr.appendChild(ratingTd);
+
+        tableBody.appendChild(tr);
     });
+}
+
+
+async function updateTimeSlotField(slotId, data) {
+  const token = localStorage.getItem("access_token");
+  try {
+      const response = await fetch(`/api/time_slots/${slotId}`, {
+          method: "PATCH",
+          headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(data),
+      });
+      if (!response.ok) {
+          alert("Failed to update time slot status");
+      }
+  } catch (error) {
+      console.error("Error updating time slot status:", error);
+      alert("An error occurred. Please try again.");
   }
+}
+
   
   // When the report minutes input changes, update the booking.
   async function updateTimeSlotReport(slotId, reportMinutes, allottedMinutes) {
@@ -493,7 +507,7 @@ async function loadTimeSlotsByDate(date) {
       
       if (response.ok) {
           const slots = await response.json();
-          renderTimeSlotTable(slots);
+          renderTimeSlotTable(slots); // Render the table with status
       } else {
           const error = await response.json();
           alert(`Failed to load time slots: ${error.detail || 'Unknown error'}`);
@@ -520,41 +534,41 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
-async function fetchAnalytics(startDate, endDate) {
-  const token = localStorage.getItem("access_token");
-  const response = await fetch(`/api/analytics/?start=${startDate}&end=${endDate}`, {
-      headers: { Authorization: `Bearer ${token}` },
-  });
-  if (response.ok) {
-      const analytics = await response.json();
-      updateAnalyticsChart(analytics);
-  } else {
-      alert("Failed to fetch analytics");
-  }
-}
+// async function fetchAnalytics(startDate, endDate) {
+//   const token = localStorage.getItem("access_token");
+//   const response = await fetch(`/api/analytics/?start=${startDate}&end=${endDate}`, {
+//       headers: { Authorization: `Bearer ${token}` },
+//   });
+//   if (response.ok) {
+//       const analytics = await response.json();
+//       updateAnalyticsChart(analytics);
+//   } else {
+//       alert("Failed to fetch analytics");
+//   }
+// }
 
-function updateAnalyticsChart(analytics) {
-  const chartCanvas = document.getElementById("productivityChart");
-  if (chartCanvas) {
-      new Chart(chartCanvas, {
-          type: 'bar',
-          data: {
-              labels: ['Total Tasks', 'Completed Tasks', 'Time Spent (hrs)', 'Total Time Slots', 'Completed Time Slots'],
-              datasets: [{
-                  label: 'Productivity Analytics',
-                  data: [
-                      analytics.total_tasks,
-                      analytics.completed_tasks,
-                      analytics.total_time_spent,
-                      analytics.total_time_slots,
-                      analytics.completed_time_slots
-                  ],
-                  backgroundColor: ['#007BFF', '#28a745', '#ffc107', '#17a2b8', '#6c757d']
-              }]
-          }
-      });
-  }
-}
+// function updateAnalyticsChart(analytics) {
+//   const chartCanvas = document.getElementById("productivityChart");
+//   if (chartCanvas) {
+//       new Chart(chartCanvas, {
+//           type: 'bar',
+//           data: {
+//               labels: ['Total Tasks', 'Completed Tasks', 'Time Spent (hrs)', 'Total Time Slots', 'Completed Time Slots'],
+//               datasets: [{
+//                   label: 'Productivity Analytics',
+//                   data: [
+//                       analytics.total_tasks,
+//                       analytics.completed_tasks,
+//                       analytics.total_time_spent,
+//                       analytics.total_time_slots,
+//                       analytics.completed_time_slots
+//                   ],
+//                   backgroundColor: ['#007BFF', '#28a745', '#ffc107', '#17a2b8', '#6c757d']
+//               }]
+//           }
+//       });
+//   }
+// }
 
 
 // Update digital clock

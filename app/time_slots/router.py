@@ -36,4 +36,4 @@ def update_time_slot(
     slot = services.get_time_slot(db, slot_id, current_user.id)
     if not slot:
         raise HTTPException(status_code=404, detail="Time slot not found")
-    return services.update_time_slot(db, slot, update) 
+    return services.update_time_slot(db, slot, update)

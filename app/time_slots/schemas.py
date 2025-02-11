@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel,Field
 from typing import Optional
 from datetime import datetime
 
@@ -7,7 +7,7 @@ class TimeSlotBase(BaseModel):
     end_time: datetime
     description: Optional[str] = None
     report_minutes: Optional[int] = None
-    done: Optional[bool] = False
+    status: Optional[str] = Field(default="not_started", description="Status of the time slot: completed, in_progress, not_started")
 
 class TimeSlotCreate(TimeSlotBase):
     pass
@@ -17,7 +17,7 @@ class TimeSlotUpdate(BaseModel):
     end_time: Optional[datetime] = None
     description: Optional[str] = None
     report_minutes: Optional[int] = None
-    done: Optional[bool] = None
+    status: Optional[str] = Field(None, description="Status of the time slot: completed, in_progress, not_started")
 
 class TimeSlot(TimeSlotBase): 
     id: int
