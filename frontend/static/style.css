@@ -1,5 +1,5 @@
 :root {
-    --primary-color: #6366f1;
+    --primary-color: #2427ee;
     --secondary-color: #818cf8;
     --background: #f8fafc;
     --card-bg: rgba(255, 255, 255, 0.9);
@@ -314,162 +314,6 @@
   }
 
 /* Timer Display */
-#time {
-    font-size: 48px;
-    color: #333;
-    font-weight: bold;
-    margin: 20px 0;
-    transition: all 0.3s ease-in-out;
-    background: #f5a623; /* Adding a background color for contrast */
-    padding: 20px;
-    border-radius: 10px;
-  }
-  
-  
-  /* Controls Row */
-  .controls {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-    margin: 15px 0;
-  }
-  
-  /* Time Settings Section */
-  .time-settings {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-  }
-  
-  .time-settings label {
-    margin-right: 10px;
-  }
-  
-  .time-settings input {
-    width: 50px;
-    height: 25px;
-    margin-right: 20px;
-  }
-  
-  /* Media Queries for Responsiveness */
-  @media (max-width: 600px) {
-    #time {
-      font-size: 36px;
-      padding: 15px;
-    }
-  
-    .controls {
-      flex-direction: column;
-    }
-  
-    .btn {
-      width: 100%;
-      margin: 5px 0;
-    }
-  
-    .time-settings {
-      gap: 8px;
-    }
-  }
-
-  .feature-card {
-    background: #fff;
-    border-radius: 12px;
-    padding: 30px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-
-  .feature-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-  }
-
-  .feature-card h3 {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: #1f2937;
-    margin-bottom: 15px;
-  }
-
-  .feature-card p {
-    font-size: 1rem;
-    color: #6b7280;
-  }
-  
-
-  /* Timer Container */
-.timer-container {
-    display: grid;
-    grid-template-columns: 4fr 8fr;
-    gap: 2rem;
-    align-items: center;
-  }
-  
-  /* Timer Display */
-  #time {
-    font-size: 48px;
-    color: #333;
-    font-weight: bold;
-    margin: 20px 0;
-    transition: all 0.3s ease-in-out;
-    background: #f5a623;
-    padding: 20px;
-    border-radius: 10px;
-    text-align: center;
-  }
-
-  
-  /* Controls Row */
-  .controls {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-    margin: 15px 0;
-  }
-  
-  /* Time Settings Section */
-  .time-settings {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  
-  .time-settings label {
-    font-weight: bold;
-  }
-  
-  .time-settings input {
-    padding: 8px;
-    border-radius: 5px;
-    border: 1px solid #3cd312;
-    font-size: 16px;
-    width: 80px; /* Fixed width for consistency */
-    text-align: center;
-  }
-  
-  /* Media Queries for Responsiveness */
-  @media (max-width: 600px) {
-    #time {
-      font-size: 36px;
-      padding: 15px;
-    }
-  
-    .controls {
-      flex-direction: column;
-    }
-  
-    .btn {
-      width: 100%;
-      margin: 5px 0;
-    }
-  
-    .time-settings {
-      gap: 8px;
-    }
-  }
-
 /* OAuth related styles */
 .divider {
     position: relative;
@@ -494,3 +338,221 @@
     transform: translateY(-1px);
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }       
+
+
+
+/* Pomodoro Timer */
+
+.floating-timer {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.5rem;
+  width: 340px;
+  z-index: 1000;
+  color: var(--card-bg);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Digital Clock */
+.digital-clock {
+  text-align: center;
+  font-family: 'Inter', sans-serif;
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  letter-spacing: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+}
+
+/* Blinking Colon Animation */
+.digital-clock .colon {
+  animation: blink 1s infinite;
+  opacity: 0.8;
+}
+
+@keyframes blink {
+  50% { opacity: 0.2; }
+}
+
+/* Timer Section */
+.timer-section {
+  margin-bottom: 1.5rem;
+}
+
+.timer-section h2 {
+  font-size: 1.3rem;
+  margin-bottom: 1rem;
+  text-align: center;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.6);
+}
+
+/* Timer Box */
+.timer-container {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* Input Fields */
+.timer-settings {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.time-input-group {
+  flex: 1;
+}
+
+.time-input-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.time-input-group input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.time-input-group input:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+}
+
+/* Timer Display */
+#time {
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin: 1.5rem 0;
+  text-align: center;
+  color: white;
+  text-shadow: 0 0 12px rgba(0, 255, 150, 0.8);
+  background: rgba(255, 255, 255, 0.08);
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* Progress Bar */
+.progress-container {
+  background: rgba(255, 255, 255, 0.15);
+  height: 8px;
+  border-radius: 10px;
+  margin: 1.5rem 0;
+  overflow: hidden;
+}
+
+#progress {
+  height: 100%;
+  background: linear-gradient(90deg, rgba(0, 255, 150, 0.8), rgba(0, 255, 200, 1));
+  border-radius: 10px;
+  transition: width 0.8s ease-in-out;
+  box-shadow: 0 0 12px rgba(0, 255, 150, 0.8);
+}
+
+/* Control Buttons */
+.timer-controls {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.btn-timer {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 700;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-transform: uppercase;
+}
+
+.btn-start {
+  padding: 8px 16px;
+  font-size: 14px;
+  background: linear-gradient(135deg, #00ff96, #00ffc8);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(0, 255, 150, 0.6);
+}
+
+.btn-reset {
+  padding: 8px 16px;
+  font-size: 14px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.btn-timer:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+}
+
+/* Minimize Button */
+.minimize-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.minimize-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .floating-timer {
+    width: calc(100% - 2rem);
+    left: 1rem;
+    right: 1rem;
+    bottom: 1rem;
+  }
+
+  #time {
+    font-size: 2.5rem;
+  }
+
+  .digital-clock {
+    font-size: 1.8rem;
+  }
+}

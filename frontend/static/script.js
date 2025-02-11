@@ -555,3 +555,30 @@ function updateAnalyticsChart(analytics) {
       });
   }
 }
+
+
+// Update digital clock
+function updateDigitalClock() {
+  const now = new Date();
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+
+  document.querySelector('.hours').textContent = hours;
+  document.querySelector('.minutes').textContent = minutes;
+  document.querySelector('.seconds').textContent = seconds;
+}
+
+// Update clock every second
+setInterval(updateDigitalClock, 1000);
+updateDigitalClock(); // Initial update
+
+// Minimize/Maximize functionality
+const minimizeBtn = document.querySelector('.minimize-btn');
+const timerSection = document.querySelector('.timer-section');
+
+minimizeBtn.addEventListener('click', () => {
+  timerSection.style.display = timerSection.style.display === 'none' ? 'block' : 'none';
+  minimizeBtn.innerHTML = timerSection.style.display === 'none' ? 
+      '<i class="fas fa-plus"></i>' : '<i class="fas fa-minus"></i>';
+});

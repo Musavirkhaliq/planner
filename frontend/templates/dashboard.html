@@ -9,231 +9,6 @@
     <link rel="stylesheet" href="static/style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <style>
-        :root {
-            --primary-color: #4f46e5;
-            --secondary-color: #10b981;
-            --accent-color: #f59e0b;
-            --light-bg: #f9fafb;
-            --text-muted: #6b7280;
-            --border-radius: 16px;
-            --box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
-        }
-
-        body {
-            background-color: #f3f4f6;
-            font-family: 'Inter', sans-serif;
-        }
-
-        .navbar {
-            background-color: white;
-            box-shadow: var(--box-shadow);
-            padding: 1rem 2rem;
-        }
-
-        .navbar-brand {
-            font-weight: 700;
-            color: var(--primary-color);
-            font-size: 1.5rem;
-        }
-
-        .navbar-logo {
-            width: 3rem;
-            height: 3rem;
-            margin-right: 1rem;
-        }
-
-        .timer-section {
-            background: white;
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
-            padding: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .timer-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
-            align-items: center;
-        }
-
-        .timer-settings {
-            padding: 2rem;
-            background: var(--light-bg);
-            border-radius: var(--border-radius);
-        }
-
-        .timer-display {
-            text-align: center;
-            padding: 2rem;
-            background: linear-gradient(135deg, var(--primary-color), #6366f1);
-            border-radius: var(--border-radius);
-            color: white;
-        }
-
-        #time {
-            font-size: 4rem;
-            font-weight: 700;
-            margin: 1rem 0;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .progress-container {
-            background: rgba(255,255,255,0.2);
-            border-radius: 100px;
-            height: 8px;
-            margin: 1rem 0;
-            overflow: hidden;
-        }
-
-        .progress {
-            background: var(--accent-color);
-            height: 100%;
-            transition: width 0.3s ease;
-        }
-
-        .timer-controls {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-            margin-top: 1.5rem;
-        }
-
-        .btn-timer {
-            padding: 0.75rem 2rem;
-            border-radius: 100px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            border: none;
-        }
-
-        .btn-start {
-            background: var(--accent-color);
-            color: white;
-        }
-
-        .btn-reset {
-            background: rgba(255,255,255,0.2);
-            color: white;
-        }
-
-        .time-input-group {
-            margin-bottom: 1.5rem;
-        }
-
-        .time-input-group label {
-            font-weight: 500;
-            color: var(--text-muted);
-            margin-bottom: 0.5rem;
-        }
-
-        .time-input-group input {
-            border: 2px solid #e5e7eb;
-            border-radius: 12px;
-            padding: 0.75rem;
-            width: 100%;
-            transition: all 0.3s ease;
-        }
-
-        .time-input-group input:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-            outline: none;
-        }
-
-        .task-section {
-            background: white;
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
-            padding: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .task-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-        }
-
-        .date-picker {
-            background: var(--light-bg);
-            border-radius: 12px;
-            padding: 0.5rem 1rem;
-            border: 2px solid #e5e7eb;
-        }
-
-        .task-form {
-            background: var(--light-bg);
-            border-radius: var(--border-radius);
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .task-table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0 0.75rem;
-        }
-
-        .task-table th {
-            font-weight: 600;
-            padding: 1rem;
-            text-transform: uppercase;
-            font-size: 0.875rem;
-        }
-
-        .task-table td {
-            background: var(--light-bg);
-            padding: 1rem;
-            border-radius: 8px;
-            transition: transform 0.2s ease;
-        }
-
-        .task-table tr:hover td {
-            transform: translateX(4px);
-            background: #f0f1f5;
-        }
-
-        .progress-badge {
-            padding: 0.5rem 1rem;
-            border-radius: 100px;
-            font-weight: 500;
-            font-size: 0.875rem;
-        }
-
-        .progress-badge.not-started { background: #f3f4f6; color: #6b7280; }
-        .progress-badge.in-progress { background: #dbeafe; color: #2563eb; }
-        .progress-badge.completed { background: #dcfce7; color: #16a34a; }
-
-        .rating-stars {
-            color: var(--accent-color);
-            font-size: 1.25rem;
-        }
-
-        .analytics-section {
-            background: white;
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
-            padding: 2rem;
-        }
-
-        @media (max-width: 768px) {
-            .timer-container {
-                grid-template-columns: 1fr;
-            }
-            
-            #time {
-                font-size: 3rem;
-            }
-
-            .task-table {
-                display: block;
-                overflow-x: auto;
-            }
-        }
-    </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-light fixed-top">
@@ -252,38 +27,54 @@
 
     <main class="container" style="margin-top: 6rem;">
         <!-- Timer Section -->
-        <section class="timer-section">
-            <h2 class="text-center fw-bold mb-4">
-                <i class="fas fa-clock me-2"></i>Pomodoro Timer
-            </h2>
-            <div class="timer-container">
-                <div class="timer-settings">
-                    <div class="time-input-group">
-                        <label for="workTime">Work Duration (min)</label>
-                        <input type="number" id="workTime" value="25" min="1" class="form-control">
-                    </div>
-                    <div class="time-input-group">
-                        <label for="breakTime">Break Duration (min)</label>
-                        <input type="number" id="breakTime" value="5" min="1" class="form-control">
-                    </div>
-                </div>
-                <div class="timer-display">
-                    <h3 class="mb-3">Current Session</h3>
-                    <div id="time">25:00</div>
-                    <div class="progress-container">
-                        <div id="progress" class="progress" style="width: 0%"></div>
-                    </div>
-                    <div class="timer-controls">
-                        <button class="btn-timer btn-start" id="startBtn">
-                            <i class="fas fa-play me-2"></i>Start
-                        </button>
-                        <button class="btn-timer btn-reset" id="resetBtn">
-                            <i class="fas fa-redo me-2"></i>Reset
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </section>
+        <div class="floating-timer">
+          <button class="minimize-btn">
+              <i class="fas fa-minus"></i>
+          </button>
+          
+          <!-- Digital Clock -->
+          <div class="digital-clock">
+              <span class="hours">00</span>
+              <span class="colon">:</span>
+              <span class="minutes">00</span>
+              <span class="colon">:</span>
+              <span class="seconds">00</span>
+          </div>
+  
+          <!-- Timer Section -->
+          <section class="timer-section">
+              <h2>
+                  <i class="fas fa-clock me-2"></i>Pomodoro Timer
+              </h2>
+              <div class="timer-container">
+                  <div class="timer-settings">
+                      <div class="time-input-group">
+                          <label for="workTime">Work Duration (min)</label>
+                          <input type="number" id="workTime" value="25" min="1">
+                      </div>
+                      <div class="time-input-group">
+                          <label for="breakTime">Break Duration (min)</label>
+                          <input type="number" id="breakTime" value="5" min="1">
+                      </div>
+                  </div>
+                  <div class="timer-display">
+                      <h2>Current Session</h2>
+                      <div id="time">25:00</div>
+                      <div class="progress-container">
+                          <div id="progress" class="progress" style="width: 0%"></div>
+                      </div>
+                      <div class="timer-controls">
+                          <button class="btn-timer btn-start" id="startBtn">
+                              <i class="fas fa-play"></i>Start
+                          </button>
+                          <button class="btn-timer btn-reset" id="resetBtn">
+                              <i class="fas fa-redo"></i>Reset
+                          </button>
+                      </div>
+                  </div>
+              </div>
+          </section>
+      </div>
 
         <!-- Task Management Section -->
         <section class="task-section">
