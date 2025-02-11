@@ -556,3 +556,184 @@
     font-size: 1.8rem;
   }
 }
+
+
+
+/* Task Section Styling */
+.task-section {
+  background: var(--card-bg);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 2rem;
+  margin: 2rem 0;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.task-section:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 32px -3px rgba(0, 0, 0, 0.15);
+}
+
+/* Task Header */
+.task-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 2rem;
+}
+
+.task-header h2 {
+  font-size: 1.5rem;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.task-header h2 i {
+  color: var(--primary-color);
+  font-size: 1.25rem;
+}
+
+/* Date Picker Container */
+.task-header .d-flex {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Date Label */
+.task-header label {
+  color: var(--text-light);
+  font-weight: 500;
+  margin: 0;
+}
+
+/* Date Input Styling */
+.date-picker {
+  border-radius: var(--radius);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.9);
+  transition: all 0.2s ease;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: var(--text-color);
+  min-width: 160px;
+}
+
+.date-picker:focus {
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  border-color: var(--primary-color);
+  background: white;
+  outline: none;
+}
+
+.date-picker:hover {
+  border-color: var(--primary-color);
+}
+
+/* Date Picker Calendar Icon */
+.date-picker::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+}
+
+.date-picker::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+/* Glassmorphism effect for the section */
+.task-section {
+  position: relative;
+  overflow: hidden;
+}
+
+.task-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  z-index: -1;
+  border-radius: var(--radius);
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .task-section {
+    padding: 1.5rem;
+    margin: 1rem 0;
+  }
+
+  .task-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .task-header .d-flex {
+    width: 100%;
+  }
+
+  .date-picker {
+    flex: 1;
+    min-width: unset;
+  }
+
+  .task-header h2 {
+    font-size: 1.25rem;
+  }
+}
+
+/* Decorative shapes */
+.task-section .bg-shape {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.1;
+  z-index: -1;
+}
+
+.task-section .shape-1 {
+  width: 200px;
+  height: 200px;
+  background: var(--primary-color);
+  top: -100px;
+  right: -100px;
+}
+
+.task-section .shape-2 {
+  width: 300px;
+  height: 300px;
+  background: var(--secondary-color);
+  bottom: -150px;
+  left: -150px;
+}
+
+/* Animation for section load */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.task-section {
+  animation: fadeInUp 0.5s ease-out forwards;
+}
