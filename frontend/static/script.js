@@ -45,7 +45,7 @@ document.getElementById("registerForm")?.addEventListener("submit", async (e) =>
     const data = await submitForm(e, "/api/users/", { email, password });
     if (data) {
         // Redirect to email verification page
-        window.location.href = `/auth/verify-email?email=${encodeURIComponent(email)}`;
+        window.location.href = `/verify-email?email=${encodeURIComponent(email)}`;
     }
 });
 

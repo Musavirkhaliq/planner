@@ -64,13 +64,6 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = 
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
-@router.get("/verify-email", response_class=HTMLResponse)
-async def verify_email_page(request: Request, email: str):
-    return templates.TemplateResponse(
-        "verify_email.html",
-        {"request": request, "email": email}
-    )
-
 @router.post("/send-verification")
 async def send_verification(email: str, db: Session = Depends(get_db)):
     user = user_services.get_user_by_email(db, email=email)
@@ -106,7 +99,16 @@ async def verify_otp(
     db: Session = Depends(get_db)
 ):
     if user_services.verify_otp(db, email, otp):
-        return {"message": "Email verified successfully"}
+        # Create access token after successful verification
+        access_token = services.create_access_token(
+            data={"sub": email},
+            expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        )
+        return {
+            "message": "Email verified successfully",
+            "access_token": access_token,
+            "token_type": "bearer"
+        }
     raise HTTPException(status_code=400, detail="Invalid or expired OTP")
 
 @router.get('/login/google')

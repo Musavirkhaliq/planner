@@ -161,9 +161,8 @@
             e.preventDefault();
             const otp = document.getElementById('otp').value;
 
-            //Add loading class to the button
+            // Add loading class to the button
             e.target.querySelector('button[type="submit"]').classList.add('loading');
-
 
             const formData = new FormData();
             formData.append('email', email);
@@ -176,8 +175,11 @@
                 });
 
                 if (response.ok) {
-                    alert('Email verified successfully! You can now log in.');
-                    window.location.href = '/login';
+                    const data = await response.json();
+                    // Store the access token
+                    localStorage.setItem('access_token', data.access_token);
+                    // Redirect to dashboard
+                    window.location.href = '/dashboard';
                 } else {
                     const error = await response.json();
                     showError(error.detail || 'Invalid or expired verification code');
@@ -186,7 +188,7 @@
                 console.error('Error:', error);
                 showError('Failed to verify code');
             } finally {
-                //Remove loading class regardless of success/failure
+                // Remove loading class regardless of success/failure
                 e.target.querySelector('button[type="submit"]').classList.remove('loading');
             }
         });
