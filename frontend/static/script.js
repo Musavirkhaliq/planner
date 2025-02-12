@@ -181,14 +181,16 @@ document.addEventListener("DOMContentLoaded", async () => {
 // frontend/static/script.js
 
 document.addEventListener("DOMContentLoaded", () => {
-  initAuth();
-  initTimeSlotForm();
-  initBookingDatePicker();
-  // Initially load bookings for today
-  const today = new Date().toISOString().split("T")[0];
-  document.getElementById("bookingDate").value = today;
-  loadTimeSlotsByDate(today);
-  // fetchAnalytics(today, today);
+  if (document.querySelector('.hours')) {
+    initAuth();
+    initTimeSlotForm();
+    initBookingDatePicker();
+    // Initially load bookings for today
+    const today = new Date().toISOString().split("T")[0];
+    document.getElementById("bookingDate").value = today;
+    loadTimeSlotsByDate(today);
+    // fetchAnalytics(today, today);
+  }
 });
   
   // ---------- AUTH FUNCTIONS ----------
@@ -581,30 +583,33 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 // Update digital clock
-function updateDigitalClock() {
-  const now = new Date();
-  const hours = String(now.getHours()).padStart(2, '0');
-  const minutes = String(now.getMinutes()).padStart(2, '0');
-  const seconds = String(now.getSeconds()).padStart(2, '0');
+// check if the element exists
+if (document.querySelector('.hours')) {
+  function updateDigitalClock() {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
 
-  document.querySelector('.hours').textContent = hours;
-  document.querySelector('.minutes').textContent = minutes;
-  document.querySelector('.seconds').textContent = seconds;
+    document.querySelector('.hours').textContent = hours;
+    document.querySelector('.minutes').textContent = minutes;
+    document.querySelector('.seconds').textContent = seconds;
+  }
+
+  // Update clock every second
+  setInterval(updateDigitalClock, 1000);
+  updateDigitalClock(); // Initial update
+
+  // Minimize/Maximize functionality
+  const minimizeBtn = document.querySelector('.minimize-btn');
+  const timerSection = document.querySelector('.timer-section');
+
+  minimizeBtn.addEventListener('click', () => {
+    timerSection.style.display = timerSection.style.display === 'none' ? 'block' : 'none';
+    minimizeBtn.innerHTML = timerSection.style.display === 'none' ? 
+        '<i class="fas fa-plus"></i>' : '<i class="fas fa-minus"></i>';
+  });
 }
-
-// Update clock every second
-setInterval(updateDigitalClock, 1000);
-updateDigitalClock(); // Initial update
-
-// Minimize/Maximize functionality
-const minimizeBtn = document.querySelector('.minimize-btn');
-const timerSection = document.querySelector('.timer-section');
-
-minimizeBtn.addEventListener('click', () => {
-  timerSection.style.display = timerSection.style.display === 'none' ? 'block' : 'none';
-  minimizeBtn.innerHTML = timerSection.style.display === 'none' ? 
-      '<i class="fas fa-plus"></i>' : '<i class="fas fa-minus"></i>';
-});
 
 
 
@@ -619,8 +624,14 @@ document.addEventListener('DOMContentLoaded', function() {
  * Fetch overall analytics data from the backend.
  */
 function fetchOverallAnalytics() {
-  fetch('/analytics')
-    .then(response => {
+  const token = localStorage.getItem("access_token");
+  if (document.getElementById('overall-analytics')) {
+    fetch('/api/analytics', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+      .then(response => {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${ response.status }`);
       }
@@ -634,14 +645,21 @@ function fetchOverallAnalytics() {
       document.getElementById('overall-analytics').innerHTML =
         '<p style="color:red;">Unable to load analytics data.</p>';
     });
+  }
 }
 
 /**
  * Fetch daily analytics data from the backend.
  */
 function fetchDailyAnalytics() {
-  fetch('/analytics/daily')
-    .then(response => {
+  const token = localStorage.getItem("access_token");
+  if (document.getElementById('#daily-analytics')) {
+    fetch('/api/analytics/daily', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+      .then(response => {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -652,9 +670,10 @@ function fetchDailyAnalytics() {
     })
     .catch(error => {
       console.error('Error fetching daily analytics:', error);
-      document.getElementById('daily-analytics').innerHTML =
+      document.getElementById('#daily-analytics').innerHTML =
         '<p style="color:red;">Unable to load daily analytics data.</p>';
     });
+  }
 }
 
 /**

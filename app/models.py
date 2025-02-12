@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, DateTime, F
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from .database import Base
+from sqlalchemy import Date
 
 class User(Base):
     __tablename__ = "users"
@@ -13,6 +14,7 @@ class User(Base):
     tasks = relationship("Task", back_populates="owner")
     goals = relationship("Goal", back_populates="owner")
     time_slots = relationship("TimeSlot", back_populates="owner")
+    created_at = Column(DateTime, default=datetime.utcnow)
 
 class Task(Base):
     __tablename__ = "tasks"
@@ -23,6 +25,7 @@ class Task(Base):
     time_spent = Column(Float, default=0.0)  # Time spent in hours
     owner_id = Column(Integer, ForeignKey("users.id"))
     owner = relationship("User", back_populates="tasks")
+    created_at = Column(DateTime, default=datetime.utcnow)
 
 class Goal(Base):
     __tablename__ = "goals"
@@ -33,6 +36,7 @@ class Goal(Base):
     steps = relationship("GoalStep", back_populates="goal")
     owner_id = Column(Integer, ForeignKey("users.id"))
     owner = relationship("User", back_populates="goals")
+    created_at = Column(DateTime, default=datetime.utcnow)
 
 class GoalStep(Base):
     __tablename__ = "goal_steps"
@@ -41,15 +45,7 @@ class GoalStep(Base):
     completed = Column(Boolean, default=False)
     goal_id = Column(Integer, ForeignKey("goals.id"))
     goal = relationship("Goal", back_populates="steps")
-
-
-# app/models.py
-from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, DateTime, Float
-from sqlalchemy.orm import relationship
-from datetime import datetime
-from .database import Base
-
-from sqlalchemy import Date
+    created_at = Column(DateTime, default=datetime.utcnow)
 
 class TimeSlot(Base):
     __tablename__ = "time_slots"
@@ -63,7 +59,7 @@ class TimeSlot(Base):
 
     report_minutes = Column(Integer, default=0)
     status = Column(String, default="not_started", nullable=False)  # New field
-
+    created_at = Column(DateTime, default=datetime.utcnow)
 
 class EmailVerification(Base):
     __tablename__ = "email_verifications"
@@ -73,4 +69,5 @@ class EmailVerification(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     expires_at = Column(DateTime)
     is_used = Column(Boolean, default=False)
+    
 
