@@ -9,6 +9,7 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
     is_active = Column(Boolean, default=True)
+    is_email_verified = Column(Boolean, default=False)
     tasks = relationship("Task", back_populates="owner")
     goals = relationship("Goal", back_populates="owner")
     time_slots = relationship("TimeSlot", back_populates="owner")
@@ -62,4 +63,13 @@ class TimeSlot(Base):
 
     report_minutes = Column(Integer, default=0)
     done = Column(Boolean, default=False)
+
+class EmailVerification(Base):
+    __tablename__ = "email_verifications"
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String, index=True)
+    otp = Column(String)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    expires_at = Column(DateTime)
+    is_used = Column(Boolean, default=False)
 
