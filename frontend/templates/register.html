@@ -122,6 +122,18 @@
                 <input type="email" class="form-control" id="email" name="email" placeholder="Enter your email" required />
               </div>
               <div class="mb-4">
+                <label for="username" class="form-label">Username</label>
+                <input type="text" class="form-control" id="username" name="username" 
+                       placeholder="Choose a username" 
+                       pattern="^[a-zA-Z0-9_-]+$"
+                       minlength="3"
+                       maxlength="50"
+                       required />
+                <div class="form-text">
+                  Username must be 3-50 characters long and can only contain letters, numbers, underscores, and hyphens.
+                </div>
+              </div>
+              <div class="mb-4">
                 <label for="password" class="form-label">Password</label>
                 <input type="password" class="form-control" id="password" name="password" placeholder="Create a password" required />
                 <div class="password-requirements">

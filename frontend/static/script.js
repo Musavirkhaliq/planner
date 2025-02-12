@@ -41,8 +41,9 @@ document.getElementById("loginForm")?.addEventListener("submit", async (e) => {
 // Register Form Submission
 document.getElementById("registerForm")?.addEventListener("submit", async (e) => {
     const email = document.getElementById("email").value;
+    const username = document.getElementById("username").value;
     const password = document.getElementById("password").value;
-    const data = await submitForm(e, "/api/users/", { email, password });
+    const data = await submitForm(e, "/api/users/", { email, username, password });
     if (data) {
         // Redirect to email verification page
         window.location.href = `/verify-email?email=${encodeURIComponent(email)}`;
