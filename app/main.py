@@ -5,7 +5,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from . import models, database
 from .web_router import router as web_router
 from .api_router import router as api_router
-from .time_slots.router import router as time_slots_router
+
 
 from .config import settings
 
@@ -26,4 +26,5 @@ app.mount("/templates", StaticFiles(directory="frontend/templates"), name="templ
 # Include routers
 app.include_router(web_router)
 app.include_router(api_router)
-app.include_router(time_slots_router)
+
+

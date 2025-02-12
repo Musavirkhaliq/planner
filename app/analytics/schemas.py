@@ -1,33 +1,42 @@
 from pydantic import BaseModel
-from typing import Optional, List
-from datetime import datetime, date
+from datetime import date
+from typing import List, Optional
 
-class Analytics(BaseModel):
+class ProductivityAnalytics(BaseModel):
+    total_time_slots: int
+    completed_time_slots: int
+    time_slot_completion_rate: float  # completed time slots / total time slots
     total_tasks: int
     completed_tasks: int
-    total_time_spent: int
-    timeslot_analytics: List[dict]  # New field for timeslot analytics
+    task_completion_rate: float       # completed tasks / total tasks
+    total_time_spent: float           # in hours
+    average_time_slot_duration: float # in hours
+    average_task_completion_time: float  # in hours, for tasks linked to time slots
+    average_tasks_per_day: float
+    most_productive_day: Optional[date]
+    least_productive_day: Optional[date]
 
-class TimeSlotBase(BaseModel):
-    start_time: datetime
-    end_time: datetime
-    description: Optional[str] = None
-    report_minutes: Optional[int] = None
-    done: Optional[str] = "Not Started"
+class GoalProgressAnalytics(BaseModel):
+    total_goals: int
+    completed_goals: int
+    in_progress_goals: int
+    not_started_goals: int
+    completion_percentage: float      # as a percentage
 
-class TimeSlotCreate(TimeSlotBase):
-    pass
+class TimeSlotDistribution(BaseModel):
+    date: date
+    total_time_slots: int
+    completed_time_slots: int
 
-class TimeSlotUpdate(BaseModel):
-    start_time: Optional[datetime] = None
-    end_time: Optional[datetime] = None
-    description: Optional[str] = None
-    report_minutes: Optional[int] = None
-    done: Optional[str] = "Not Started"
+class AnalyticsResponse(BaseModel):
+    productivity: ProductivityAnalytics
+    goal_progress: GoalProgressAnalytics
+    time_slot_distribution: List[TimeSlotDistribution]
 
-class TimeSlot(TimeSlotBase):
-    id: int
-    owner_id: int
-
-    class Config:
-        from_attributes = True
+class DailyProductivityAnalytics(BaseModel):
+    date: date
+    total_time_slots: int
+    completed_time_slots: int
+    total_tasks: int
+    completed_tasks: int
+    total_time_spent: float  # in hours

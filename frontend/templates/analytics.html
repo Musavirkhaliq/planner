@@ -1,169 +1,215 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Analytics | Productivity Planner</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="UTF-8">
+  <title>Analytics Dashboard</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    /* Some basic styling if you don't already have one */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f7f7f7;
+    }
+    header {
+      background-color: #007BFF;
+      color: #fff;
+      padding: 1rem;
+      text-align: center;
+    }
+    main {
+      padding: 1rem;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    section {
+      background: #fff;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 0.5rem;
+    }
+    table, th, td {
+      border: 1px solid #ddd;
+    }
+    th, td {
+      padding: 0.5rem;
+      text-align: left;
+    }
+    h2 {
+      border-bottom: 2px solid #007BFF;
+      padding-bottom: 0.5rem;
+    }
+  </style>
 </head>
 <body>
-  <main class="container mt-5">
-    <h2 class="mb-4">Analytics</h2>
-
-    <div class="row mb-4">
-      <div class="col-md-3">
-        <label for="startDate">Start Date:</label>
-        <input type="date" id="startDate" class="form-control">
-      </div>
-      <div class="col-md-3">
-        <label for="endDate">End Date:</label>
-        <input type="date" id="endDate" class="form-control">
-      </div>
-      <div class="col-md-3">
-        <label>&nbsp;</label>
-        <button class="btn btn-primary w-100" onclick="fetchAnalytics()">Get Analytics</button>
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="col-md-6">
-        <canvas id="focusTimeChart"></canvas>
-      </div>
-      <div class="col-md-6">
-        <canvas id="productivityTrendsChart"></canvas>
-      </div>
-    </div>
-
-    <div class="row mt-4">
-      <div class="col-md-6">
-        <canvas id="utilizationChart"></canvas>
-      </div>
-      <div class="col-md-6">
-        <canvas id="completionRateChart"></canvas>
-      </div>
-    </div>
+  <header>
+    <h1>Analytics Dashboard</h1>
+  </header>
+  <main>
+    <section id="overall-analytics">
+      <h2>Overall Analytics</h2>
+      <div id="productivity-analytics"></div>
+      <div id="goal-progress-analytics"></div>
+      <div id="time-slot-distribution"></div>
+    </section>
+    <section id="daily-analytics">
+      <h2>Daily Productivity</h2>
+      <div id="daily-analytics-container"></div>
+    </section>
   </main>
-
   <script>
-    function fetchAnalytics() {
-        const startDate = document.getElementById("startDate").value;
-        const endDate = document.getElementById("endDate").value;
 
-        if (!startDate || !endDate) {
-            alert("Please select a date range.");
-            return;
-        }
+document.addEventListener('DOMContentLoaded', function() {
+  // Fetch overall analytics and daily analytics on page load.
+  fetchOverallAnalytics();
+  fetchDailyAnalytics();
+});
 
-        fetch(`/time_slots/analytics?start=${startDate}&end=${endDate}`)
-            .then(response => response.json())
-            .then(data => {
-                updateFocusTimeChart(data);
-                updateProductivityTrendsChart(data);
-                updateUtilizationChart(data);
-                updateCompletionRateChart(data);
-            })
-            .catch(error => console.error("Error fetching analytics:", error));
-    }
+/**
+ * Fetch overall analytics data from the backend.
+ */
+function fetchOverallAnalytics() {
+  fetch('/analytics')
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${ response.status }`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      renderOverallAnalytics(data);
+    })
+    .catch(error => {
+      console.error('Error fetching overall analytics:', error);
+      document.getElementById('overall-analytics').innerHTML =
+        '<p style="color:red;">Unable to load analytics data.</p>';
+    });
+}
 
-    function updateFocusTimeChart(data) {
-        const ctx = document.getElementById("focusTimeChart").getContext("2d");
-        const labels = data.timeslot_analytics.map(slot => slot.start_time);
-        const minutes = data.timeslot_analytics.map(slot => slot.minutes_focused);
+/**
+ * Fetch daily analytics data from the backend.
+ */
+function fetchDailyAnalytics() {
+  fetch('/analytics/daily')
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      renderDailyAnalytics(data);
+    })
+    .catch(error => {
+      console.error('Error fetching daily analytics:', error);
+      document.getElementById('daily-analytics').innerHTML =
+        '<p style="color:red;">Unable to load daily analytics data.</p>';
+    });
+}
 
-        new Chart(ctx, {
-            type: "line",
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: "Minutes Focused",
-                    data: minutes,
-                    backgroundColor: "rgba(255, 99, 132, 0.6)",
-                    borderColor: "rgba(255, 99, 132, 1)",
-                    borderWidth: 1,
-                    fill: false
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: { beginAtZero: true }
-                }
-            }
-        });
-    }
+/**
+ * Render the overall analytics data into the page.
+ */
+function renderOverallAnalytics(data) {
+  const productivity = data.productivity;
+  const goalProgress = data.goal_progress;
+  const timeSlotDistribution = data.time_slot_distribution;
 
-    function updateProductivityTrendsChart(data) {
-        const ctx = document.getElementById("productivityTrendsChart").getContext("2d");
-        const labels = data.productivity_trends.map(trend => trend.date);
-        const focusTime = data.productivity_trends.map(trend => trend.focus_time);
+  // Render Productivity Analytics
+  const productivityDiv = document.getElementById('productivity-analytics');
+  productivityDiv.innerHTML = `
+    <h3>Productivity Analytics</h3>
+    <ul>
+      <li><strong>Total Time Slots:</strong> ${ productivity.total_time_slots }</li>
+      <li><strong>Completed Time Slots:</strong> ${ productivity.completed_time_slots } 
+          (${ (productivity.time_slot_completion_rate * 100).toFixed(0) }% completion rate)</li>
+      <li><strong>Total Tasks:</strong> ${ productivity.total_tasks }</li>
+      <li><strong>Completed Tasks:</strong> ${ productivity.completed_tasks } 
+          (${ (productivity.task_completion_rate * 100).toFixed(0) }% completion rate)</li>
+      <li><strong>Total Time Spent:</strong> ${ productivity.total_time_spent } hours</li>
+      <li><strong>Average Time Slot Duration:</strong> ${ productivity.average_time_slot_duration } hours</li>
+      <li><strong>Average Task Completion Time:</strong> ${ productivity.average_task_completion_time } hours</li>
+      <li><strong>Average Tasks Per Day:</strong> ${ productivity.average_tasks_per_day }</li>
+      <li><strong>Most Productive Day:</strong> ${ productivity.most_productive_day || 'N/A' }</li>
+      <li><strong>Least Productive Day:</strong> ${ productivity.least_productive_day || 'N/A' }</li>
+    </ul>
+  `;
 
-        new Chart(ctx, {
-            type: "bar",
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: "Daily Focus Time",
-                    data: focusTime,
-                    backgroundColor: "rgba(54, 162, 235, 0.6)",
-                    borderColor: "rgba(54, 162, 235, 1)",
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: { beginAtZero: true }
-                }
-            }
-        });
-    }
+  // Render Goal Progress Analytics
+  const goalProgressDiv = document.getElementById('goal-progress-analytics');
+  goalProgressDiv.innerHTML = `
+    <h3>Goal Progress Analytics</h3>
+    <ul>
+      <li><strong>Total Goals:</strong> ${ goalProgress.total_goals }</li>
+      <li><strong>Completed Goals:</strong> ${ goalProgress.completed_goals }</li>
+      <li><strong>In Progress Goals:</strong> ${ goalProgress.in_progress_goals }</li>
+      <li><strong>Not Started Goals:</strong> ${ goalProgress.not_started_goals }</li>
+      <li><strong>Completion Percentage:</strong> ${ goalProgress.completion_percentage }%</li>
+    </ul>
+  `;
 
-    function updateUtilizationChart(data) {
-        const ctx = document.getElementById("utilizationChart").getContext("2d");
-        new Chart(ctx, {
-            type: "doughnut",
-            data: {
-                labels: ["Utilized", "Wasted"],
-                datasets: [{
-                    data: [data.time_slot_utilization, 100 - data.time_slot_utilization],
-                    backgroundColor: ["#28a745", "#dc3545"]
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: "Time Slot Utilization"
-                    }
-                }
-            }
-        });
-    }
+  // Render Time Slot Distribution as a table
+  const timeSlotDiv = document.getElementById('time-slot-distribution');
+  let distributionHTML = `<h3>Time Slot Distribution</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Total Time Slots</th>
+          <th>Completed Time Slots</th>
+        </tr>
+      </thead>
+      <tbody>`;
+  timeSlotDistribution.forEach(item => {
+    distributionHTML += `
+      <tr>
+        <td>${ item.date }</td>
+        <td>${ item.total_time_slots }</td>
+        <td>${ item.completed_time_slots }</td>
+      </tr>`;
+  });
+  distributionHTML += `</tbody></table>`;
+  timeSlotDiv.innerHTML = distributionHTML;
+}
 
-    function updateCompletionRateChart(data) {
-        const ctx = document.getElementById("completionRateChart").getContext("2d");
-        new Chart(ctx, {
-            type: "doughnut",
-            data: {
-                labels: ["Completed", "Incomplete"],
-                datasets: [{
-                    data: [data.task_completion_rate, 100 - data.task_completion_rate],
-                    backgroundColor: ["#007BFF", "#6c757d"]
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: "Task Completion Rate"
-                    }
-                }
-            }
-        });
-    }
+/**
+ * Render the daily analytics data into the page.
+ */
+function renderDailyAnalytics(data) {
+  const dailyDiv = document.getElementById('daily-analytics-container');
+  let dailyHTML = `<table>
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Total Time Slots</th>
+        <th>Completed Time Slots</th>
+        <th>Total Tasks</th>
+        <th>Completed Tasks</th>
+        <th>Total Time Spent (hours)</th>
+      </tr>
+    </thead>
+    <tbody>`;
+  data.forEach(day => {
+    dailyHTML += `
+      <tr>
+        <td>${ day.date }</td>
+        <td>${ day.total_time_slots }</td>
+        <td>${ day.completed_time_slots }</td>
+        <td>${ day.total_tasks }</td>
+        <td>${ day.completed_tasks }</td>
+        <td>${ day.total_time_spent }</td>
+      </tr>`;
+  });
+  dailyHTML += `</tbody></table>`;
+  dailyDiv.innerHTML = dailyHTML;
+}
   </script>
+
 </body>
 </html>
