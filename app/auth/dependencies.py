@@ -25,4 +25,16 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
     user = user_services.get_user_by_email(db, email=email)
     if user is None:
         raise credentials_exception
-    return user 
+    return user
+
+async def get_current_verified_user(
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    # Skip verification for Google OAuth users (they are pre-verified)
+    if not current_user.is_email_verified:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Email not verified. Please verify your email first."
+        )
+    return current_user 

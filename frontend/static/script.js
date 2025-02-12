@@ -10,7 +10,13 @@ async function submitForm(e, url, formData, isJson = true) {
             body: isJson ? JSON.stringify(formData) : new URLSearchParams(formData)
         });
         if (response.ok) {
-            return await response.json();
+             let result = await response.json();
+             if (result.message) {
+                if (result.message === "verify_email") {
+                    window.location.href = `/verify-email?email=${result.email}`;
+                }
+             }
+             return result;
         } else {
             const errorData = await response.json();
             alert(`Error: ${errorData.detail || "Unknown error"}`);
@@ -37,7 +43,10 @@ document.getElementById("registerForm")?.addEventListener("submit", async (e) =>
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
     const data = await submitForm(e, "/api/users/", { email, password });
-    if (data) window.location.href = "/login";
+    if (data) {
+        // Redirect to email verification page
+        window.location.href = `/auth/verify-email?email=${encodeURIComponent(email)}`;
+    }
 });
 
 // ---------- DASHBOARD FUNCTIONS -----------
