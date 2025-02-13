@@ -7,40 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="/static/style.css">
-    <style>
-        /* Basic Loader Styles */
-        .loader {
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid #3498db;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            animation: spin 1s linear infinite;
-            display: none; /* Hidden by default */
-            margin: 0 auto; /* Center horizontally */
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Add class to buttons when loading */
-        .loading .fa-paper-plane,
-        .loading .fa-redo,
-        .loading .fa-check-circle {
-            display: none; /* Hide the icon */
-        }
-
-        .loading .loader {
-            display: block; /* Show the loader */
-        }
-
-        .loading {
-            cursor: wait; /* Change cursor to 'wait' */
-            pointer-events: none; /* Disable button clicks */
-        }
-    </style>
+    
 </head>
 <body>
     <div class="container">
@@ -106,92 +73,6 @@
         </div>
     </div>
 
-    <script>
-        const email = "{{ email }}";
-        const sendOtpSection = document.getElementById('sendOtpSection');
-        const verifyOtpSection = document.getElementById('verifyOtpSection');
-        const sendOtpBtn = document.getElementById('sendOtpBtn');
-        const resendOtpBtn = document.getElementById('resendOtpBtn');
-        const verifyOtpForm = document.getElementById('verifyOtpForm');
-        const errorMessage = document.getElementById('errorMessage');
-
-        function showError(message) {
-            errorMessage.textContent = message;
-            errorMessage.classList.remove('d-none');
-            setTimeout(() => {
-                errorMessage.classList.add('d-none');
-            }, 5000);
-        }
-
-        async function sendVerificationEmail() {
-            // Add loading class to the button
-            this.classList.add('loading');
-
-
-            try {
-                const response = await fetch('/api/auth/send-verification?email=' + email, {
-                    method: 'POST'
-                });
-                
-                if (response.ok) {
-                    sendOtpSection.classList.add('d-none');
-                    verifyOtpSection.classList.remove('d-none');
-                } else {
-                    const error = await response.json();
-                    if (response.status === 429) {
-                        showError('Too many attempts. Please try again in an hour.');
-                    } else {
-                        showError(error.detail || 'Failed to send verification email');
-                    }
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                showError('Failed to send verification email');
-            } finally {
-                 // Remove loading class regardless of success/failure
-                this.classList.remove('loading');
-            }
-        }
-
-
-        sendOtpBtn.addEventListener('click', sendVerificationEmail);
-        resendOtpBtn.addEventListener('click', sendVerificationEmail);
-
-        verifyOtpForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const otp = document.getElementById('otp').value;
-
-            // Add loading class to the button
-            e.target.querySelector('button[type="submit"]').classList.add('loading');
-
-            const formData = new FormData();
-            formData.append('email', email);
-            formData.append('otp', otp);
-
-            try {
-                const response = await fetch('/api/auth/verify-otp', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    // Store the access token
-                    localStorage.setItem('access_token', data.access_token);
-                    // Redirect to dashboard
-                    window.location.href = '/dashboard';
-                } else {
-                    const error = await response.json();
-                    showError(error.detail || 'Invalid or expired verification code');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                showError('Failed to verify code');
-            } finally {
-                // Remove loading class regardless of success/failure
-                e.target.querySelector('button[type="submit"]').classList.remove('loading');
-            }
-        });
-    </script>
+    <script src="static/script.js"> </script>
 </body>
 </html>

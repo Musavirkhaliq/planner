@@ -545,44 +545,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-
-// async function fetchAnalytics(startDate, endDate) {
-  // const token = localStorage.getItem("access_token");
-  // const response = await fetch(`/api/analytics/?start=${startDate}&end=${endDate}`, {
-  //     headers: { Authorization: `Bearer ${token}` },
-  // });
-  // if (response.ok) {
-//       const analytics = await response.json();
-//       updateAnalyticsChart(analytics);
-//   } else {
-//       alert("Failed to fetch analytics");
-//   }
-// }
-
-// function updateAnalyticsChart(analytics) {
-//   const chartCanvas = document.getElementById("productivityChart");
-//   if (chartCanvas) {
-//       new Chart(chartCanvas, {
-//           type: 'bar',
-//           data: {
-//               labels: ['Total Tasks', 'Completed Tasks', 'Time Spent (hrs)', 'Total Time Slots', 'Completed Time Slots'],
-//               datasets: [{
-//                   label: 'Productivity Analytics',
-//                   data: [
-//                       analytics.total_tasks,
-//                       analytics.completed_tasks,
-//                       analytics.total_time_spent,
-//                       analytics.total_time_slots,
-//                       analytics.completed_time_slots
-//                   ],
-//                   backgroundColor: ['#007BFF', '#28a745', '#ffc107', '#17a2b8', '#6c757d']
-//               }]
-//           }
-//       });
-//   }
-// }
-
-
 // Update digital clock
 // check if the element exists
 if (document.querySelector('.hours')) {
@@ -615,206 +577,360 @@ if (document.querySelector('.hours')) {
 
 
 
-// document.addEventListener('DOMContentLoaded', function() {
-//   // Fetch overall analytics and daily analytics on page load.
-//   fetchOverallAnalytics();
-//   fetchDailyAnalytics();
-// });
+// for analytics
 
-// /**
-//  * Fetch overall analytics data from the backend.
-//  */
-// function fetchOverallAnalytics() {
-//   fetch('/analytics')
-//     .then(response => {
-//       if (!response.ok) {
-//         throw new Error(`HTTP error! status: ${ response.status }`);
-//       }
-//       return response.json();
-//     })
-//     .then(data => {
-//       renderOverallAnalytics(data);
-//     })
-//     .catch(error => {
-//       console.error('Error fetching overall analytics:', error);
-//       document.getElementById('overall-analytics').innerHTML =
-//         '<p style="color:red;">Unable to load analytics data.</p>';
-//     });
-// }
 
-// /**
-//  * Fetch daily analytics data from the backend.
-//  */
-// function fetchDailyAnalytics() {
-//   fetch('/analytics/daily')
-//     .then(response => {
-//       if (!response.ok) {
-//         throw new Error(`HTTP error! status: ${response.status}`);
-//       }
-//       return response.json();
-//     })
-//     .then(data => {
-//       renderDailyAnalytics(data);
-//     })
-//     .catch(error => {
-//       console.error('Error fetching daily analytics:', error);
-//       document.getElementById('daily-analytics').innerHTML =
-//         '<p style="color:red;">Unable to load daily analytics data.</p>';
-//     });
-// }
 
-// /**
-//  * Render the overall analytics data into the page.
-//  */
-// function renderOverallAnalytics(data) {
-//   const productivity = data.productivity;
-//   const goalProgress = data.goal_progress;
-//   const timeSlotDistribution = data.time_slot_distribution;
+let completionTrendChart = null;
+let timeDistributionChart = null;
+let statusDistributionChart = null;
 
-//   // Render Productivity Analytics
-//   const productivityDiv = document.getElementById('productivity-analytics');
-//   productivityDiv.innerHTML = `
-//     <h3>Productivity Analytics</h3>
-//     <ul>
-//       <li><strong>Total Time Slots:</strong> ${ productivity.total_time_slots }</li>
-//       <li><strong>Completed Time Slots:</strong> ${ productivity.completed_time_slots } 
-//           (${ (productivity.time_slot_completion_rate * 100).toFixed(0) }% completion rate)</li>
-//       <li><strong>Total Tasks:</strong> ${ productivity.total_tasks }</li>
-//       <li><strong>Completed Tasks:</strong> ${ productivity.completed_tasks } 
-//           (${ (productivity.task_completion_rate * 100).toFixed(0) }% completion rate)</li>
-//       <li><strong>Total Time Spent:</strong> ${ productivity.total_time_spent } hours</li>
-//       <li><strong>Average Time Slot Duration:</strong> ${ productivity.average_time_slot_duration } hours</li>
-//       <li><strong>Average Task Completion Time:</strong> ${ productivity.average_task_completion_time } hours</li>
-//       <li><strong>Average Tasks Per Day:</strong> ${ productivity.average_tasks_per_day }</li>
-//       <li><strong>Most Productive Day:</strong> ${ productivity.most_productive_day || 'N/A' }</li>
-//       <li><strong>Least Productive Day:</strong> ${ productivity.least_productive_day || 'N/A' }</li>
-//     </ul>
-//   `;
-
-//   // Render Goal Progress Analytics
-//   const goalProgressDiv = document.getElementById('goal-progress-analytics');
-//   goalProgressDiv.innerHTML = `
-//     <h3>Goal Progress Analytics</h3>
-//     <ul>
-//       <li><strong>Total Goals:</strong> ${ goalProgress.total_goals }</li>
-//       <li><strong>Completed Goals:</strong> ${ goalProgress.completed_goals }</li>
-//       <li><strong>In Progress Goals:</strong> ${ goalProgress.in_progress_goals }</li>
-//       <li><strong>Not Started Goals:</strong> ${ goalProgress.not_started_goals }</li>
-//       <li><strong>Completion Percentage:</strong> ${ goalProgress.completion_percentage }%</li>
-//     </ul>
-//   `;
-
-//   // Render Time Slot Distribution as a table
-//   const timeSlotDiv = document.getElementById('time-slot-distribution');
-//   let distributionHTML = `<h3>Time Slot Distribution</h3>
-//     <table>
-//       <thead>
-//         <tr>
-//           <th>Date</th>
-//           <th>Total Time Slots</th>
-//           <th>Completed Time Slots</th>
-//         </tr>
-//       </thead>
-//       <tbody>`;
-//   timeSlotDistribution.forEach(item => {
-//     distributionHTML += `
-//       <tr>
-//         <td>${ item.date }</td>
-//         <td>${ item.total_time_slots }</td>
-//         <td>${ item.completed_time_slots }</td>
-//       </tr>`;
-//   });
-//   distributionHTML += `</tbody></table>`;
-//   timeSlotDiv.innerHTML = distributionHTML;
-// }
-
-// /**
-//  * Render the daily analytics data into the page.
-//  */
-// function renderDailyAnalytics(data) {
-//   const dailyDiv = document.getElementById('daily-analytics-container');
-//   let dailyHTML = `<table>
-//     <thead>
-//       <tr>
-//         <th>Date</th>
-//         <th>Total Time Slots</th>
-//         <th>Completed Time Slots</th>
-//         <th>Total Tasks</th>
-//         <th>Completed Tasks</th>
-//         <th>Total Time Spent (hours)</th>
-//       </tr>
-//     </thead>
-//     <tbody>`;
-//   data.forEach(day => {
-//     dailyHTML += `
-//       <tr>
-//         <td>${ day.date }</td>
-//         <td>${ day.total_time_slots }</td>
-//         <td>${ day.completed_time_slots }</td>
-//         <td>${ day.total_tasks }</td>
-//         <td>${ day.completed_tasks }</td>
-//         <td>${ day.total_time_spent }</td>
-//       </tr>`;
-//   });
-//   dailyHTML += `</tbody></table>`;
-//   dailyDiv.innerHTML = dailyHTML;
-// }
-
-/**
- * Fetch overall analytics data from the backend.
- */
-function fetchOverallAnalytics() {
+// Fetch overview analytics data
+async function fetchOverviewAnalytics() {
   const token = localStorage.getItem("access_token");
-  if (document.getElementById('overall-analytics')) {
-    fetch('/api/analytics', {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    })
-      .then(response => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${ response.status }`);
-      }
-      return response.json();
-    })
-    .then(data => {
-      renderOverallAnalytics(data);
-    })
-    .catch(error => {
-      console.error('Error fetching overall analytics:', error);
-      document.getElementById('overall-analytics').innerHTML =
-        '<p style="color:red;">Unable to load analytics data.</p>';
+  try {
+    const response = await fetch("/analytics/overview", {
+      headers: { Authorization: `Bearer ${token}` },
     });
+    if (!response.ok) {
+      throw new Error("Failed to fetch overview analytics data");
+    }
+    const data = await response.json();
+    document.getElementById("totalSlots").textContent = data.total_slots;
+    document.getElementById("completedSlots").textContent = data.completed_slots;
+    document.getElementById("inProgressSlots").textContent = data.in_progress_slots;
+    document.getElementById("notStartedSlots").textContent = data.not_started_slots;
+    document.getElementById("totalMinutes").textContent = data.total_minutes_reported;
+    document.getElementById("avgMinutes").textContent = Math.round(data.average_minutes_per_slot);
+    document.getElementById("completionRate").textContent = `${data.completion_rate}%`;
+
+    updateStatusDistributionChart(data);
+  } catch (error) {
+    console.error("Error fetching overview analytics:", error);
   }
 }
 
-/**
- * Fetch daily analytics data from the backend.
- */
-function fetchDailyAnalytics() {
+// Fetch today's analytics data
+async function fetchTodayAnalytics() {
   const token = localStorage.getItem("access_token");
-  if (document.getElementById('#daily-analytics')) {
-    fetch('/api/analytics/daily', {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    })
-      .then(response => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      return response.json();
-    })
-    .then(data => {
-      renderDailyAnalytics(data);
-    })
-    .catch(error => {
-      console.error('Error fetching daily analytics:', error);
-      document.getElementById('#daily-analytics').innerHTML =
-        '<p style="color:red;">Unable to load daily analytics data.</p>';
+  try {
+    const response = await fetch("/analytics/today", {
+      headers: { Authorization: `Bearer ${token}` },
     });
+    if (!response.ok) {
+      throw new Error("Failed to fetch today's analytics");
+    }
+    const data = await response.json();
+    document.getElementById("todayTotalSlots").textContent = data.total_slots;
+    document.getElementById("todayCompletedSlots").textContent = data.completed_slots;
+    document.getElementById("todayTotalMinutes").textContent = data.total_minutes;
+    document.getElementById("todayCompletionRate").textContent = `${data.completion_rate}%`;
+  } catch (error) {
+    console.error("Error fetching today's analytics:", error);
   }
 }
 
+// Update status distribution pie chart (Overview)
+function updateStatusDistributionChart(data) {
+  const ctx = document.getElementById("statusDistributionChart").getContext("2d");
+  const chartData = {
+    labels: ["Completed", "In Progress", "Not Started"],
+    datasets: [
+      {
+        data: [data.completed_slots, data.in_progress_slots, data.not_started_slots],
+        backgroundColor: [
+          "rgba(34, 197, 94, 0.7)", // green
+          "rgba(59, 130, 246, 0.7)", // blue
+          "rgba(239, 68, 68, 0.7)"   // red
+        ],
+        borderColor: [
+          "rgba(34, 197, 94, 1)",
+          "rgba(59, 130, 246, 1)",
+          "rgba(239, 68, 68, 1)"
+        ],
+        borderWidth: 1,
+      },
+    ],
+  };
 
+  if (statusDistributionChart) {
+    statusDistributionChart.destroy();
+  }
+  statusDistributionChart = new Chart(ctx, {
+    type: "pie",
+    data: chartData,
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: "top" },
+        title: { display: true, text: "Slot Status Distribution" },
+      },
+    },
+  });
+}
+
+// Fetch range analytics data and update additional analytics for the selected date range
+async function fetchRangeAnalytics() {
+  const startDate = document.getElementById("startDate").value;
+  const endDate = document.getElementById("endDate").value;
+  if (!startDate || !endDate) {
+    alert("Please select both start and end dates");
+    return;
+  }
+  const token = localStorage.getItem("access_token");
+  try {
+    const response = await fetch(
+      `/analytics/range?start_date=${startDate}&end_date=${endDate}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    if (!response.ok) {
+      throw new Error("Failed to fetch range analytics data");
+    }
+    const data = await response.json();
+    // Update range charts with daily analytics data
+    updateCompletionTrendChart(data.daily_analytics);
+    updateTimeDistributionChart(data.daily_analytics);
+    updateRangeSummary(data.daily_analytics);
+    updateRangeStatusChart(data.daily_analytics);
+  } catch (error) {
+    console.error("Error fetching range analytics:", error);
+  }
+}
+
+// Update completion trend chart
+function updateCompletionTrendChart(dailyData) {
+  const labels = dailyData.map((day) => moment(day.date).format("MMM D"));
+  const completionRates = dailyData.map((day) => day.completion_rate);
+  if (completionTrendChart) {
+    completionTrendChart.destroy();
+  }
+  completionTrendChart = new Chart(
+    document.getElementById("completionTrendChart"),
+    {
+      type: "line",
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: "Completion Rate (%)",
+            data: completionRates,
+            borderColor: "rgb(59, 130, 246)",
+            tension: 0.1,
+            fill: true,
+            backgroundColor: "rgba(59, 130, 246, 0.1)",
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: "top" },
+          title: { display: true, text: "Daily Completion Rate Trend" },
+        },
+        scales: {
+          y: { beginAtZero: true, max: 100 },
+        },
+      },
+    }
+  );
+}
+
+// Update time distribution bar chart
+function updateTimeDistributionChart(dailyData) {
+  const labels = dailyData.map((day) => moment(day.date).format("MMM D"));
+  const minutes = dailyData.map((day) => day.total_minutes);
+  if (timeDistributionChart) {
+    timeDistributionChart.destroy();
+  }
+  timeDistributionChart = new Chart(
+    document.getElementById("timeDistributionChart"),
+    {
+      type: "bar",
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: "Total Minutes",
+            data: minutes,
+            backgroundColor: "rgba(59, 130, 246, 0.5)",
+            borderColor: "rgb(59, 130, 246)",
+            borderWidth: 1,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: "top" },
+          title: { display: true, text: "Daily Time Distribution" },
+        },
+        scales: {
+          y: { beginAtZero: true },
+        },
+      },
+    }
+  );
+}
+
+// Update Range Analytics Summary cards
+function updateRangeSummary(dailyData) {
+  const totalSlots = dailyData.reduce((sum, day) => sum + (day.total_slots || 0), 0);
+  const completedSlots = dailyData.reduce((sum, day) => sum + (day.completed_slots || 0), 0);
+  const totalMinutes = dailyData.reduce((sum, day) => sum + (day.total_minutes || 0), 0);
+  const avgCompletionRate = dailyData.length > 0
+    ? dailyData.reduce((sum, day) => sum + (day.completion_rate || 0), 0) / dailyData.length
+    : 0;
+
+  document.getElementById("rangeTotalSlots").textContent = totalSlots;
+  document.getElementById("rangeCompletedSlots").textContent = completedSlots;
+  document.getElementById("rangeTotalMinutes").textContent = totalMinutes;
+  document.getElementById("rangeAvgCompletionRate").textContent = `${Math.round(avgCompletionRate)}%`;
+}
+
+// Update range status distribution doughnut chart
+function updateRangeStatusChart(dailyData) {
+  const completedSlots = dailyData.reduce((sum, day) => sum + (day.completed_slots || 0), 0);
+  const inProgressSlots = dailyData.reduce((sum, day) => sum + (day.in_progress_slots || 0), 0);
+  const notStartedSlots = dailyData.reduce((sum, day) => sum + (day.not_started_slots || 0), 0);
+
+  const ctx = document.getElementById("rangeStatusChart").getContext("2d");
+  const chartData = {
+    labels: ["Completed", "In Progress", "Not Started"],
+    datasets: [
+      {
+        data: [completedSlots, inProgressSlots, notStartedSlots],
+        backgroundColor: [
+          "rgba(34, 197, 94, 0.7)",
+          "rgba(59, 130, 246, 0.7)",
+          "rgba(239, 68, 68, 0.7)"
+        ],
+        borderColor: [
+          "rgba(34, 197, 94, 1)",
+          "rgba(59, 130, 246, 1)",
+          "rgba(239, 68, 68, 1)"
+        ],
+        borderWidth: 1,
+      }
+    ]
+  };
+  if (window.rangeStatusChart) {
+    window.rangeStatusChart.destroy();
+  }
+  window.rangeStatusChart = new Chart(ctx, {
+    type: "doughnut",
+    data: chartData,
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: "top" },
+        title: { display: true, text: "Range Slot Status Distribution" }
+      }
+    }
+  });
+}
+
+// Initialize page
+document.addEventListener("DOMContentLoaded", () => {
+  fetchOverviewAnalytics();
+  fetchTodayAnalytics();
+  
+  // Set default date range to last 7 days
+  const endDate = new Date();
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - 7);
+  document.getElementById("startDate").value = startDate.toISOString().split("T")[0];
+  document.getElementById("endDate").value = endDate.toISOString().split("T")[0];
+  fetchRangeAnalytics();
+});
+
+
+
+// verify email
+
+
+const email = "{{ email }}";
+const sendOtpSection = document.getElementById('sendOtpSection');
+const verifyOtpSection = document.getElementById('verifyOtpSection');
+const sendOtpBtn = document.getElementById('sendOtpBtn');
+const resendOtpBtn = document.getElementById('resendOtpBtn');
+const verifyOtpForm = document.getElementById('verifyOtpForm');
+const errorMessage = document.getElementById('errorMessage');
+
+function showError(message) {
+    errorMessage.textContent = message;
+    errorMessage.classList.remove('d-none');
+    setTimeout(() => {
+        errorMessage.classList.add('d-none');
+    }, 5000);
+}
+
+async function sendVerificationEmail() {
+    // Add loading class to the button
+    this.classList.add('loading');
+
+
+    try {
+        const response = await fetch('/api/auth/send-verification?email=' + email, {
+            method: 'POST'
+        });
+        
+        if (response.ok) {
+            sendOtpSection.classList.add('d-none');
+            verifyOtpSection.classList.remove('d-none');
+        } else {
+            const error = await response.json();
+            if (response.status === 429) {
+                showError('Too many attempts. Please try again in an hour.');
+            } else {
+                showError(error.detail || 'Failed to send verification email');
+            }
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showError('Failed to send verification email');
+    } finally {
+          // Remove loading class regardless of success/failure
+        this.classList.remove('loading');
+    }
+}
+
+
+sendOtpBtn.addEventListener('click', sendVerificationEmail);
+resendOtpBtn.addEventListener('click', sendVerificationEmail);
+
+verifyOtpForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const otp = document.getElementById('otp').value;
+
+    // Add loading class to the button
+    e.target.querySelector('button[type="submit"]').classList.add('loading');
+
+    const formData = new FormData();
+    formData.append('email', email);
+    formData.append('otp', otp);
+
+    try {
+        const response = await fetch('/api/auth/verify-otp', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            // Store the access token
+            localStorage.setItem('access_token', data.access_token);
+            // Redirect to dashboard
+            window.location.href = '/dashboard';
+        } else {
+            const error = await response.json();
+            showError(error.detail || 'Invalid or expired verification code');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showError('Failed to verify code');
+    } finally {
+        // Remove loading class regardless of success/failure
+        e.target.querySelector('button[type="submit"]').classList.remove('loading');
+    }
+});
 
