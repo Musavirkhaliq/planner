@@ -547,11 +547,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 // async function fetchAnalytics(startDate, endDate) {
-//   const token = localStorage.getItem("access_token");
-//   const response = await fetch(`/api/analytics/?start=${startDate}&end=${endDate}`, {
-//       headers: { Authorization: `Bearer ${token}` },
-//   });
-//   if (response.ok) {
+  // const token = localStorage.getItem("access_token");
+  // const response = await fetch(`/api/analytics/?start=${startDate}&end=${endDate}`, {
+  //     headers: { Authorization: `Bearer ${token}` },
+  // });
+  // if (response.ok) {
 //       const analytics = await response.json();
 //       updateAnalyticsChart(analytics);
 //   } else {
@@ -615,11 +615,150 @@ if (document.querySelector('.hours')) {
 
 
 
-document.addEventListener('DOMContentLoaded', function() {
-  // Fetch overall analytics and daily analytics on page load.
-  fetchOverallAnalytics();
-  fetchDailyAnalytics();
-});
+// document.addEventListener('DOMContentLoaded', function() {
+//   // Fetch overall analytics and daily analytics on page load.
+//   fetchOverallAnalytics();
+//   fetchDailyAnalytics();
+// });
+
+// /**
+//  * Fetch overall analytics data from the backend.
+//  */
+// function fetchOverallAnalytics() {
+//   fetch('/analytics')
+//     .then(response => {
+//       if (!response.ok) {
+//         throw new Error(`HTTP error! status: ${ response.status }`);
+//       }
+//       return response.json();
+//     })
+//     .then(data => {
+//       renderOverallAnalytics(data);
+//     })
+//     .catch(error => {
+//       console.error('Error fetching overall analytics:', error);
+//       document.getElementById('overall-analytics').innerHTML =
+//         '<p style="color:red;">Unable to load analytics data.</p>';
+//     });
+// }
+
+// /**
+//  * Fetch daily analytics data from the backend.
+//  */
+// function fetchDailyAnalytics() {
+//   fetch('/analytics/daily')
+//     .then(response => {
+//       if (!response.ok) {
+//         throw new Error(`HTTP error! status: ${response.status}`);
+//       }
+//       return response.json();
+//     })
+//     .then(data => {
+//       renderDailyAnalytics(data);
+//     })
+//     .catch(error => {
+//       console.error('Error fetching daily analytics:', error);
+//       document.getElementById('daily-analytics').innerHTML =
+//         '<p style="color:red;">Unable to load daily analytics data.</p>';
+//     });
+// }
+
+// /**
+//  * Render the overall analytics data into the page.
+//  */
+// function renderOverallAnalytics(data) {
+//   const productivity = data.productivity;
+//   const goalProgress = data.goal_progress;
+//   const timeSlotDistribution = data.time_slot_distribution;
+
+//   // Render Productivity Analytics
+//   const productivityDiv = document.getElementById('productivity-analytics');
+//   productivityDiv.innerHTML = `
+//     <h3>Productivity Analytics</h3>
+//     <ul>
+//       <li><strong>Total Time Slots:</strong> ${ productivity.total_time_slots }</li>
+//       <li><strong>Completed Time Slots:</strong> ${ productivity.completed_time_slots } 
+//           (${ (productivity.time_slot_completion_rate * 100).toFixed(0) }% completion rate)</li>
+//       <li><strong>Total Tasks:</strong> ${ productivity.total_tasks }</li>
+//       <li><strong>Completed Tasks:</strong> ${ productivity.completed_tasks } 
+//           (${ (productivity.task_completion_rate * 100).toFixed(0) }% completion rate)</li>
+//       <li><strong>Total Time Spent:</strong> ${ productivity.total_time_spent } hours</li>
+//       <li><strong>Average Time Slot Duration:</strong> ${ productivity.average_time_slot_duration } hours</li>
+//       <li><strong>Average Task Completion Time:</strong> ${ productivity.average_task_completion_time } hours</li>
+//       <li><strong>Average Tasks Per Day:</strong> ${ productivity.average_tasks_per_day }</li>
+//       <li><strong>Most Productive Day:</strong> ${ productivity.most_productive_day || 'N/A' }</li>
+//       <li><strong>Least Productive Day:</strong> ${ productivity.least_productive_day || 'N/A' }</li>
+//     </ul>
+//   `;
+
+//   // Render Goal Progress Analytics
+//   const goalProgressDiv = document.getElementById('goal-progress-analytics');
+//   goalProgressDiv.innerHTML = `
+//     <h3>Goal Progress Analytics</h3>
+//     <ul>
+//       <li><strong>Total Goals:</strong> ${ goalProgress.total_goals }</li>
+//       <li><strong>Completed Goals:</strong> ${ goalProgress.completed_goals }</li>
+//       <li><strong>In Progress Goals:</strong> ${ goalProgress.in_progress_goals }</li>
+//       <li><strong>Not Started Goals:</strong> ${ goalProgress.not_started_goals }</li>
+//       <li><strong>Completion Percentage:</strong> ${ goalProgress.completion_percentage }%</li>
+//     </ul>
+//   `;
+
+//   // Render Time Slot Distribution as a table
+//   const timeSlotDiv = document.getElementById('time-slot-distribution');
+//   let distributionHTML = `<h3>Time Slot Distribution</h3>
+//     <table>
+//       <thead>
+//         <tr>
+//           <th>Date</th>
+//           <th>Total Time Slots</th>
+//           <th>Completed Time Slots</th>
+//         </tr>
+//       </thead>
+//       <tbody>`;
+//   timeSlotDistribution.forEach(item => {
+//     distributionHTML += `
+//       <tr>
+//         <td>${ item.date }</td>
+//         <td>${ item.total_time_slots }</td>
+//         <td>${ item.completed_time_slots }</td>
+//       </tr>`;
+//   });
+//   distributionHTML += `</tbody></table>`;
+//   timeSlotDiv.innerHTML = distributionHTML;
+// }
+
+// /**
+//  * Render the daily analytics data into the page.
+//  */
+// function renderDailyAnalytics(data) {
+//   const dailyDiv = document.getElementById('daily-analytics-container');
+//   let dailyHTML = `<table>
+//     <thead>
+//       <tr>
+//         <th>Date</th>
+//         <th>Total Time Slots</th>
+//         <th>Completed Time Slots</th>
+//         <th>Total Tasks</th>
+//         <th>Completed Tasks</th>
+//         <th>Total Time Spent (hours)</th>
+//       </tr>
+//     </thead>
+//     <tbody>`;
+//   data.forEach(day => {
+//     dailyHTML += `
+//       <tr>
+//         <td>${ day.date }</td>
+//         <td>${ day.total_time_slots }</td>
+//         <td>${ day.completed_time_slots }</td>
+//         <td>${ day.total_tasks }</td>
+//         <td>${ day.completed_tasks }</td>
+//         <td>${ day.total_time_spent }</td>
+//       </tr>`;
+//   });
+//   dailyHTML += `</tbody></table>`;
+//   dailyDiv.innerHTML = dailyHTML;
+// }
 
 /**
  * Fetch overall analytics data from the backend.
@@ -677,99 +816,5 @@ function fetchDailyAnalytics() {
   }
 }
 
-/**
- * Render the overall analytics data into the page.
- */
-function renderOverallAnalytics(data) {
-  const productivity = data.productivity;
-  const goalProgress = data.goal_progress;
-  const timeSlotDistribution = data.time_slot_distribution;
 
-  // Render Productivity Analytics
-  const productivityDiv = document.getElementById('productivity-analytics');
-  productivityDiv.innerHTML = `
-    <h3>Productivity Analytics</h3>
-    <ul>
-      <li><strong>Total Time Slots:</strong> ${ productivity.total_time_slots }</li>
-      <li><strong>Completed Time Slots:</strong> ${ productivity.completed_time_slots } 
-          (${ (productivity.time_slot_completion_rate * 100).toFixed(0) }% completion rate)</li>
-      <li><strong>Total Tasks:</strong> ${ productivity.total_tasks }</li>
-      <li><strong>Completed Tasks:</strong> ${ productivity.completed_tasks } 
-          (${ (productivity.task_completion_rate * 100).toFixed(0) }% completion rate)</li>
-      <li><strong>Total Time Spent:</strong> ${ productivity.total_time_spent } hours</li>
-      <li><strong>Average Time Slot Duration:</strong> ${ productivity.average_time_slot_duration } hours</li>
-      <li><strong>Average Task Completion Time:</strong> ${ productivity.average_task_completion_time } hours</li>
-      <li><strong>Average Tasks Per Day:</strong> ${ productivity.average_tasks_per_day }</li>
-      <li><strong>Most Productive Day:</strong> ${ productivity.most_productive_day || 'N/A' }</li>
-      <li><strong>Least Productive Day:</strong> ${ productivity.least_productive_day || 'N/A' }</li>
-    </ul>
-  `;
 
-  // Render Goal Progress Analytics
-  const goalProgressDiv = document.getElementById('goal-progress-analytics');
-  goalProgressDiv.innerHTML = `
-    <h3>Goal Progress Analytics</h3>
-    <ul>
-      <li><strong>Total Goals:</strong> ${ goalProgress.total_goals }</li>
-      <li><strong>Completed Goals:</strong> ${ goalProgress.completed_goals }</li>
-      <li><strong>In Progress Goals:</strong> ${ goalProgress.in_progress_goals }</li>
-      <li><strong>Not Started Goals:</strong> ${ goalProgress.not_started_goals }</li>
-      <li><strong>Completion Percentage:</strong> ${ goalProgress.completion_percentage }%</li>
-    </ul>
-  `;
-
-  // Render Time Slot Distribution as a table
-  const timeSlotDiv = document.getElementById('time-slot-distribution');
-  let distributionHTML = `<h3>Time Slot Distribution</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Total Time Slots</th>
-          <th>Completed Time Slots</th>
-        </tr>
-      </thead>
-      <tbody>`;
-  timeSlotDistribution.forEach(item => {
-    distributionHTML += `
-      <tr>
-        <td>${ item.date }</td>
-        <td>${ item.total_time_slots }</td>
-        <td>${ item.completed_time_slots }</td>
-      </tr>`;
-  });
-  distributionHTML += `</tbody></table>`;
-  timeSlotDiv.innerHTML = distributionHTML;
-}
-
-/**
- * Render the daily analytics data into the page.
- */
-function renderDailyAnalytics(data) {
-  const dailyDiv = document.getElementById('daily-analytics-container');
-  let dailyHTML = `<table>
-    <thead>
-      <tr>
-        <th>Date</th>
-        <th>Total Time Slots</th>
-        <th>Completed Time Slots</th>
-        <th>Total Tasks</th>
-        <th>Completed Tasks</th>
-        <th>Total Time Spent (hours)</th>
-      </tr>
-    </thead>
-    <tbody>`;
-  data.forEach(day => {
-    dailyHTML += `
-      <tr>
-        <td>${ day.date }</td>
-        <td>${ day.total_time_slots }</td>
-        <td>${ day.completed_time_slots }</td>
-        <td>${ day.total_tasks }</td>
-        <td>${ day.completed_tasks }</td>
-        <td>${ day.total_time_spent }</td>
-      </tr>`;
-  });
-  dailyHTML += `</tbody></table>`;
-  dailyDiv.innerHTML = dailyHTML;
-}
