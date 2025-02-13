@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="static/style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-light fixed-top">
@@ -18,9 +17,24 @@
                 Planner Dashboard
             </a>
             <div class="ms-auto">
-                <button class="btn btn-outline-danger btn-sm rounded-pill px-4" id="logoutBtn">
-                    <i class="fas fa-sign-out-alt me-1"></i>Logout
-                </button>
+                <div class="dropdown">
+                    <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-user me-1"></i>
+                        <span id="username">User</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                        <li><a class="dropdown-item" href="/profile">
+                            <i class="fas fa-user-cog me-2"></i>Profile Settings
+                        </a></li>
+                        <li><a class="dropdown-item" href="/notifications">
+                            <i class="fas fa-bell me-2"></i>Notifications
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="#" id="logoutBtn">
+                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                        </a></li>
+                    </ul>
+                </div>
             </div>
         </div>
     </nav>

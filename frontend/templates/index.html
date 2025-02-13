@@ -12,84 +12,213 @@
   <!-- Custom CSS -->
   <link rel="stylesheet" href="static/style.css">
 
+  <style>
+    .content-wrapper {
+      display: none;
+    }
+    
+    .loading-spinner {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
 
+    .auth-buttons, .user-menu {
+      display: none;
+    }
+  </style>
+
+  <!-- Authentication Scripts -->
+  <script>
+    function isAuthenticated() {
+        return !!localStorage.getItem("access_token"); // Returns true if token exists
+    }
+
+    function handleLogout() {
+        localStorage.removeItem("access_token");
+        window.location.href = "/login";
+    }
+
+    // New function to handle Get Started button click
+    async function handleGetStarted(event) {
+        event.preventDefault();
+        const token = localStorage.getItem("access_token");
+        
+        if (!token) {
+            window.location.href = '/login';
+            return;
+        }
+        else {
+          window.location.href = '/dashboard';
+        }
+    }
+
+    async function updateNavigation() {
+        const token = localStorage.getItem("access_token");
+        const authButtons = document.getElementById('auth-buttons');
+        const userMenu = document.getElementById('user-menu');
+        
+        if (token) {
+            authButtons.style.display = 'none';
+            userMenu.style.display = 'block';
+            
+            try {
+                const response = await isAuthenticated();
+                if (response && response.ok) {
+                    const userData = await response.json();
+                    document.getElementById('username').textContent = userData.name || 'User';
+                }
+            } catch (error) {
+                console.error('Error fetching user info:', error);
+            }
+        } else {
+            authButtons.style.display = 'block';
+            userMenu.style.display = 'none';
+        }
+    }
+
+    async function checkAuth() {
+        try {
+            const token = localStorage.getItem("access_token");
+            if (token) {
+                const response = await isAuthenticated();
+                if (response && response.ok) {
+                    await updateNavigation();
+                    window.location.href = '/dashboard';
+                    return;
+                }
+            }
+            await updateNavigation();
+            document.getElementById('loading-spinner').style.display = 'none';
+            document.getElementById('content-wrapper').style.display = 'block';
+        } catch (error) {
+            await updateNavigation();
+            document.getElementById('loading-spinner').style.display = 'none';
+            document.getElementById('content-wrapper').style.display = 'block';
+        }
+    }
+
+    // Initialize all event listeners when page loads
+    document.addEventListener('DOMContentLoaded', () => {
+        checkAuth();
+        
+        // Add event listener to Get Started button
+        const getStartedBtn = document.getElementById('getStartedBtn');
+        if (getStartedBtn) {
+            getStartedBtn.addEventListener('click', handleGetStarted);
+        }
+    });
+  </script>
 </head>
 <body>
-
-  <!-- Navigation -->
-  <nav class="navbar navbar-expand-lg navbar-light fixed-top">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="/">
-        <i class="fas fa-chart-line me-2"></i>Productivity Planner
-      </a>
-      <div class="ms-auto">
-        <a href="/login" class="btn btn-outline-primary btn-sm">
-          <i class="fas fa-sign-in-alt me-1"></i>Log In
-        </a>
-        <a href="/register" class="btn btn-primary btn-sm ms-2">
-          <i class="fas fa-user-plus me-1"></i>Sign Up
-        </a>
-      </div>
+  <!-- Loading Spinner -->
+  <div id="loading-spinner" class="loading-spinner">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
     </div>
-  </nav>
+  </div>
 
-  <!-- Hero Section -->
-  <section class="hero-section">
-    <div class="container">
-      <h1 class="hero-title">Master Your Time</h1>
-      <p class="hero-subtitle">
-        Transform your productivity with our intelligent planning tools.
-        Stay organized, focused, and achieve more every day.
-      </p>
-      <div class="d-flex justify-content-center gap-3">
-        <a href="/dashboard" class="btn btn-primary">
-          <i class="fas fa-rocket me-2"></i>Get Started
+  <!-- Main Content Wrapper -->
+  <div id="content-wrapper" class="content-wrapper">
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="/">
+          <i class="fas fa-chart-line me-2"></i>Productivity Planner
         </a>
-        <a href="/features" class="btn btn-outline-primary">
-          <i class="fas fa-lightbulb me-2"></i>Explore Features
-        </a>
-      </div>
-    </div>
-  </section>
-
-  <!-- Features Section -->
-  <section class="py-5">
-    <div class="container">
-      <div class="row g-4">
-        <div class="col-md-4">
-          <div class="feature-card">
-            <i class="fas fa-stopwatch"></i>
-            <h3>Smart Time Tracking</h3>
-            <p>Monitor daily activities and gain insights into your productivity trends.</p>
-          </div>
+        <!-- Auth Buttons (shown when logged out) -->
+        <div id="auth-buttons" class="ms-auto auth-buttons">
+          <a href="/login" class="btn btn-outline-primary btn-sm">
+            <i class="fas fa-sign-in-alt me-1"></i>Log In
+          </a>
+          <a href="/register" class="btn btn-primary btn-sm ms-2">
+            <i class="fas fa-user-plus me-1"></i>Sign Up
+          </a>
         </div>
-        <div class="col-md-4">
-          <div class="feature-card">
-            <i class="fas fa-hourglass-start"></i>
-            <h3>Focus Timer</h3>
-            <p>Use the Pomodoro technique to stay focused and maximize efficiency.</p>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="feature-card">
-            <i class="fas fa-chart-line"></i>
-            <h3>Analytics Dashboard</h3>
-            <p>Visualize your progress and optimize your workflow with detailed analytics.</p>
+        <!-- User Menu (shown when logged in) -->
+        <div id="user-menu" class="ms-auto user-menu">
+          <div class="dropdown">
+            <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="fas fa-user me-1"></i>
+              <span id="username">User</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+              <li><a class="dropdown-item" href="/dashboard">
+                <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+              </a></li>
+              <li><a class="dropdown-item" href="/profile">
+                <i class="fas fa-user-cog me-2"></i>Profile
+              </a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="#" onclick="handleLogout()">
+                <i class="fas fa-sign-out-alt me-2"></i>Logout
+              </a></li>
+            </ul>
           </div>
         </div>
       </div>
-    </div>
-  </section>
+    </nav>
 
-  <!-- Footer -->
-  <footer class="footer">
-    <div class="container">
-      <p>&copy; 2025 Productivity Planner. All rights reserved.</p>
-    </div>
-  </footer>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <div class="container">
+        <h1 class="hero-title">Master Your Time</h1>
+        <p class="hero-subtitle">
+          Transform your productivity with our intelligent planning tools.
+          Stay organized, focused, and achieve more every day.
+        </p>
+        <div class="d-flex justify-content-center gap-3">
+          <a href="/dashboard" class="btn btn-primary" id="getStartedBtn">
+            <i class="fas fa-rocket me-2"></i>Get Started
+          </a>
+          <a href="/features" class="btn btn-outline-primary">
+            <i class="fas fa-lightbulb me-2"></i>Explore Features
+          </a>
+        </div>
+      </div>
+    </section>
+    
+
+    <!-- Features Section -->
+    <section class="py-5">
+      <div class="container">
+        <div class="row g-4">
+          <div class="col-md-4">
+            <div class="feature-card">
+              <i class="fas fa-stopwatch"></i>
+              <h3>Smart Time Tracking</h3>
+              <p>Monitor daily activities and gain insights into your productivity trends.</p>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="feature-card">
+              <i class="fas fa-hourglass-start"></i>
+              <h3>Focus Timer</h3>
+              <p>Use the Pomodoro technique to stay focused and maximize efficiency.</p>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="feature-card">
+              <i class="fas fa-chart-line"></i>
+              <h3>Analytics Dashboard</h3>
+              <p>Visualize your progress and optimize your workflow with detailed analytics.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="container">
+        <p>&copy; 2025 Productivity Planner. All rights reserved.</p>
+      </div>
+    </footer>
+  </div>
 
   <!-- Bootstrap Bundle JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
 </body>
 </html>

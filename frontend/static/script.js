@@ -401,111 +401,205 @@ let workTime = 25 * 60; // default work time in seconds
 let breakTime = 5 * 60; // default break time in seconds
 let timerInterval;
 let isWorking = true;
+let lastTimestamp;
+let ws;
 
-/**
- * Reads the user-specified times from input fields (in minutes)
- * and updates the global workTime and breakTime values (in seconds).
- */
+// WebSocket setup
+function initializeWebSocket() {
+  ws = new WebSocket('wss://your-websocket-server.com'); //  WebSocket server
+
+  ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    syncTimerState(data);
+  };
+
+  ws.onclose = () => {
+    // Attempt to reconnect
+    setTimeout(initializeWebSocket, 1000);
+  };
+}
+
+// Timer state management
+function saveTimerState(remainingTime, isWorking, isActive) {
+  const state = {
+    remainingTime,
+    isWorking,
+    isActive,
+    timestamp: Date.now()
+  };
+  localStorage.setItem('pomodoroState', JSON.stringify(state));
+  
+  // Broadcast state to other clients if WebSocket is connected
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify(state));
+  }
+}
+
+function loadTimerState() {
+  const savedState = localStorage.getItem('pomodoroState');
+  if (savedState) {
+    const state = JSON.parse(savedState);
+    const elapsedTime = Math.floor((Date.now() - state.timestamp) / 1000);
+    
+    // Adjust remaining time based on elapsed time since last save
+    if (state.isActive) {
+      state.remainingTime = Math.max(0, state.remainingTime - elapsedTime);
+    }
+    
+    return state;
+  }
+  return null;
+}
+
+function syncTimerState(state) {
+  isWorking = state.isWorking;
+  if (state.isActive) {
+    const display = document.querySelector("#time");
+    const progressBar = document.querySelector("#progress");
+    if (display && progressBar) {
+      startTimer(state.remainingTime, display, progressBar);
+    }
+  }
+}
+
 function updateTimerDurationsFromInputs() {
   const workInput = document.getElementById("workTime");
   const breakInput = document.getElementById("breakTime");
 
-  // Parse the input values (if provided) or use defaults.
   const workMinutes = workInput && workInput.value ? parseInt(workInput.value, 10) : 25;
   const breakMinutes = breakInput && breakInput.value ? parseInt(breakInput.value, 10) : 5;
 
   workTime = workMinutes * 60;
   breakTime = breakMinutes * 60;
+  
+  // Save new durations to localStorage
+  localStorage.setItem('pomodoroSettings', JSON.stringify({ workTime, breakTime }));
 }
 
-/**
- * Starts the Pomodoro timer for a given session.
- * @param {number} duration - Duration of the current session in seconds.
- * @param {HTMLElement} display - Element to display the remaining time.
- * @param {HTMLElement} progressBar - Element to show progress.
- */
+function loadSettings() {
+  const savedSettings = localStorage.getItem('pomodoroSettings');
+  if (savedSettings) {
+    const settings = JSON.parse(savedSettings);
+    workTime = settings.workTime;
+    breakTime = settings.breakTime;
+    
+    // Update input fields
+    const workInput = document.getElementById("workTime");
+    const breakInput = document.getElementById("breakTime");
+    if (workInput) workInput.value = Math.floor(workTime / 60);
+    if (breakInput) breakInput.value = Math.floor(breakTime / 60);
+  }
+}
+
 function startTimer(duration, display, progressBar) {
   let remainingTime = duration;
   clearInterval(timerInterval);
 
-  timerInterval = setInterval(() => {
-    // Format minutes and seconds for display.
+  const updateDisplay = () => {
     const minutes = Math.floor(remainingTime / 60);
     const seconds = remainingTime % 60;
     display.textContent = `${minutes < 10 ? "0" + minutes : minutes}:${seconds < 10 ? "0" + seconds : seconds}`;
 
-    // Update progress bar based on elapsed time.
     const progress = ((duration - remainingTime) / duration) * 100;
     progressBar.style.width = `${progress}%`;
+    
+    // Save state every second
+    saveTimerState(remainingTime, isWorking, true);
+  };
 
-    // When the timer runs out, switch modes and restart.
+  updateDisplay();
+  timerInterval = setInterval(() => {
     if (remainingTime <= 0) {
       clearInterval(timerInterval);
       isWorking = !isWorking;
-      // Set the new session duration based on the mode.
       remainingTime = isWorking ? workTime : breakTime;
       alert(isWorking ? "Time to work!" : "Time for a break!");
-      // Start the next session.
       startTimer(remainingTime, display, progressBar);
+    } else {
+      remainingTime--;
+      updateDisplay();
     }
-    remainingTime--;
   }, 1000);
 }
 
-/**
- * Resets the Pomodoro timer display and progress.
- * Also updates the work and break durations from user inputs.
- * @param {HTMLElement} display - Timer display element.
- * @param {HTMLElement} progressBar - Progress bar element.
- */
 function resetTimer(display, progressBar) {
   clearInterval(timerInterval);
   isWorking = true;
   updateTimerDurationsFromInputs();
-  // Reset display to the new work time.
+  
   const minutes = Math.floor(workTime / 60);
   const seconds = workTime % 60;
   display.textContent = `${minutes < 10 ? "0" + minutes : minutes}:${seconds < 10 ? "0" + seconds : seconds}`;
   progressBar.style.width = "0%";
+  
+  // Clear saved state
+  localStorage.removeItem('pomodoroState');
+  // Broadcast reset to other clients
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: 'reset' }));
+  }
 }
+
+// Handle visibility change
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) {
+    // Reload and sync state when tab becomes visible
+    const state = loadTimerState();
+    if (state) {
+      syncTimerState(state);
+    }
+  }
+});
 
 // --------------------------
 // INITIALIZATION
 // --------------------------
 document.addEventListener("DOMContentLoaded", () => {
-  // Get references to DOM elements.
   const display = document.querySelector("#time");
   const progressBar = document.querySelector("#progress");
   const startBtn = document.getElementById("startBtn");
   const resetBtn = document.getElementById("resetBtn");
 
-  // If user inputs exist, update durations immediately.
-  updateTimerDurationsFromInputs();
+  // Initialize WebSocket connection
+  initializeWebSocket();
   
-  // Display the initial work time.
-  const minutes = Math.floor(workTime / 60);
-  const seconds = workTime % 60;
-  if (display) {
-    display.textContent = `${minutes < 10 ? "0" + minutes : minutes}:${seconds < 10 ? "0" + seconds : seconds}`;
+  // Load saved settings
+  loadSettings();
+  
+  // Load and apply saved timer state
+  const savedState = loadTimerState();
+  if (savedState) {
+    isWorking = savedState.isWorking;
+    if (savedState.isActive && savedState.remainingTime > 0) {
+      startTimer(savedState.remainingTime, display, progressBar);
+    } else {
+      const currentTime = isWorking ? workTime : breakTime;
+      const minutes = Math.floor(currentTime / 60);
+      const seconds = currentTime % 60;
+      display.textContent = `${minutes < 10 ? "0" + minutes : minutes}:${seconds < 10 ? "0" + seconds : seconds}`;
+    }
+  } else {
+    updateTimerDurationsFromInputs();
+    const minutes = Math.floor(workTime / 60);
+    const seconds = workTime % 60;
+    if (display) {
+      display.textContent = `${minutes < 10 ? "0" + minutes : minutes}:${seconds < 10 ? "0" + seconds : seconds}`;
+    }
   }
 
-  // Start button: update times from inputs and start the timer.
   if (startBtn && display && progressBar) {
     startBtn.addEventListener("click", () => {
       updateTimerDurationsFromInputs();
-      // Start with workTime if beginning a new session.
       startTimer(workTime, display, progressBar);
     });
   }
 
-  // Reset button: clear the timer and update the display.
   if (resetBtn && display && progressBar) {
     resetBtn.addEventListener("click", () => {
       resetTimer(display, progressBar);
     });
   }
 });
-
 
 async function loadTimeSlotsByDate(date) {
   const token = localStorage.getItem("access_token");
