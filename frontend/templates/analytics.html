@@ -1,215 +1,542 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Analytics Dashboard</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Detailed Time Slot Analytics</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
   <style>
-    /* Some basic styling if you don't already have one */
+    /* Base Styles & Colors */
+    :root {
+      --primary-blue: #3b82f6;
+      --primary-hover: #2563eb;
+      --success-green: #22c55e;
+      --danger-red: #ef4444;
+      --background-gray: #f3f4f6;
+      --border-color: #e5e7eb;
+      --text-primary: #111827;
+      --text-secondary: #6b7280;
+    }
+    
     body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background: #f7f7f7;
+      background-color: var(--background-gray);
+      color: var(--text-primary);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.5;
     }
-    header {
-      background-color: #007BFF;
-      color: #fff;
-      padding: 1rem;
-      text-align: center;
-    }
-    main {
-      padding: 1rem;
-      max-width: 1000px;
+    
+    .container {
+      max-width: 1280px;
       margin: 0 auto;
     }
-    section {
-      background: #fff;
-      padding: 1rem;
-      margin-bottom: 1rem;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    
+    .bg-white {
+      background-color: white;
+      border-radius: 0.75rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+      transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+      animation: fadeIn 0.3s ease-out;
     }
-    table {
+    
+    .bg-white:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+    }
+    
+    .text-2xl {
+      font-size: 1.5rem;
+      line-height: 2rem;
+    }
+    
+    .text-lg {
+      font-size: 1.125rem;
+      line-height: 1.75rem;
+    }
+    
+    .font-bold {
+      font-weight: 700;
+    }
+    
+    .font-semibold {
+      font-weight: 600;
+    }
+    
+    .text-gray-600 {
+      color: var(--text-secondary);
+    }
+    
+    .text-green-600 {
+      color: var(--success-green);
+    }
+    
+    .grid {
+      display: grid;
+      gap: 1rem;
+    }
+    
+    .grid-cols-1 {
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
+    
+    @media (min-width: 768px) {
+      .md\:grid-cols-3 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+      .md\:grid-cols-2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+    
+    input[type="date"] {
+      padding: 0.5rem;
+      border: 1px solid var(--border-color);
+      border-radius: 0.375rem;
       width: 100%;
-      border-collapse: collapse;
+      min-width: 200px;
+      font-size: 0.875rem;
+      transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    
+    input[type="date"]:focus {
+      outline: none;
+      border-color: var(--primary-blue);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    
+    button {
+      background-color: var(--primary-blue);
+      color: white;
+      font-weight: 500;
+      padding: 0.5rem 1rem;
+      border-radius: 0.375rem;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+    }
+    
+    button:hover {
+      background-color: var(--primary-hover);
+      transform: translateY(-1px);
+    }
+    
+    button:active {
+      transform: translateY(0);
+    }
+    
+    canvas {
+      width: 100% !important;
+      height: 300px !important;
+      margin-top: 1rem;
+    }
+    
+    .px-4 {
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
+    
+    .py-8 {
+      padding-top: 2rem;
+      padding-bottom: 2rem;
+    }
+    
+    .p-4 {
+      padding: 1rem;
+    }
+    
+    .mb-2 {
+      margin-bottom: 0.5rem;
+    }
+    
+    .mb-4 {
+      margin-bottom: 1rem;
+    }
+    
+    .mb-8 {
+      margin-bottom: 2rem;
+    }
+    
+    .mt-1 {
+      margin-top: 0.25rem;
+    }
+    
+    .mt-2 {
       margin-top: 0.5rem;
     }
-    table, th, td {
-      border: 1px solid #ddd;
+    
+    .flex {
+      display: flex;
     }
-    th, td {
-      padding: 0.5rem;
-      text-align: left;
+    
+    .items-center {
+      align-items: center;
     }
-    h2 {
-      border-bottom: 2px solid #007BFF;
-      padding-bottom: 0.5rem;
+    
+    .items-end {
+      align-items: flex-end;
+    }
+    
+    .justify-center {
+      justify-content: center;
+    }
+    
+    .gap-2 {
+      gap: 0.5rem;
+    }
+    
+    .gap-4 {
+      gap: 1rem;
+    }
+    
+    .flex-wrap {
+      flex-wrap: wrap;
+    }
+    
+    .loading {
+      opacity: 0.7;
+      pointer-events: none;
+    }
+    
+    @media (max-width: 640px) {
+      .container {
+        padding: 1rem;
+      }
+      .grid {
+        gap: 1rem;
+      }
+      canvas {
+        height: 250px !important;
+      }
+    }
+    
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Analytics Dashboard</h1>
-  </header>
-  <main>
-    <section id="overall-analytics">
-      <h2>Overall Analytics</h2>
-      <div id="productivity-analytics"></div>
-      <div id="goal-progress-analytics"></div>
-      <div id="time-slot-distribution"></div>
-    </section>
-    <section id="daily-analytics">
-      <h2>Daily Productivity</h2>
-      <div id="daily-analytics-container"></div>
-    </section>
-  </main>
+  <div class="container mx-auto px-4 py-8">
+    <!-- Overview Analytics Section -->
+    <div class="mb-8">
+      <h2 class="text-2xl font-bold mb-4">Overview Analytics</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Time Slots Card with Detailed Status -->
+        <div class="bg-white p-4 rounded-lg shadow">
+          <h3 class="text-lg font-semibold mb-2">Time Slots</h3>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <p class="text-gray-600">Total</p>
+              <p class="text-2xl font-bold" id="totalSlots">-</p>
+            </div>
+            <div>
+              <p class="text-gray-600">Completed</p>
+              <p class="text-2xl font-bold text-green-600" id="completedSlots">-</p>
+            </div>
+            <div>
+              <p class="text-gray-600">In Progress</p>
+              <p class="text-2xl font-bold" id="inProgressSlots">-</p>
+            </div>
+            <div>
+              <p class="text-gray-600">Not Started</p>
+              <p class="text-2xl font-bold" id="notStartedSlots">-</p>
+            </div>
+          </div>
+        </div>
+        <!-- Time Tracking Card -->
+        <div class="bg-white p-4 rounded-lg shadow">
+          <h3 class="text-lg font-semibold mb-2">Time Tracking</h3>
+          <div>
+            <p class="text-gray-600">Total Minutes</p>
+            <p class="text-2xl font-bold" id="totalMinutes">-</p>
+            <p class="text-gray-600 mt-2">Average per Slot</p>
+            <p class="text-xl" id="avgMinutes">-</p>
+          </div>
+        </div>
+        <!-- Completion Rate Card -->
+        <div class="bg-white p-4 rounded-lg shadow">
+          <h3 class="text-lg font-semibold mb-2">Completion Rate</h3>
+          <div class="flex items-center justify-center h-24">
+            <p class="text-4xl font-bold" id="completionRate">-%</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Today's Analytics Section -->
+    <div class="mb-8">
+      <h2 class="text-2xl font-bold mb-4">Today's Analytics</h2>
+      <div class="bg-white p-4 rounded-lg shadow">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <p class="text-gray-600">Total Slots</p>
+            <p class="text-2xl font-bold" id="todayTotalSlots">-</p>
+          </div>
+          <div>
+            <p class="text-gray-600">Completed Slots</p>
+            <p class="text-2xl font-bold text-green-600" id="todayCompletedSlots">-</p>
+          </div>
+          <div>
+            <p class="text-gray-600">Total Minutes</p>
+            <p class="text-2xl font-bold" id="todayTotalMinutes">-</p>
+          </div>
+          <div>
+            <p class="text-gray-600">Completion Rate</p>
+            <p class="text-2xl font-bold" id="todayCompletionRate">-%</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slot Status Distribution Chart -->
+    <div class="mb-8">
+      <h2 class="text-2xl font-bold mb-4">Slot Status Distribution</h2>
+      <div class="bg-white p-4 rounded-lg shadow">
+        <canvas id="statusDistributionChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Date Range Selection for Detailed Analytics -->
+    <div class="mb-8 bg-white p-4 rounded-lg shadow">
+      <h3 class="text-lg font-semibold mb-4">Time Range Analysis</h3>
+      <div class="flex flex-wrap gap-4 mb-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Start Date</label>
+          <input type="date" id="startDate" class="mt-1 block rounded-md border-gray-300 shadow-sm" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">End Date</label>
+          <input type="date" id="endDate" class="mt-1 block rounded-md border-gray-300 shadow-sm" />
+        </div>
+        <div class="flex items-end">
+          <button onclick="fetchRangeAnalytics()" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+            Analyze Range
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div class="bg-white p-4 rounded-lg shadow">
+        <h3 class="text-lg font-semibold mb-4">Daily Completion Trend</h3>
+        <canvas id="completionTrendChart"></canvas>
+      </div>
+      <div class="bg-white p-4 rounded-lg shadow">
+        <h3 class="text-lg font-semibold mb-4">Time Distribution</h3>
+        <canvas id="timeDistributionChart"></canvas>
+      </div>
+    </div>
+  </div>
+
   <script>
+    let completionTrendChart = null;
+    let timeDistributionChart = null;
+    let statusDistributionChart = null;
 
-document.addEventListener('DOMContentLoaded', function() {
-  // Fetch overall analytics and daily analytics on page load.
-  fetchOverallAnalytics();
-  fetchDailyAnalytics();
-});
+    // Fetch overview analytics data
+    async function fetchOverviewAnalytics() {
+      const token = localStorage.getItem("access_token");
+      try {
+        const response = await fetch("/analytics/overview", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!response.ok) {
+          throw new Error("Failed to fetch overview analytics data");
+        }
+        const data = await response.json();
+        document.getElementById("totalSlots").textContent = data.total_slots;
+        document.getElementById("completedSlots").textContent = data.completed_slots;
+        document.getElementById("inProgressSlots").textContent = data.in_progress_slots;
+        document.getElementById("notStartedSlots").textContent = data.not_started_slots;
+        document.getElementById("totalMinutes").textContent = data.total_minutes_reported;
+        document.getElementById("avgMinutes").textContent = Math.round(data.average_minutes_per_slot);
+        document.getElementById("completionRate").textContent = `${data.completion_rate}%`;
 
-/**
- * Fetch overall analytics data from the backend.
- */
-function fetchOverallAnalytics() {
-  fetch('/analytics')
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${ response.status }`);
+        updateStatusDistributionChart(data);
+      } catch (error) {
+        console.error("Error fetching overview analytics:", error);
       }
-      return response.json();
-    })
-    .then(data => {
-      renderOverallAnalytics(data);
-    })
-    .catch(error => {
-      console.error('Error fetching overall analytics:', error);
-      document.getElementById('overall-analytics').innerHTML =
-        '<p style="color:red;">Unable to load analytics data.</p>';
-    });
-}
+    }
 
-/**
- * Fetch daily analytics data from the backend.
- */
-function fetchDailyAnalytics() {
-  fetch('/analytics/daily')
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+    // Fetch today's analytics data
+    async function fetchTodayAnalytics() {
+      const token = localStorage.getItem("access_token");
+      try {
+        const response = await fetch("/analytics/today", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!response.ok) {
+          throw new Error("Failed to fetch today's analytics");
+        }
+        const data = await response.json();
+        document.getElementById("todayTotalSlots").textContent = data.total_slots;
+        document.getElementById("todayCompletedSlots").textContent = data.completed_slots;
+        document.getElementById("todayTotalMinutes").textContent = data.total_minutes;
+        document.getElementById("todayCompletionRate").textContent = `${data.completion_rate}%`;
+      } catch (error) {
+        console.error("Error fetching today's analytics:", error);
       }
-      return response.json();
-    })
-    .then(data => {
-      renderDailyAnalytics(data);
-    })
-    .catch(error => {
-      console.error('Error fetching daily analytics:', error);
-      document.getElementById('daily-analytics').innerHTML =
-        '<p style="color:red;">Unable to load daily analytics data.</p>';
+    }
+
+    // Update status distribution pie chart
+    function updateStatusDistributionChart(data) {
+      const ctx = document.getElementById("statusDistributionChart").getContext("2d");
+      const chartData = {
+        labels: ["Completed", "In Progress", "Not Started"],
+        datasets: [
+          {
+            data: [data.completed_slots, data.in_progress_slots, data.not_started_slots],
+            backgroundColor: [
+              "rgba(34, 197, 94, 0.7)", // green
+              "rgba(59, 130, 246, 0.7)", // blue
+              "rgba(239, 68, 68, 0.7)"   // red
+            ],
+            borderColor: [
+              "rgba(34, 197, 94, 1)",
+              "rgba(59, 130, 246, 1)",
+              "rgba(239, 68, 68, 1)"
+            ],
+            borderWidth: 1,
+          },
+        ],
+      };
+
+      if (statusDistributionChart) {
+        statusDistributionChart.destroy();
+      }
+      statusDistributionChart = new Chart(ctx, {
+        type: "pie",
+        data: chartData,
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: "top" },
+            title: { display: true, text: "Slot Status Distribution" },
+          },
+        },
+      });
+    }
+
+    // Fetch range analytics data
+    async function fetchRangeAnalytics() {
+      const startDate = document.getElementById("startDate").value;
+      const endDate = document.getElementById("endDate").value;
+      if (!startDate || !endDate) {
+        alert("Please select both start and end dates");
+        return;
+      }
+      const token = localStorage.getItem("access_token");
+      try {
+        const response = await fetch(
+          `/analytics/range?start_date=${startDate}&end_date=${endDate}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch range analytics data");
+        }
+        const data = await response.json();
+        updateCompletionTrendChart(data.daily_analytics);
+        updateTimeDistributionChart(data.daily_analytics);
+      } catch (error) {
+        console.error("Error fetching range analytics:", error);
+      }
+    }
+
+    // Update completion trend chart
+    function updateCompletionTrendChart(dailyData) {
+      const labels = dailyData.map((day) => moment(day.date).format("MMM D"));
+      const completionRates = dailyData.map((day) => day.completion_rate);
+      if (completionTrendChart) {
+        completionTrendChart.destroy();
+      }
+      completionTrendChart = new Chart(
+        document.getElementById("completionTrendChart"),
+        {
+          type: "line",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: "Completion Rate (%)",
+                data: completionRates,
+                borderColor: "rgb(59, 130, 246)",
+                tension: 0.1,
+                fill: true,
+                backgroundColor: "rgba(59, 130, 246, 0.1)",
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { position: "top" },
+              title: { display: true, text: "Daily Completion Rate Trend" },
+            },
+            scales: {
+              y: { beginAtZero: true, max: 100 },
+            },
+          },
+        }
+      );
+    }
+
+    // Update time distribution bar chart
+    function updateTimeDistributionChart(dailyData) {
+      const labels = dailyData.map((day) => moment(day.date).format("MMM D"));
+      const minutes = dailyData.map((day) => day.total_minutes);
+      if (timeDistributionChart) {
+        timeDistributionChart.destroy();
+      }
+      timeDistributionChart = new Chart(
+        document.getElementById("timeDistributionChart"),
+        {
+          type: "bar",
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: "Total Minutes",
+                data: minutes,
+                backgroundColor: "rgba(59, 130, 246, 0.5)",
+                borderColor: "rgb(59, 130, 246)",
+                borderWidth: 1,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { position: "top" },
+              title: { display: true, text: "Daily Time Distribution" },
+            },
+            scales: {
+              y: { beginAtZero: true },
+            },
+          },
+        }
+      );
+    }
+
+    // Initialize page
+    document.addEventListener("DOMContentLoaded", () => {
+      fetchOverviewAnalytics();
+      fetchTodayAnalytics();
+      
+      // Set default date range to last 7 days
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - 7);
+      document.getElementById("startDate").value = startDate.toISOString().split("T")[0];
+      document.getElementById("endDate").value = endDate.toISOString().split("T")[0];
+      fetchRangeAnalytics();
     });
-}
-
-/**
- * Render the overall analytics data into the page.
- */
-function renderOverallAnalytics(data) {
-  const productivity = data.productivity;
-  const goalProgress = data.goal_progress;
-  const timeSlotDistribution = data.time_slot_distribution;
-
-  // Render Productivity Analytics
-  const productivityDiv = document.getElementById('productivity-analytics');
-  productivityDiv.innerHTML = `
-    <h3>Productivity Analytics</h3>
-    <ul>
-      <li><strong>Total Time Slots:</strong> ${ productivity.total_time_slots }</li>
-      <li><strong>Completed Time Slots:</strong> ${ productivity.completed_time_slots } 
-          (${ (productivity.time_slot_completion_rate * 100).toFixed(0) }% completion rate)</li>
-      <li><strong>Total Tasks:</strong> ${ productivity.total_tasks }</li>
-      <li><strong>Completed Tasks:</strong> ${ productivity.completed_tasks } 
-          (${ (productivity.task_completion_rate * 100).toFixed(0) }% completion rate)</li>
-      <li><strong>Total Time Spent:</strong> ${ productivity.total_time_spent } hours</li>
-      <li><strong>Average Time Slot Duration:</strong> ${ productivity.average_time_slot_duration } hours</li>
-      <li><strong>Average Task Completion Time:</strong> ${ productivity.average_task_completion_time } hours</li>
-      <li><strong>Average Tasks Per Day:</strong> ${ productivity.average_tasks_per_day }</li>
-      <li><strong>Most Productive Day:</strong> ${ productivity.most_productive_day || 'N/A' }</li>
-      <li><strong>Least Productive Day:</strong> ${ productivity.least_productive_day || 'N/A' }</li>
-    </ul>
-  `;
-
-  // Render Goal Progress Analytics
-  const goalProgressDiv = document.getElementById('goal-progress-analytics');
-  goalProgressDiv.innerHTML = `
-    <h3>Goal Progress Analytics</h3>
-    <ul>
-      <li><strong>Total Goals:</strong> ${ goalProgress.total_goals }</li>
-      <li><strong>Completed Goals:</strong> ${ goalProgress.completed_goals }</li>
-      <li><strong>In Progress Goals:</strong> ${ goalProgress.in_progress_goals }</li>
-      <li><strong>Not Started Goals:</strong> ${ goalProgress.not_started_goals }</li>
-      <li><strong>Completion Percentage:</strong> ${ goalProgress.completion_percentage }%</li>
-    </ul>
-  `;
-
-  // Render Time Slot Distribution as a table
-  const timeSlotDiv = document.getElementById('time-slot-distribution');
-  let distributionHTML = `<h3>Time Slot Distribution</h3>
-    <table>
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Total Time Slots</th>
-          <th>Completed Time Slots</th>
-        </tr>
-      </thead>
-      <tbody>`;
-  timeSlotDistribution.forEach(item => {
-    distributionHTML += `
-      <tr>
-        <td>${ item.date }</td>
-        <td>${ item.total_time_slots }</td>
-        <td>${ item.completed_time_slots }</td>
-      </tr>`;
-  });
-  distributionHTML += `</tbody></table>`;
-  timeSlotDiv.innerHTML = distributionHTML;
-}
-
-/**
- * Render the daily analytics data into the page.
- */
-function renderDailyAnalytics(data) {
-  const dailyDiv = document.getElementById('daily-analytics-container');
-  let dailyHTML = `<table>
-    <thead>
-      <tr>
-        <th>Date</th>
-        <th>Total Time Slots</th>
-        <th>Completed Time Slots</th>
-        <th>Total Tasks</th>
-        <th>Completed Tasks</th>
-        <th>Total Time Spent (hours)</th>
-      </tr>
-    </thead>
-    <tbody>`;
-  data.forEach(day => {
-    dailyHTML += `
-      <tr>
-        <td>${ day.date }</td>
-        <td>${ day.total_time_slots }</td>
-        <td>${ day.completed_time_slots }</td>
-        <td>${ day.total_tasks }</td>
-        <td>${ day.completed_tasks }</td>
-        <td>${ day.total_time_spent }</td>
-      </tr>`;
-  });
-  dailyHTML += `</tbody></table>`;
-  dailyDiv.innerHTML = dailyHTML;
-}
   </script>
-
 </body>
 </html>

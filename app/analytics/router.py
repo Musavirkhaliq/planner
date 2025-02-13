@@ -1,44 +1,61 @@
-from fastapi import APIRouter, Depends, Query, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from datetime import date, timedelta
-from ..dependencies import get_db
-from ..auth.dependencies import get_current_user
-from . import services
-from .schemas import AnalyticsResponse, DailyProductivityAnalytics
-from ..users.schemas import User
-from typing import List
+from datetime import date
+from typing import Optional
+
+from app.database import get_db
+from app.auth.dependencies import get_current_user
+from app.analytics.services import AnalyticsService
+from app.analytics.schemas import TimeSlotAnalytics, DailyAnalytics, TimeRangeAnalytics
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
 
-@router.get("/", response_model=AnalyticsResponse)
-def get_analytics(
-    start_date: date = Query(default_factory=lambda: date.today() - timedelta(days=7)),
-    end_date: date = Query(default_factory=date.today),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+@router.get("/overview", response_model=TimeSlotAnalytics)
+def get_overview_analytics(
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
+    """Get overview analytics for the current user's time slots."""
+    analytics_service = AnalyticsService(db)
+    return analytics_service.get_user_analytics(current_user.id)
+
+@router.get("/daily/{date}", response_model=DailyAnalytics)
+def get_daily_analytics(
+    date: date,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get analytics for a specific day."""
+    analytics_service = AnalyticsService(db)
+    return analytics_service.get_daily_analytics(current_user.id, date)
+
+@router.get("/range", response_model=TimeRangeAnalytics)
+def get_range_analytics(
+    start_date: date,
+    end_date: date,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get analytics for a specific date range."""
     if start_date > end_date:
-        raise HTTPException(status_code=400, detail="Start date must be before end date")
-
-    productivity = services.calculate_productivity_analytics(db, current_user.id, start_date, end_date)
-    goal_progress = services.calculate_goal_progress_analytics(db, current_user.id)
-    time_slot_distribution = services.calculate_time_slot_distribution(db, current_user.id, start_date, end_date)
-
-    return AnalyticsResponse(
-        productivity=productivity,
-        goal_progress=goal_progress,
-        time_slot_distribution=time_slot_distribution
+        raise HTTPException(
+            status_code=400,
+            detail="Start date must be before or equal to end date"
+        )
+        
+    analytics_service = AnalyticsService(db)
+    return analytics_service.get_time_range_analytics(
+        current_user.id,
+        start_date,
+        end_date
     )
 
-@router.get("/daily", response_model=List[DailyProductivityAnalytics])
-def get_daily_analytics(
-    start_date: date = Query(default_factory=lambda: date.today() - timedelta(days=7)),
-    end_date: date = Query(default_factory=date.today),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+@router.get("/today", response_model=DailyAnalytics)
+def get_today_analytics(
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
-    if start_date > end_date:
-        raise HTTPException(status_code=400, detail="Start date must be before end date")
-    
-    daily_analytics = services.calculate_daily_productivity(db, current_user.id, start_date, end_date)
-    return daily_analytics
+    """Get analytics for the current day."""
+    today = date.today()
+    analytics_service = AnalyticsService(db)
+    return analytics_service.get_daily_analytics(current_user.id, today)
