@@ -846,9 +846,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 // verify email
-
-
-const email = "{{ email }}";
+// verify email
 const sendOtpSection = document.getElementById('sendOtpSection');
 const verifyOtpSection = document.getElementById('verifyOtpSection');
 const sendOtpBtn = document.getElementById('sendOtpBtn');
@@ -865,15 +863,13 @@ function showError(message) {
 }
 
 async function sendVerificationEmail() {
-    // Add loading class to the button
     this.classList.add('loading');
 
-
     try {
-        const response = await fetch('/api/auth/send-verification?email=' + email, {
+        const response = await fetch('/api/auth/send-verification?email=' + encodeURIComponent(email), {
             method: 'POST'
         });
-        
+
         if (response.ok) {
             sendOtpSection.classList.add('d-none');
             verifyOtpSection.classList.remove('d-none');
@@ -889,11 +885,9 @@ async function sendVerificationEmail() {
         console.error('Error:', error);
         showError('Failed to send verification email');
     } finally {
-          // Remove loading class regardless of success/failure
         this.classList.remove('loading');
     }
 }
-
 
 sendOtpBtn.addEventListener('click', sendVerificationEmail);
 resendOtpBtn.addEventListener('click', sendVerificationEmail);
@@ -902,7 +896,6 @@ verifyOtpForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const otp = document.getElementById('otp').value;
 
-    // Add loading class to the button
     e.target.querySelector('button[type="submit"]').classList.add('loading');
 
     const formData = new FormData();
@@ -917,9 +910,7 @@ verifyOtpForm.addEventListener('submit', async (e) => {
 
         if (response.ok) {
             const data = await response.json();
-            // Store the access token
             localStorage.setItem('access_token', data.access_token);
-            // Redirect to dashboard
             window.location.href = '/dashboard';
         } else {
             const error = await response.json();
@@ -929,8 +920,6 @@ verifyOtpForm.addEventListener('submit', async (e) => {
         console.error('Error:', error);
         showError('Failed to verify code');
     } finally {
-        // Remove loading class regardless of success/failure
         e.target.querySelector('button[type="submit"]').classList.remove('loading');
     }
 });
-
