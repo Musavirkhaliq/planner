@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Detailed Time Slot Analytics</title>
+  <title>Analytics</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
   <style>
-       :root {
+    :root {
       --primary: #6366f1;
       --primary-dark: #4f46e5;
       --success: #22c55e;
@@ -25,6 +25,9 @@
       --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
       --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
       --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+      --background-gray: #f1f5f9;
+      --text-primary: #0f172a;
+      --border-color: #e2e8f0;
     }
 
     * {
@@ -42,8 +45,9 @@
     }
     
     .container {
-      max-width: 1280px;
-      margin: 0 auto;
+      max-width: 1400px;
+      margin: 2rem auto;
+      padding: 0 2rem;
     }
     
     .bg-white {
@@ -79,27 +83,6 @@
     .navbar-logo {
       height: 40px;
       width: auto;
-    }
-
-    /* Enhanced Container */
-    .container {
-      max-width: 1400px;
-      margin: 2rem auto;
-      padding: 0 2rem;
-    }
-
-    /* Modern Card Design */
-    .card {
-      background: var(--card);
-      border-radius: var(--radius-lg);
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow-md);
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-
-    .card:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-lg);
     }
 
     /* Grid System */
@@ -163,12 +146,6 @@
       gap: 0.5rem;
     }
     
-    canvas {
-      width: 100% !important;
-      height: 300px !important;
-      margin-top: 1rem;
-    }
-
     .form-control {
       padding: 0.75rem 1rem;
       border: 1px solid var(--border);
@@ -200,6 +177,16 @@
       margin-bottom: 2rem;
     }
 
+    .btn-primary {
+      background-color: var(--primary);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: var(--radius-md);
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+    }
+    
     .btn-primary:hover {
       transform: translateY(-1px);
       box-shadow: 0 4px 6px rgba(99,102,241,0.3);
@@ -235,12 +222,6 @@
       }
     }
 
-    /* Loading States */
-    .loading {
-      opacity: 0.7;
-      pointer-events: none;
-    }
-    
     @media (max-width: 640px) {
       .container {
         padding: 1rem;
@@ -285,9 +266,44 @@
       width: 20px;
       height: 20px;
     }
+    
+    header {
+      background-color: var(--card);
+      box-shadow: var(--shadow-sm);
+      padding: 1rem 2rem;
+      margin-bottom: 2rem;
+    }
+    
+    header .logo-title {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    header h1 {
+      font-size: 1.5rem;
+      color: var(--text);
+    }
   </style>
-<</head>
+</head>
 <body>
+  <!-- Header Section -->
+  <header>
+    <div class="container flex items-center justify-between" style="display: flex; align-items: center; justify-content: space-between;">
+      <div class="logo-title" style="display: flex; align-items: center;">
+        <!-- Replace 'logo.png' with your logo image source if available -->
+        <img src="static/img/planner_logo.svg" alt="Logo" class="navbar-logo" />
+        <h1>Analytics Dashboard</h1>
+      </div>
+      <a href="/" class="back-button">
+        <svg fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a1 1 0 01-.707-.293l-7-7a1 1 0 010-1.414l7-7a1 1 0 111.414 1.414L5.414 10l5.293 5.293A1 1 0 0110 18z" clip-rule="evenodd"></path>
+        </svg>
+        Back
+      </a>
+    </div>
+  </header>
+
   <div class="container mx-auto px-4 py-8">
     <!-- Overview Analytics Section -->
     <div class="mb-8">
@@ -374,21 +390,44 @@
       <div class="flex flex-wrap gap-4 mb-4">
         <div>
           <label class="block text-sm font-medium text-gray-700">Start Date</label>
-          <input type="date" id="startDate" class="mt-1 block rounded-md border-gray-300 shadow-sm" />
+          <input type="date" id="startDate" class="mt-1 block rounded-md border-gray-300 shadow-sm form-control" />
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700">End Date</label>
-          <input type="date" id="endDate" class="mt-1 block rounded-md border-gray-300 shadow-sm" />
+          <input type="date" id="endDate" class="mt-1 block rounded-md border-gray-300 shadow-sm form-control" />
         </div>
         <div class="flex items-end">
-          <button onclick="fetchRangeAnalytics()" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+          <button onclick="fetchRangeAnalytics()" class="btn-primary">
             Analyze Range
           </button>
         </div>
       </div>
     </div>
 
-    <!-- Charts Section -->
+    <!-- Range Analytics Summary -->
+    <div class="mb-8">
+      <h2 class="text-2xl font-bold mb-4">Range Analytics Summary</h2>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white p-4 rounded-lg shadow">
+          <h3 class="text-lg font-semibold mb-2">Total Slots</h3>
+          <p class="text-2xl font-bold" id="rangeTotalSlots">-</p>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow">
+          <h3 class="text-lg font-semibold mb-2">Completed Slots</h3>
+          <p class="text-2xl font-bold text-green-600" id="rangeCompletedSlots">-</p>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow">
+          <h3 class="text-lg font-semibold mb-2">Total Minutes</h3>
+          <p class="text-2xl font-bold" id="rangeTotalMinutes">-</p>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow">
+          <h3 class="text-lg font-semibold mb-2">Avg. Completion Rate</h3>
+          <p class="text-2xl font-bold" id="rangeAvgCompletionRate">-%</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Section for Range Analytics -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
       <div class="bg-white p-4 rounded-lg shadow">
         <h3 class="text-lg font-semibold mb-4">Daily Completion Trend</h3>
@@ -397,6 +436,14 @@
       <div class="bg-white p-4 rounded-lg shadow">
         <h3 class="text-lg font-semibold mb-4">Time Distribution</h3>
         <canvas id="timeDistributionChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Range Slot Status Distribution Chart -->
+    <div class="mb-8">
+      <h2 class="text-2xl font-bold mb-4">Range Slot Status Distribution</h2>
+      <div class="bg-white p-4 rounded-lg shadow">
+        <canvas id="rangeStatusChart"></canvas>
       </div>
     </div>
   </div>
@@ -451,7 +498,7 @@
       }
     }
 
-    // Update status distribution pie chart
+    // Update status distribution pie chart (Overview)
     function updateStatusDistributionChart(data) {
       const ctx = document.getElementById("statusDistributionChart").getContext("2d");
       const chartData = {
@@ -490,7 +537,7 @@
       });
     }
 
-    // Fetch range analytics data
+    // Fetch range analytics data and update additional analytics for the selected date range
     async function fetchRangeAnalytics() {
       const startDate = document.getElementById("startDate").value;
       const endDate = document.getElementById("endDate").value;
@@ -508,8 +555,11 @@
           throw new Error("Failed to fetch range analytics data");
         }
         const data = await response.json();
+        // Update range charts with daily analytics data
         updateCompletionTrendChart(data.daily_analytics);
         updateTimeDistributionChart(data.daily_analytics);
+        updateRangeSummary(data.daily_analytics);
+        updateRangeStatusChart(data.daily_analytics);
       } catch (error) {
         console.error("Error fetching range analytics:", error);
       }
@@ -588,6 +638,63 @@
           },
         }
       );
+    }
+
+    // Update Range Analytics Summary cards
+    function updateRangeSummary(dailyData) {
+      const totalSlots = dailyData.reduce((sum, day) => sum + (day.total_slots || 0), 0);
+      const completedSlots = dailyData.reduce((sum, day) => sum + (day.completed_slots || 0), 0);
+      const totalMinutes = dailyData.reduce((sum, day) => sum + (day.total_minutes || 0), 0);
+      const avgCompletionRate = dailyData.length > 0
+        ? dailyData.reduce((sum, day) => sum + (day.completion_rate || 0), 0) / dailyData.length
+        : 0;
+
+      document.getElementById("rangeTotalSlots").textContent = totalSlots;
+      document.getElementById("rangeCompletedSlots").textContent = completedSlots;
+      document.getElementById("rangeTotalMinutes").textContent = totalMinutes;
+      document.getElementById("rangeAvgCompletionRate").textContent = `${Math.round(avgCompletionRate)}%`;
+    }
+
+    // Update range status distribution doughnut chart
+    function updateRangeStatusChart(dailyData) {
+      const completedSlots = dailyData.reduce((sum, day) => sum + (day.completed_slots || 0), 0);
+      const inProgressSlots = dailyData.reduce((sum, day) => sum + (day.in_progress_slots || 0), 0);
+      const notStartedSlots = dailyData.reduce((sum, day) => sum + (day.not_started_slots || 0), 0);
+
+      const ctx = document.getElementById("rangeStatusChart").getContext("2d");
+      const chartData = {
+        labels: ["Completed", "In Progress", "Not Started"],
+        datasets: [
+          {
+            data: [completedSlots, inProgressSlots, notStartedSlots],
+            backgroundColor: [
+              "rgba(34, 197, 94, 0.7)",
+              "rgba(59, 130, 246, 0.7)",
+              "rgba(239, 68, 68, 0.7)"
+            ],
+            borderColor: [
+              "rgba(34, 197, 94, 1)",
+              "rgba(59, 130, 246, 1)",
+              "rgba(239, 68, 68, 1)"
+            ],
+            borderWidth: 1,
+          }
+        ]
+      };
+      if (window.rangeStatusChart) {
+        window.rangeStatusChart.destroy();
+      }
+      window.rangeStatusChart = new Chart(ctx, {
+        type: "doughnut",
+        data: chartData,
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: "top" },
+            title: { display: true, text: "Range Slot Status Distribution" }
+          }
+        }
+      });
     }
 
     // Initialize page
