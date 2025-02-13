@@ -1,0 +1,269 @@
+<style>
+  .sidenav {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 250px;
+    background: white;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+    transition: width 0.3s ease;
+  }
+
+  .sidenav.collapsed {
+    width: 60px;
+    padding: 1.5rem 0.5rem;
+  }
+
+  .sidenav-toggle {
+    position: absolute;
+    right: -12px;
+    top: 20px;
+    width: 24px;
+    height: 24px;
+    background: #f3f4f6; /* Changed from white to light gray */
+    border: 1px solid #e5e7eb;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    z-index: 1001; /* Ensure it's above other elements */
+  }
+
+  .sidenav-toggle:hover {
+    background: #e5e7eb;
+  }
+
+  .sidenav-toggle i {
+    color: #4b5563; /* Add explicit color for the chevron */
+  }
+
+  .sidenav.collapsed .sidenav-toggle {
+    transform: rotate(180deg);
+  }
+
+  .sidenav.collapsed .nav-link span,
+  .sidenav.collapsed .user-info > div,
+  .sidenav.collapsed .logout-btn span {
+    display: none;
+  }
+
+  .sidenav.collapsed .user-avatar {
+    margin: 0 auto;
+  }
+
+  .sidenav.collapsed .nav-link {
+    justify-content: center;
+    padding: 0.75rem;
+  }
+
+  .sidenav.collapsed .logout-btn {
+    justify-content: center;
+    padding: 0.75rem;
+  }
+
+  .sidenav-header {
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+    margin-bottom: 1.5rem;
+  }
+
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #4b5563;
+  }
+
+  .user-name {
+    font-weight: 600;
+    color: #111827;
+  }
+
+  .user-email {
+    font-size: 0.875rem;
+    color: #6b7280;
+  }
+
+  .nav-links {
+    flex: 1;
+  }
+
+  .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    color: #4b5563;
+    text-decoration: none;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+    margin-bottom: 0.5rem;
+  }
+
+  .nav-link:hover {
+    background: #f3f4f6;
+    color: #111827;
+  }
+
+  .nav-link.active {
+    background: #3b82f6;
+    color: white !important; /* Force white color */
+  }
+
+  .nav-link.active i,
+  .nav-link.active span {
+    color: white !important; /* Force white color for icon and text */
+  }
+
+  .nav-link i {
+    width: 20px;
+  }
+
+  .logout-section {
+    padding-top: 1.5rem;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  .logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    color: #ef4444;
+    background: none;
+    border: 1px solid #ef4444;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .logout-btn:hover {
+    background: #ef4444;
+    color: white;
+  }
+
+  /* Add margin to main content to accommodate sidenav */
+  .main-content {
+    margin-left: 250px;
+    padding: 2rem;
+    transition: margin-left 0.3s ease;
+  }
+
+  .main-content.collapsed {
+    margin-left: 60px;
+  }
+</style>
+
+<nav class="sidenav" id="sidenav">
+  <button class="sidenav-toggle" id="sidenavToggle">
+    <i class="fas fa-chevron-left"></i>
+  </button>
+
+  <div class="sidenav-header">
+    <div class="user-info">
+      <div class="user-avatar">
+        <span id="userInitials">JS</span>
+      </div>
+      <div>
+        <div class="user-name" id="userName">John Smith</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav-links">
+    <a href="/dashboard" class="nav-link" id="dashboard-link">
+      <i class="fas fa-home"></i>
+      <span>Dashboard</span>
+    </a>
+    <a href="/analytics" class="nav-link" id="analytics-link">
+      <i class="fas fa-chart-line"></i>
+      <span>Analytics</span>
+    </a>
+  </div>
+
+  <div class="logout-section">
+    <button class="logout-btn" id="logoutBtn">
+      <i class="fas fa-sign-out-alt"></i>
+      <span>Logout</span>
+    </button>
+  </div>
+</nav>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const sidenav = document.getElementById('sidenav');
+    const mainContent = document.querySelector('.main-content');
+    const toggle = document.getElementById('sidenavToggle');
+    
+    // Get collapsed state from localStorage
+    const isCollapsed = localStorage.getItem('sidenavCollapsed') === 'true';
+    
+    // Set initial state
+    if (isCollapsed) {
+      sidenav.classList.add('collapsed');
+      mainContent.classList.add('collapsed');
+    }
+
+    // Toggle handler
+    toggle.addEventListener('click', () => {
+      sidenav.classList.toggle('collapsed');
+      mainContent.classList.toggle('collapsed');
+      
+      // Save state to localStorage
+      localStorage.setItem('sidenavCollapsed', sidenav.classList.contains('collapsed'));
+    });
+
+    // Set active link based on current page
+    const path = window.location.pathname;
+    const dashboardLink = document.getElementById('dashboard-link');
+    const analyticsLink = document.getElementById('analytics-link');
+    
+    // Remove any existing active classes first
+    document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
+    
+    // Set active class based on current path
+    if (path.includes('dashboard')) {
+      dashboardLink.classList.add('active');
+    } else if (path.includes('analytics')) {
+      analyticsLink.classList.add('active');
+    }
+
+    // Set user info
+    const username = localStorage.getItem('username') || '';
+    if (username) {
+      document.getElementById('userName').textContent = username;
+      document.getElementById('userInitials').textContent = username
+        .split(' ')
+        .map(n => n[0])
+        .join('')
+        .toUpperCase();
+    }
+
+    // Logout handler
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
+    });
+  });
+</script>

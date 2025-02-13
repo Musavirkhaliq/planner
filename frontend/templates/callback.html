@@ -34,17 +34,20 @@
     <div id="auth-data" 
          data-token="{{ access_token }}" 
          data-type="{{ token_type }}" 
+         data-username="{{ username }}"
          data-error="{{ detail if detail is defined else '' }}">
     </div>
 
     <script>
         const authData = document.getElementById('auth-data');
         const token = authData.dataset.token;
+        const username = authData.dataset.username;
         const error = authData.dataset.error;
         
         setTimeout(() => {
             if (token) {
                 localStorage.setItem('access_token', token);
+                localStorage.setItem('username', username);
                 window.location.href = '/dashboard';
             } else {
                 window.location.href = '/login?error=' + encodeURIComponent(error || 'Authentication failed');

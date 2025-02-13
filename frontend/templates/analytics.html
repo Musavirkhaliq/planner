@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     /* Base Styles & Colors */
     :root {
@@ -234,128 +235,126 @@
   </style>
 </head>
 <body>
-  <main>
-    <div class="container mx-auto px-4 py-8">
-      <!-- Add this back button at the top -->
-      <a href="/dashboard" class="back-button">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-        </svg>
-        Back to Dashboard
-      </a>
+  <!-- Include the sidenav -->
+  {% include 'components/sidenav.html' %}
 
-      <!-- Overview Analytics Section -->
-      <div class="mb-8">
-        <h2 class="text-2xl font-bold mb-4">Overview Analytics</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <!-- Time Slots Card with Detailed Status -->
+  <!-- Wrap existing content in main-content div -->
+  <div class="main-content">
+    <main>
+      <div class="container mx-auto px-4 py-8">
+        <!-- Overview Analytics Section -->
+        <div class="mb-8">
+          <h2 class="text-2xl font-bold mb-4">Overview Analytics</h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Time Slots Card with Detailed Status -->
+            <div class="bg-white p-4 rounded-lg shadow">
+              <h3 class="text-lg font-semibold mb-2">Time Slots</h3>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <p class="text-gray-600">Total</p>
+                  <p class="text-2xl font-bold" id="totalSlots">-</p>
+                </div>
+                <div>
+                  <p class="text-gray-600">Completed</p>
+                  <p class="text-2xl font-bold text-green-600" id="completedSlots">-</p>
+                </div>
+                <div>
+                  <p class="text-gray-600">In Progress</p>
+                  <p class="text-2xl font-bold" id="inProgressSlots">-</p>
+                </div>
+                <div>
+                  <p class="text-gray-600">Not Started</p>
+                  <p class="text-2xl font-bold" id="notStartedSlots">-</p>
+                </div>
+              </div>
+            </div>
+            <!-- Time Tracking Card -->
+            <div class="bg-white p-4 rounded-lg shadow">
+              <h3 class="text-lg font-semibold mb-2">Time Tracking</h3>
+              <div>
+                <p class="text-gray-600">Total Minutes</p>
+                <p class="text-2xl font-bold" id="totalMinutes">-</p>
+                <p class="text-gray-600 mt-2">Average per Slot</p>
+                <p class="text-xl" id="avgMinutes">-</p>
+              </div>
+            </div>
+            <!-- Completion Rate Card -->
+            <div class="bg-white p-4 rounded-lg shadow">
+              <h3 class="text-lg font-semibold mb-2">Completion Rate</h3>
+              <div class="flex items-center justify-center h-24">
+                <p class="text-4xl font-bold" id="completionRate">-%</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Today's Analytics Section -->
+        <div class="mb-8">
+          <h2 class="text-2xl font-bold mb-4">Today's Analytics</h2>
           <div class="bg-white p-4 rounded-lg shadow">
-            <h3 class="text-lg font-semibold mb-2">Time Slots</h3>
-            <div class="grid grid-cols-2 gap-2">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <p class="text-gray-600">Total</p>
-                <p class="text-2xl font-bold" id="totalSlots">-</p>
+                <p class="text-gray-600">Total Slots</p>
+                <p class="text-2xl font-bold" id="todayTotalSlots">-</p>
               </div>
               <div>
-                <p class="text-gray-600">Completed</p>
-                <p class="text-2xl font-bold text-green-600" id="completedSlots">-</p>
+                <p class="text-gray-600">Completed Slots</p>
+                <p class="text-2xl font-bold text-green-600" id="todayCompletedSlots">-</p>
               </div>
               <div>
-                <p class="text-gray-600">In Progress</p>
-                <p class="text-2xl font-bold" id="inProgressSlots">-</p>
+                <p class="text-gray-600">Total Minutes</p>
+                <p class="text-2xl font-bold" id="todayTotalMinutes">-</p>
               </div>
               <div>
-                <p class="text-gray-600">Not Started</p>
-                <p class="text-2xl font-bold" id="notStartedSlots">-</p>
+                <p class="text-gray-600">Completion Rate</p>
+                <p class="text-2xl font-bold" id="todayCompletionRate">-%</p>
               </div>
             </div>
           </div>
-          <!-- Time Tracking Card -->
+        </div>
+
+        <!-- Slot Status Distribution Chart -->
+        <div class="mb-8">
+          <h2 class="text-2xl font-bold mb-4">Slot Status Distribution</h2>
+          <div class="bg-white p-4 rounded-lg shadow" >
+            <canvas id="statusDistributionChart" style="max-height: 400px;"></canvas>
+          </div>
+        </div>
+
+        <!-- Date Range Selection for Detailed Analytics -->
+        <div class="mb-8 bg-white p-4 rounded-lg shadow">
+          <h3 class="text-lg font-semibold mb-4">Time Range Analysis</h3>
+          <div class="flex flex-wrap gap-4 mb-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Start Date</label>
+              <input type="date" id="startDate" class="mt-1 block rounded-md border-gray-300 shadow-sm" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700">End Date</label>
+              <input type="date" id="endDate" class="mt-1 block rounded-md border-gray-300 shadow-sm" />
+            </div>
+            <div class="flex items-end">
+              <button onclick="fetchRangeAnalytics()" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                Analyze Range
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div class="bg-white p-4 rounded-lg shadow">
-            <h3 class="text-lg font-semibold mb-2">Time Tracking</h3>
-            <div>
-              <p class="text-gray-600">Total Minutes</p>
-              <p class="text-2xl font-bold" id="totalMinutes">-</p>
-              <p class="text-gray-600 mt-2">Average per Slot</p>
-              <p class="text-xl" id="avgMinutes">-</p>
-            </div>
+            <h3 class="text-lg font-semibold mb-4">Daily Completion Trend</h3>
+            <canvas id="completionTrendChart"></canvas>
           </div>
-          <!-- Completion Rate Card -->
           <div class="bg-white p-4 rounded-lg shadow">
-            <h3 class="text-lg font-semibold mb-2">Completion Rate</h3>
-            <div class="flex items-center justify-center h-24">
-              <p class="text-4xl font-bold" id="completionRate">-%</p>
-            </div>
+            <h3 class="text-lg font-semibold mb-4">Time Distribution</h3>
+            <canvas id="timeDistributionChart"></canvas>
           </div>
         </div>
       </div>
-
-      <!-- Today's Analytics Section -->
-      <div class="mb-8">
-        <h2 class="text-2xl font-bold mb-4">Today's Analytics</h2>
-        <div class="bg-white p-4 rounded-lg shadow">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <p class="text-gray-600">Total Slots</p>
-              <p class="text-2xl font-bold" id="todayTotalSlots">-</p>
-            </div>
-            <div>
-              <p class="text-gray-600">Completed Slots</p>
-              <p class="text-2xl font-bold text-green-600" id="todayCompletedSlots">-</p>
-            </div>
-            <div>
-              <p class="text-gray-600">Total Minutes</p>
-              <p class="text-2xl font-bold" id="todayTotalMinutes">-</p>
-            </div>
-            <div>
-              <p class="text-gray-600">Completion Rate</p>
-              <p class="text-2xl font-bold" id="todayCompletionRate">-%</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Slot Status Distribution Chart -->
-      <div class="mb-8">
-        <h2 class="text-2xl font-bold mb-4">Slot Status Distribution</h2>
-        <div class="bg-white p-4 rounded-lg shadow" >
-          <canvas id="statusDistributionChart" style="max-height: 400px;"></canvas>
-        </div>
-      </div>
-
-      <!-- Date Range Selection for Detailed Analytics -->
-      <div class="mb-8 bg-white p-4 rounded-lg shadow">
-        <h3 class="text-lg font-semibold mb-4">Time Range Analysis</h3>
-        <div class="flex flex-wrap gap-4 mb-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Start Date</label>
-            <input type="date" id="startDate" class="mt-1 block rounded-md border-gray-300 shadow-sm" />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700">End Date</label>
-            <input type="date" id="endDate" class="mt-1 block rounded-md border-gray-300 shadow-sm" />
-          </div>
-          <div class="flex items-end">
-            <button onclick="fetchRangeAnalytics()" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
-              Analyze Range
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Charts Section -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div class="bg-white p-4 rounded-lg shadow">
-          <h3 class="text-lg font-semibold mb-4">Daily Completion Trend</h3>
-          <canvas id="completionTrendChart"></canvas>
-        </div>
-        <div class="bg-white p-4 rounded-lg shadow">
-          <h3 class="text-lg font-semibold mb-4">Time Distribution</h3>
-          <canvas id="timeDistributionChart"></canvas>
-        </div>
-      </div>
-    </div>
-  </main>
+    </main>
+  </div>
   <script>
     let completionTrendChart = null;
     let timeDistributionChart = null;

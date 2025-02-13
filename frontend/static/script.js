@@ -34,6 +34,7 @@ document.getElementById("loginForm")?.addEventListener("submit", async (e) => {
     const data = await submitForm(e, "/api/auth/token", { username: email, password: password }, false);
     if (data && data.access_token) {
         localStorage.setItem("access_token", data.access_token);
+        localStorage.setItem("username", data.username);
         window.location.href = "/dashboard";
     }
 });

@@ -62,7 +62,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = 
         data={"sub": user.email},
         expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {"access_token": access_token, "token_type": "bearer", "username": user.username}
 
 @router.post("/send-verification")
 async def send_verification(email: str, db: Session = Depends(get_db)):
@@ -133,11 +133,13 @@ async def auth_callback(request: Request, db: Session = Depends(get_db)):
         )
         
         # Return the callback template with the token data
+        username = user.email.split('@')[0]
         return templates.TemplateResponse(
             "callback.html",
             {
                 "request": request,
                 "access_token": access_token,
+                "username": username,
                 "token_type": "bearer"
             }
         )
