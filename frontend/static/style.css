@@ -804,3 +804,232 @@
   background-color: #007bff; /* Blue for selected option */
   color: white;
 }
+
+
+
+
+/* ******************** Analytics*/
+
+:root {
+  --primary-color: #2427ee;
+  --secondary-color: #818cf8;
+  --background: #f8fafc;
+  --card-bg: rgba(255, 255, 255, 0.9);
+  --text-color: #1e293b;
+  --text-light: #64748b;
+  --shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.1);
+  --radius: 16px;
+}
+
+body {
+  background: linear-gradient(135deg, var(--background) 0%, #e2e8f0 100%);
+  min-height: 100vh;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: var(--text-color);
+  line-height: 1.6;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* Decorative background shapes */
+.bg-shapes {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+}
+
+.bg-shape {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.3;
+}
+
+.shape-1 {
+  width: 300px;
+  height: 300px;
+  background: rgba(99, 102, 241, 0.2);
+  top: -100px;
+  right: -100px;
+}
+
+.shape-2 {
+  width: 400px;
+  height: 400px;
+  background: rgba(129, 140, 248, 0.2);
+  bottom: -200px;
+  left: -200px;
+}
+
+/* Container styling */
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* Card styling */
+.bg-white {
+  background: var(--card-bg);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.bg-white:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 32px -3px rgba(0, 0, 0, 0.15);
+}
+
+/* Typography */
+.text-2xl {
+  font-size: 1.5rem;
+  line-height: 2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.text-lg {
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.font-semibold {
+  font-weight: 600;
+}
+
+.text-gray-600 {
+  color: var(--text-light);
+}
+
+.text-green-600 {
+  color: #22c55e;
+}
+
+/* Grid layout */
+.grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.grid-cols-1 {
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+@media (min-width: 768px) {
+  .md\:grid-cols-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .md\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Form elements */
+input[type="date"] {
+  border-radius: var(--radius);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 0.75rem 1rem;
+  background: rgba(255, 255, 255, 0.9);
+  transition: all 0.2s ease;
+  font-family: inherit;
+  color: var(--text-color);
+  min-width: 200px;
+}
+
+input[type="date"]:focus {
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  border-color: var(--primary-color);
+  background: white;
+  outline: none;
+}
+
+/* Button styling */
+button {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: white;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 12px -3px var(--primary-color);
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px -3px var(--primary-color);
+}
+
+/* Chart containers */
+canvas {
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.5);
+  padding: 1rem;
+  margin-top: 1rem;
+  transition: all 0.2s ease;
+}
+
+/* Spacing utilities */
+.p-4 { padding: 1rem; }
+.px-4 { padding-left: 1rem; padding-right: 1rem; }
+.py-8 { padding-top: 2rem; padding-bottom: 2rem; }
+.mb-2 { margin-bottom: 0.5rem; }
+.mb-4 { margin-bottom: 1rem; }
+.mb-8 { margin-bottom: 2rem; }
+.mt-1 { margin-top: 0.25rem; }
+.mt-2 { margin-top: 0.5rem; }
+
+/* Flex utilities */
+.flex { display: flex; }
+.items-center { align-items: center; }
+.items-end { align-items: flex-end; }
+.justify-center { justify-content: center; }
+.gap-2 { gap: 0.5rem; }
+.gap-4 { gap: 1rem; }
+.flex-wrap { flex-wrap: wrap; }
+
+/* Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.bg-white {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .container {
+    padding: 1rem;
+  }
+  .grid {
+    gap: 1rem;
+  }
+  canvas {
+    height: 250px !important;
+  }
+  .text-2xl {
+    font-size: 1.25rem;
+  }
+}
+

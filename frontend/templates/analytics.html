@@ -3,334 +3,436 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Detailed Time Slot Analytics</title>
+  <title>Analytics Dashboard</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
   <style>
-    /* Base Styles & Colors */
-    :root {
-      --primary-blue: #3b82f6;
-      --primary-hover: #2563eb;
-      --success-green: #22c55e;
-      --danger-red: #ef4444;
-      --background-gray: #f3f4f6;
-      --border-color: #e5e7eb;
-      --text-primary: #111827;
-      --text-secondary: #6b7280;
+       :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --success: #22c55e;
+      --warning: #eab308;
+      --danger: #ef4444;
+      --background: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --text-secondary: #64748b;
+      --border: #e2e8f0;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
     }
-    
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     body {
-      background-color: var(--background-gray);
-      color: var(--text-primary);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--background);
+      color: var(--text);
       line-height: 1.5;
+      min-height: 100vh;
     }
-    
-    .container {
-      max-width: 1280px;
+
+    /* Keep all previous styles... */
+    /* Adding new styles for smaller distribution chart */
+    .distribution-chart {
+      max-height: 300px;
       margin: 0 auto;
     }
-    
-    .bg-white {
-      background-color: white;
-      border-radius: 0.75rem;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
-      transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-      animation: fadeIn 0.3s ease-out;
+
+    .section-divider {
+      height: 2px;
+      background: linear-gradient(to right, var(--border), var(--primary), var(--border));
+      margin: 3rem 0;
+      opacity: 0.3;
     }
-    
-    .bg-white:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --success: #22c55e;
+      --warning: #eab308;
+      --danger: #ef4444;
+      --background: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --text-secondary: #64748b;
+      --border: #e2e8f0;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
     }
-    
-    .text-2xl {
-      font-size: 1.5rem;
-      line-height: 2rem;
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
-    
-    .text-lg {
-      font-size: 1.125rem;
-      line-height: 1.75rem;
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--background);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
     }
-    
-    .font-bold {
+
+    /* Modern Glassmorphism Nav */
+    .navbar {
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+      padding: 1rem 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .navbar-content {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .navbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
       font-weight: 700;
+      font-size: 1.25rem;
+      color: var(--primary);
+      text-decoration: none;
     }
-    
-    .font-semibold {
-      font-weight: 600;
+
+    .navbar-logo {
+      height: 40px;
+      width: auto;
     }
-    
-    .text-gray-600 {
-      color: var(--text-secondary);
+
+    /* Enhanced Container */
+    .container {
+      max-width: 1400px;
+      margin: 2rem auto;
+      padding: 0 2rem;
     }
-    
-    .text-green-600 {
-      color: var(--success-green);
+
+    /* Modern Card Design */
+    .card {
+      background: var(--card);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-md);
+      transition: transform 0.2s, box-shadow 0.2s;
     }
-    
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    /* Grid System */
     .grid {
       display: grid;
-      gap: 1rem;
+      gap: 1.5rem;
     }
-    
-    .grid-cols-1 {
-      grid-template-columns: repeat(1, minmax(0, 1fr));
-    }
+
+    .grid-cols-1 { grid-template-columns: 1fr; }
     
     @media (min-width: 768px) {
-      .md\:grid-cols-3 {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-      .md\:grid-cols-2 {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
+      .md\:grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+      .md\:grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+      .md\:grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
     }
-    
-    input[type="date"] {
-      padding: 0.5rem;
-      border: 1px solid var(--border-color);
-      border-radius: 0.375rem;
-      width: 100%;
-      min-width: 200px;
-      font-size: 0.875rem;
-      transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+
+    /* Typography */
+    .heading {
+      font-size: 1.875rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 1.5rem;
     }
-    
-    input[type="date"]:focus {
-      outline: none;
-      border-color: var(--primary-blue);
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    }
-    
-    button {
-      background-color: var(--primary-blue);
-      color: white;
-      font-weight: 500;
-      padding: 0.5rem 1rem;
-      border-radius: 0.375rem;
-      border: none;
-      cursor: pointer;
-      transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
-    }
-    
-    button:hover {
-      background-color: var(--primary-hover);
-      transform: translateY(-1px);
-    }
-    
-    button:active {
-      transform: translateY(0);
-    }
-    
-    canvas {
-      width: 100% !important;
-      height: 300px !important;
-      margin-top: 1rem;
-    }
-    
-    .px-4 {
-      padding-left: 1rem;
-      padding-right: 1rem;
-    }
-    
-    .py-8 {
-      padding-top: 2rem;
-      padding-bottom: 2rem;
-    }
-    
-    .p-4 {
-      padding: 1rem;
-    }
-    
-    .mb-2 {
-      margin-bottom: 0.5rem;
-    }
-    
-    .mb-4 {
+
+    .subheading {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text);
       margin-bottom: 1rem;
     }
-    
-    .mb-8 {
-      margin-bottom: 2rem;
+
+    /* Stat Cards */
+    .stat-card {
+      padding: 1.5rem;
     }
-    
-    .mt-1 {
-      margin-top: 0.25rem;
+
+    .stat-label {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 0.5rem;
     }
-    
-    .mt-2 {
-      margin-top: 0.5rem;
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text);
     }
-    
-    .flex {
+
+    .stat-value.success {
+      color: var(--success);
+    }
+
+    /* Form Elements */
+    .form-group {
       display: flex;
-    }
-    
-    .items-center {
-      align-items: center;
-    }
-    
-    .items-end {
-      align-items: flex-end;
-    }
-    
-    .justify-center {
-      justify-content: center;
-    }
-    
-    .gap-2 {
+      flex-direction: column;
       gap: 0.5rem;
     }
-    
-    .gap-4 {
-      gap: 1rem;
+
+    .form-label {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-secondary);
     }
-    
-    .flex-wrap {
-      flex-wrap: wrap;
+
+    .form-control {
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      font-family: inherit;
+      font-size: 1rem;
+      transition: all 0.2s;
     }
-    
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+    }
+
+    /* Button */
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: var(--radius-md);
+      font-weight: 600;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      box-shadow: 0 2px 4px rgba(99,102,241,0.2);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 6px rgba(99,102,241,0.3);
+    }
+
+    /* Chart Containers */
+    .chart-container {
+      padding: 1.5rem;
+      margin-top: 2rem;
+    }
+
+    canvas {
+      max-width: 100%;
+      height: auto !important;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .container {
+        padding: 1rem;
+      }
+
+      .heading {
+        font-size: 1.5rem;
+      }
+
+      .stat-value {
+        font-size: 1.5rem;
+      }
+
+      .grid {
+        gap: 1rem;
+      }
+    }
+
+    /* Loading States */
     .loading {
       opacity: 0.7;
       pointer-events: none;
     }
-    
-    @media (max-width: 640px) {
-      .container {
-        padding: 1rem;
-      }
-      .grid {
-        gap: 1rem;
-      }
-      canvas {
-        height: 250px !important;
-      }
-    }
-    
+
+    /* Animations */
     @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-in {
+      animation: fadeIn 0.3s ease-out forwards;
     }
   </style>
-</head>
+<</head>
 <body>
-  <div class="container mx-auto px-4 py-8">
-    <!-- Overview Analytics Section -->
-    <div class="mb-8">
-      <h2 class="text-2xl font-bold mb-4">Overview Analytics</h2>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <!-- Time Slots Card with Detailed Status -->
-        <div class="bg-white p-4 rounded-lg shadow">
-          <h3 class="text-lg font-semibold mb-2">Time Slots</h3>
-          <div class="grid grid-cols-2 gap-2">
-            <div>
-              <p class="text-gray-600">Total</p>
-              <p class="text-2xl font-bold" id="totalSlots">-</p>
-            </div>
-            <div>
-              <p class="text-gray-600">Completed</p>
-              <p class="text-2xl font-bold text-green-600" id="completedSlots">-</p>
-            </div>
-            <div>
-              <p class="text-gray-600">In Progress</p>
-              <p class="text-2xl font-bold" id="inProgressSlots">-</p>
-            </div>
-            <div>
-              <p class="text-gray-600">Not Started</p>
-              <p class="text-2xl font-bold" id="notStartedSlots">-</p>
-            </div>
-          </div>
-        </div>
-        <!-- Time Tracking Card -->
-        <div class="bg-white p-4 rounded-lg shadow">
-          <h3 class="text-lg font-semibold mb-2">Time Tracking</h3>
-          <div>
-            <p class="text-gray-600">Total Minutes</p>
-            <p class="text-2xl font-bold" id="totalMinutes">-</p>
-            <p class="text-gray-600 mt-2">Average per Slot</p>
-            <p class="text-xl" id="avgMinutes">-</p>
-          </div>
-        </div>
-        <!-- Completion Rate Card -->
-        <div class="bg-white p-4 rounded-lg shadow">
-          <h3 class="text-lg font-semibold mb-2">Completion Rate</h3>
-          <div class="flex items-center justify-center h-24">
-            <p class="text-4xl font-bold" id="completionRate">-%</p>
-          </div>
-        </div>
-      </div>
+  <nav class="navbar">
+    <div class="navbar-content">
+      <a href="/" class="navbar-brand">
+        <img src="/static/img/planner_logo_100x100.png" alt="Planner Logo" class="navbar-logo">
+        Productivity Analytics
+      </a>
+      <button class="btn btn-primary" id="logoutBtn">Logout</button>
     </div>
+  </nav>
 
+  <div class="container">
     <!-- Today's Analytics Section -->
-    <div class="mb-8">
-      <h2 class="text-2xl font-bold mb-4">Today's Analytics</h2>
-      <div class="bg-white p-4 rounded-lg shadow">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <p class="text-gray-600">Total Slots</p>
-            <p class="text-2xl font-bold" id="todayTotalSlots">-</p>
-          </div>
-          <div>
-            <p class="text-gray-600">Completed Slots</p>
-            <p class="text-2xl font-bold text-green-600" id="todayCompletedSlots">-</p>
-          </div>
-          <div>
-            <p class="text-gray-600">Total Minutes</p>
-            <p class="text-2xl font-bold" id="todayTotalMinutes">-</p>
-          </div>
-          <div>
-            <p class="text-gray-600">Completion Rate</p>
-            <p class="text-2xl font-bold" id="todayCompletionRate">-%</p>
-          </div>
+    <h1 class="heading">Today's Analytics</h1>
+    <div class="card stat-card">
+      <div class="grid md:grid-cols-4 gap-4">
+        <div>
+          <p class="stat-label">Total Slots</p>
+          <p class="stat-value" id="todayTotalSlots">-</p>
+        </div>
+        <div>
+          <p class="stat-label">Completed Slots</p>
+          <p class="stat-value success" id="todayCompletedSlots">-</p>
+        </div>
+        <div>
+          <p class="stat-label">Total Minutes</p>
+          <p class="stat-value" id="todayTotalMinutes">-</p>
+        </div>
+        <div>
+          <p class="stat-label">Completion Rate</p>
+          <p class="stat-value success" id="todayCompletionRate">-%</p>
         </div>
       </div>
     </div>
 
-    <!-- Slot Status Distribution Chart -->
-    <div class="mb-8">
-      <h2 class="text-2xl font-bold mb-4">Slot Status Distribution</h2>
-      <div class="bg-white p-4 rounded-lg shadow">
-        <canvas id="statusDistributionChart"></canvas>
-      </div>
-    </div>
+    <div class="section-divider"></div>
 
-    <!-- Date Range Selection for Detailed Analytics -->
-    <div class="mb-8 bg-white p-4 rounded-lg shadow">
-      <h3 class="text-lg font-semibold mb-4">Time Range Analysis</h3>
-      <div class="flex flex-wrap gap-4 mb-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-700">Start Date</label>
-          <input type="date" id="startDate" class="mt-1 block rounded-md border-gray-300 shadow-sm" />
+    <!-- Time Range Analysis Section -->
+    <h2 class="heading">Time Range Analysis</h2>
+    <div class="card stat-card mb-4">
+      <div class="grid md:grid-cols-3 gap-4">
+        <div class="form-group">
+          <label class="form-label">Start Date</label>
+          <input type="date" id="startDate" class="form-control">
         </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700">End Date</label>
-          <input type="date" id="endDate" class="mt-1 block rounded-md border-gray-300 shadow-sm" />
+        <div class="form-group">
+          <label class="form-label">End Date</label>
+          <input type="date" id="endDate" class="form-control">
         </div>
         <div class="flex items-end">
-          <button onclick="fetchRangeAnalytics()" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+          <button onclick="fetchRangeAnalytics()" class="btn btn-primary">
             Analyze Range
           </button>
         </div>
       </div>
     </div>
 
-    <!-- Charts Section -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-      <div class="bg-white p-4 rounded-lg shadow">
-        <h3 class="text-lg font-semibold mb-4">Daily Completion Trend</h3>
+    <div class="grid md:grid-cols-3">
+      <div class="card stat-card">
+        <h3 class="subheading">Time Slots</h3>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <p class="stat-label">Total</p>
+            <p class="stat-value" id="totalSlots">-</p>
+          </div>
+          <div>
+            <p class="stat-label">Completed</p>
+            <p class="stat-value success" id="completedSlots">-</p>
+          </div>
+          <div>
+            <p class="stat-label">In Progress</p>
+            <p class="stat-value" id="inProgressSlots">-</p>
+          </div>
+          <div>
+            <p class="stat-label">Not Started</p>
+            <p class="stat-value" id="notStartedSlots">-</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card stat-card">
+        <h3 class="subheading">Time Tracking</h3>
+        <div>
+          <p class="stat-label">Total Minutes</p>
+          <p class="stat-value" id="totalMinutes">-</p>
+          <p class="stat-label">Average per Slot</p>
+          <p class="stat-value" id="avgMinutes">-</p>
+        </div>
+      </div>
+
+      <div class="card stat-card">
+        <h3 class="subheading">Completion Rate</h3>
+        <div class="flex items-center justify-center">
+          <p class="stat-value success" id="completionRate">-%</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-4 mt-4">
+      <div class="card chart-container">
+        <h3 class="subheading">Daily Completion Trend</h3>
         <canvas id="completionTrendChart"></canvas>
       </div>
-      <div class="bg-white p-4 rounded-lg shadow">
-        <h3 class="text-lg font-semibold mb-4">Time Distribution</h3>
+      <div class="card chart-container">
+        <h3 class="subheading">Time Distribution</h3>
         <canvas id="timeDistributionChart"></canvas>
+      </div>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <!-- Status Distribution Section -->
+    <h2 class="heading">Status Distribution</h2>
+    <div class="card chart-container">
+      <div class="distribution-chart">
+        <canvas id="statusDistributionChart"></canvas>
+      </div>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <!-- Overview Analytics Section -->
+    <h2 class="heading">Overview Analytics</h2>
+    <div class="grid md:grid-cols-4 gap-4">
+      <div class="card stat-card">
+        <p class="stat-label">Total Tasks</p>
+        <p class="stat-value" id="overviewTotalTasks">-</p>
+      </div>
+      <div class="card stat-card">
+        <p class="stat-label">Completion Rate</p>
+        <p class="stat-value success" id="overviewCompletionRate">-%</p>
+      </div>
+      <div class="card stat-card">
+        <p class="stat-label">Average Time</p>
+        <p class="stat-value" id="overviewAvgTime">-</p>
+      </div>
+      <div class="card stat-card">
+        <p class="stat-label">Productivity Score</p>
+        <p class="stat-value" id="overviewProductivity">-</p>
       </div>
     </div>
   </div>
