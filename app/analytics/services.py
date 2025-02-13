@@ -104,3 +104,46 @@ class AnalyticsService:
             total_minutes=total_minutes,
             average_completion_rate=round(avg_completion_rate, 2)
         )
+    
+
+# from sqlalchemy.orm import Session
+# from sqlalchemy import func
+from datetime import datetime, timedelta
+from app.models import TimeSlot, User  # Adjust based on your models
+
+def get_top_users_by_time_spent(db: Session, timeframe: str, limit: int = 5):
+    """
+    Get the top users based on the time spent in a given timeframe.
+    
+    :param db: Database session
+    :param timeframe: 'daily', 'weekly', 'monthly'
+    :param limit: Number of top users to return
+    :return: List of top users with their time spent
+    """
+    now = datetime.utcnow()
+    
+    if timeframe == "daily":
+        start_date = now - timedelta(days=1)
+    elif timeframe == "weekly":
+        start_date = now - timedelta(weeks=1)
+    elif timeframe == "monthly":
+        start_date = now - timedelta(days=30)
+    else:
+        raise ValueError("Invalid timeframe. Choose 'daily', 'weekly', or 'monthly'.")
+
+    # Query to sum the reported minutes per user
+    results = (
+        db.query(
+            TimeSlot.owner_id, 
+            func.sum(TimeSlot.report_minutes).label("total_time"),
+            User.username
+        )
+        .join(User, User.id == TimeSlot.owner_id)
+        .filter(TimeSlot.start_time >= start_date)
+        .group_by(TimeSlot.owner_id, User.username)
+        .order_by(func.sum(TimeSlot.report_minutes).desc())
+        .limit(limit)
+        .all()
+    )
+
+    return [{"user_id": r.owner_id, "username": r.username, "total_time": r.total_time} for r in results]

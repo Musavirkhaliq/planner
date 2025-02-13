@@ -59,3 +59,22 @@ def get_today_analytics(
     today = date.today()
     analytics_service = AnalyticsService(db)
     return analytics_service.get_daily_analytics(current_user.id, today)
+
+
+
+# from fastapi import APIRouter, Depends
+# from sqlalchemy.orm import Session
+# from app.dependencies import get_db
+from .services import get_top_users_by_time_spent
+
+# router = APIRouter()
+
+@router.get("/top-users/{timeframe}")
+def top_users(timeframe: str, db: Session = Depends(get_db)):
+    """
+    Get top users by time spent for a given timeframe ('daily', 'weekly', 'monthly').
+    """
+    if timeframe not in ["daily", "weekly", "monthly"]:
+        return {"error": "Invalid timeframe. Use 'daily', 'weekly', or 'monthly'."}
+
+    return get_top_users_by_time_spent(db, timeframe)

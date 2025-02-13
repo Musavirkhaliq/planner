@@ -1194,3 +1194,71 @@ canvas {
      margin-bottom: 1rem;
    }
    
+
+
+/* leaderboard */
+
+
+/* Leaderboard Section */
+.leaderboard {
+  padding: 2rem 0;
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  border-top: 1px solid #dee2e6;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.leaderboard h2 {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  color: #343a40;
+  margin-bottom: 1rem;
+}
+
+.leaderboard .leaderboard-card {
+  border: none;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  background: #ffffff;
+}
+
+.leaderboard .leaderboard-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+.leaderboard .card-header {
+  background: #007bff;
+  color: #fff;
+  font-size: 1.1rem;
+  padding: 0.75rem 1rem;
+  border-bottom: none;
+}
+
+.leaderboard .leaderboard-list .list-group-item {
+  background: #fff;
+  border: none;
+  padding: 0.75rem 1rem;
+  font-family: 'Roboto', sans-serif;
+  font-size: 0.95rem;
+  transition: background 0.2s ease;
+  border-top: 1px solid #f1f3f5;
+}
+
+.leaderboard .leaderboard-list .list-group-item:first-child {
+  border-top: 1px solid #007bff;
+}
+
+.leaderboard .leaderboard-list .list-group-item:hover {
+  background: #f1f1f1;
+}
+
+/* Responsive Spacing */
+@media (max-width: 768px) {
+  .leaderboard {
+    padding: 1.5rem 0;
+  }
+  .leaderboard h2 {
+    font-size: 1.5rem;
+  }
+}
