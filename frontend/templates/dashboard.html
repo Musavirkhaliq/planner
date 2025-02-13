@@ -15,7 +15,7 @@
         <div class="container-fluid">
             <a class="navbar-brand" href="/">
                 <img src="/static/img/planner_logo_100x100.png" alt="Planner Logo" class="navbar-logo" style="max-width: 35px;;">
-                Planner
+                Planner Dashboard
             </a>
             <div class="ms-auto">
                 <button class="btn btn-outline-danger btn-sm rounded-pill px-4" id="logoutBtn">
@@ -134,7 +134,31 @@
             <h2 class="fw-bold mb-4">
                 <i class="fas fa-chart-bar me-2"></i>Productivity Analytics
             </h2>
-            <canvas id="productivityChart"></canvas>
+            <!-- <canvas id="productivityChart"></canvas> -->
+            <!-- Today's Analytics Section -->
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold mb-4">Today</h2>
+                <div class="bg-white p-4 rounded-lg shadow">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                    <p class="text-gray-600">Total Slots</p>
+                    <p class="text-2xl font-bold" id="todayTotalSlots">-</p>
+                    </div>
+                    <div>
+                    <p class="text-gray-600">Completed Slots</p>
+                    <p class="text-2xl font-bold text-green-600" id="todayCompletedSlots">-</p>
+                    </div>
+                    <div>
+                    <p class="text-gray-600">Total Minutes</p>
+                    <p class="text-2xl font-bold" id="todayTotalMinutes">-</p>
+                    </div>
+                    <div>
+                    <p class="text-gray-600">Completion Rate</p>
+                    <p class="text-2xl font-bold" id="todayCompletionRate">-%</p>
+                    </div>
+                </div>
+                </div>
+            </div>
             
             <!-- Add a button to navigate to the analytics page -->
             <div class="mt-4">
