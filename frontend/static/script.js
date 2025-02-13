@@ -10,7 +10,13 @@ async function submitForm(e, url, formData, isJson = true) {
             body: isJson ? JSON.stringify(formData) : new URLSearchParams(formData)
         });
         if (response.ok) {
-            return await response.json();
+             let result = await response.json();
+             if (result.message) {
+                if (result.message === "verify_email") {
+                    window.location.href = `/verify-email?email=${result.email}`;
+                }
+             }
+             return result;
         } else {
             const errorData = await response.json();
             alert(`Error: ${errorData.detail || "Unknown error"}`);
@@ -35,9 +41,13 @@ document.getElementById("loginForm")?.addEventListener("submit", async (e) => {
 // Register Form Submission
 document.getElementById("registerForm")?.addEventListener("submit", async (e) => {
     const email = document.getElementById("email").value;
+    const username = document.getElementById("username").value;
     const password = document.getElementById("password").value;
-    const data = await submitForm(e, "/api/users/", { email, password });
-    if (data) window.location.href = "/login";
+    const data = await submitForm(e, "/api/users/", { email, username, password });
+    if (data) {
+        // Redirect to email verification page
+        window.location.href = `/verify-email?email=${encodeURIComponent(email)}`;
+    }
 });
 
 // ---------- DASHBOARD FUNCTIONS -----------
@@ -172,14 +182,16 @@ document.addEventListener("DOMContentLoaded", async () => {
 // frontend/static/script.js
 
 document.addEventListener("DOMContentLoaded", () => {
-  initAuth();
-  initTimeSlotForm();
-  initBookingDatePicker();
-  // Initially load bookings for today
-  const today = new Date().toISOString().split("T")[0];
-  document.getElementById("bookingDate").value = today;
-  loadTimeSlotsByDate(today);
-  // fetchAnalytics(today, today);
+  if (document.querySelector('.hours')) {
+    initAuth();
+    initTimeSlotForm();
+    initBookingDatePicker();
+    // Initially load bookings for today
+    const today = new Date().toISOString().split("T")[0];
+    document.getElementById("bookingDate").value = today;
+    loadTimeSlotsByDate(today);
+    // fetchAnalytics(today, today);
+  }
 });
   
   // ---------- AUTH FUNCTIONS ----------
@@ -572,30 +584,33 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 // Update digital clock
-function updateDigitalClock() {
-  const now = new Date();
-  const hours = String(now.getHours()).padStart(2, '0');
-  const minutes = String(now.getMinutes()).padStart(2, '0');
-  const seconds = String(now.getSeconds()).padStart(2, '0');
+// check if the element exists
+if (document.querySelector('.hours')) {
+  function updateDigitalClock() {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
 
-  document.querySelector('.hours').textContent = hours;
-  document.querySelector('.minutes').textContent = minutes;
-  document.querySelector('.seconds').textContent = seconds;
+    document.querySelector('.hours').textContent = hours;
+    document.querySelector('.minutes').textContent = minutes;
+    document.querySelector('.seconds').textContent = seconds;
+  }
+
+  // Update clock every second
+  setInterval(updateDigitalClock, 1000);
+  updateDigitalClock(); // Initial update
+
+  // Minimize/Maximize functionality
+  const minimizeBtn = document.querySelector('.minimize-btn');
+  const timerSection = document.querySelector('.timer-section');
+
+  minimizeBtn.addEventListener('click', () => {
+    timerSection.style.display = timerSection.style.display === 'none' ? 'block' : 'none';
+    minimizeBtn.innerHTML = timerSection.style.display === 'none' ? 
+        '<i class="fas fa-plus"></i>' : '<i class="fas fa-minus"></i>';
+  });
 }
-
-// Update clock every second
-setInterval(updateDigitalClock, 1000);
-updateDigitalClock(); // Initial update
-
-// Minimize/Maximize functionality
-const minimizeBtn = document.querySelector('.minimize-btn');
-const timerSection = document.querySelector('.timer-section');
-
-minimizeBtn.addEventListener('click', () => {
-  timerSection.style.display = timerSection.style.display === 'none' ? 'block' : 'none';
-  minimizeBtn.innerHTML = timerSection.style.display === 'none' ? 
-      '<i class="fas fa-plus"></i>' : '<i class="fas fa-minus"></i>';
-});
 
 
 
@@ -745,7 +760,61 @@ minimizeBtn.addEventListener('click', () => {
 //   dailyDiv.innerHTML = dailyHTML;
 // }
 
+/**
+ * Fetch overall analytics data from the backend.
+ */
+function fetchOverallAnalytics() {
+  const token = localStorage.getItem("access_token");
+  if (document.getElementById('overall-analytics')) {
+    fetch('/api/analytics', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+      .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${ response.status }`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      renderOverallAnalytics(data);
+    })
+    .catch(error => {
+      console.error('Error fetching overall analytics:', error);
+      document.getElementById('overall-analytics').innerHTML =
+        '<p style="color:red;">Unable to load analytics data.</p>';
+    });
+  }
+}
 
+/**
+ * Fetch daily analytics data from the backend.
+ */
+function fetchDailyAnalytics() {
+  const token = localStorage.getItem("access_token");
+  if (document.getElementById('#daily-analytics')) {
+    fetch('/api/analytics/daily', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+      .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      renderDailyAnalytics(data);
+    })
+    .catch(error => {
+      console.error('Error fetching daily analytics:', error);
+      document.getElementById('#daily-analytics').innerHTML =
+        '<p style="color:red;">Unable to load daily analytics data.</p>';
+    });
+  }
+}
 
 
 

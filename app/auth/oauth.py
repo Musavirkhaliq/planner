@@ -91,7 +91,9 @@ async def get_or_create_user_from_google(db: Session, google_user: dict):
     if not user:
         # Create new user with random password since they'll use Google login
         random_pass = secrets.token_urlsafe(32)
-        user_create = schemas.UserCreate(email=email, password=random_pass)
+        # get first part of email as username
+        username = email.split('@')[0]
+        user_create = schemas.UserCreate(email=email, password=random_pass, username=username)
         user = user_services.create_user(db=db, user=user_create)
     
     return user 
