@@ -19,12 +19,20 @@
       <div class="col-md-5">
         <div class="register-card">
           <div class="card-body">
-            <h2 class="text-center">Create Account</h2>
+            <div class="text-center"> 
+              <img src="/static/img/planner_logo_100x100.png" alt="Planner Logo" class="auth-logo mb-4">
+              <h3 class="text-center">Create an Account</h3>
+            </div>
             <!-- Google OAuth Button -->
             <a href="/api/auth/login/google" class="btn btn-light w-100 mb-4 d-flex align-items-center justify-content-center">
               <img src="https://www.google.com/favicon.ico" alt="Google" class="me-2" style="width: 18px;">
               Continue with Google
             </a>
+
+            <div class="divider">
+              <span class="bg-white px-3 py-2 rounded-pill text-muted">OR</span>
+            </div>
+
             <form id="registerForm">
               <div class="mb-4">
                 <label for="email" class="form-label">Email Address</label>
