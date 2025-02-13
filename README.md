@@ -38,7 +38,7 @@ touch app.db
 GOOGLE_CLIENT_ID="your_google_client_id"
 GOOGLE_CLIENT_SECRET="your_google_client_secret"
 
-# if you put these here to please update config.py
+<!-- if you put these here to please update config.py -->
 DATABASE_URL="your_database_url"
 SECRET_KEY="your_secret_key"
 ALGORITHM="your_algorithm"
