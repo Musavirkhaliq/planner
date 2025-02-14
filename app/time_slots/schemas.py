@@ -19,6 +19,8 @@ class TimeSlotUpdate(BaseModel):
     report_minutes: Optional[int] = None
     status: Optional[str] = Field(None, description="Status of the time slot: completed, in_progress, not_started")
 
+    class Config:
+        orm_mode = True
 class TimeSlot(TimeSlotBase): 
     id: int
     owner_id: int
