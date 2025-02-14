@@ -223,118 +223,229 @@ document.addEventListener("DOMContentLoaded", () => {
   function initTimeSlotForm() {
     const timeSlotForm = document.getElementById("timeSlotForm");
     if (timeSlotForm) {
-      timeSlotForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const startTime = document.getElementById("startTime").value;
-        const endTime = document.getElementById("endTime").value;
-        const task = document.getElementById("task").value;
-        const bookingDate = document.getElementById("bookingDate").value;
-        const token = localStorage.getItem("access_token");
-  
-        const payload = {
-          start_time: `${bookingDate}T${startTime}`,
-          end_time: `${bookingDate}T${endTime}`,
-          description: task,
-          date: bookingDate  // assuming the API accepts a date field
-        };
-  
-        const response = await fetch("/api/time_slots/", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(payload),
-        });
-  
-        if (response.ok) {
-          timeSlotForm.reset();
-          // Reapply the selected date (if the reset clears it)
-          document.getElementById("bookingDate").value = bookingDate;
-          loadTimeSlotsByDate(bookingDate);
-        } else {
-          alert("Failed to add time slot");
-        }
-      });
-    }
-  }
+        timeSlotForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const startTime = document.getElementById("startTime").value;
+            const endTime = document.getElementById("endTime").value;
+            const task = document.getElementById("task").value;
+            const bookingDate = document.getElementById("bookingDate").value;
+            const token = localStorage.getItem("access_token");
 
+            const payload = {
+                start_time: `${bookingDate}T${startTime}`,
+                end_time: `${bookingDate}T${endTime}`,
+                description: task,
+                date: bookingDate
+            };
+
+            const isEditing = timeSlotForm.dataset.editingId;
+            const url = isEditing 
+                ? `/api/time_slots/${timeSlotForm.dataset.editingId}`
+                : "/api/time_slots";  // Remove trailing slash
+            const method = isEditing ? "PUT" : "POST";
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`,
+                    },
+                    body: JSON.stringify(payload),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Failed to save time slot');
+                }
+
+                // Reset form and update table
+                timeSlotForm.reset();
+                delete timeSlotForm.dataset.editingId;
+                
+                // Reset submit button
+                const submitBtn = timeSlotForm.querySelector('button[type="submit"]');
+                submitBtn.innerHTML = '<i class="fas fa-plus me-2"></i>Add';
+                submitBtn.classList.remove('btn-success');
+                submitBtn.classList.add('btn-primary');
+                
+                // Reapply the selected date and reload table
+                document.getElementById("bookingDate").value = bookingDate;
+                await loadTimeSlotsByDate(bookingDate);
+                
+                // Update analytics after successful save
+                fetchTodayAnalytics();
+            } catch (error) {
+                console.error('Error saving time slot:', error);
+                alert(error.message || 'Failed to save time slot. Please try again.');
+            }
+        });
+    }
+}
   
   // Render the time slot table rows.
-  function renderTimeSlotTable(slots) {
-    const tableBody = document.querySelector("#timeSlotTable tbody");
-    tableBody.innerHTML = "";
+  // Render the time slot table rows with edit and delete functionality
+function renderTimeSlotTable(slots) {
+  const tableBody = document.querySelector("#timeSlotTable tbody");
+  tableBody.innerHTML = "";
 
-    slots.forEach((slot) => {
-        const start = new Date(slot.start_time);
-        const end = new Date(slot.end_time);
-        const allottedMinutes = Math.round((end - start) / 60000);
-        const reportedMinutes = slot.report_minutes || 0;
-        const progressPercent = Math.min(100, Math.round((reportedMinutes / allottedMinutes) * 100));
-        const ratingStars = "★".repeat(Math.max(1, Math.round(progressPercent / 20)));
+  slots.forEach((slot) => {
+      const start = new Date(slot.start_time);
+      const end = new Date(slot.end_time);
+      const allottedMinutes = Math.round((end - start) / 60000);
+      const reportedMinutes = slot.report_minutes || 0;
+      const progressPercent = Math.min(100, Math.round((reportedMinutes / allottedMinutes) * 100));
+      const ratingStars = "★".repeat(Math.max(1, Math.round(progressPercent / 20)));
 
-        const tr = document.createElement("tr");
-        tr.setAttribute("data-slot-id", slot.id);
+      const tr = document.createElement("tr");
+      tr.setAttribute("data-slot-id", slot.id);
 
-        // TIME
-        const timeTd = document.createElement("td");
-        timeTd.textContent = `${start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} - ${end.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
-        tr.appendChild(timeTd);
+      // TIME
+      const timeTd = document.createElement("td");
+      timeTd.textContent = `${start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} - ${end.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+      tr.appendChild(timeTd);
 
-        // STATUS (Dropdown)
-        const statusTd = document.createElement("td");
-        const statusSelect = document.createElement("select");
-        statusSelect.className = "statusSelect";
-        statusSelect.innerHTML = `
-            <option value="completed" ${slot.status === 'completed' ? 'selected' : ''}>Completed</option>
-            <option value="in_progress" ${slot.status === 'in_progress' ? 'selected' : ''}>In Progress</option>
-            <option value="not_started" ${slot.status === 'not_started' ? 'selected' : ''}>Not Started</option>
-        `;
-        statusSelect.addEventListener("change", async () => {
-            const newStatus = statusSelect.value;
-            await updateTimeSlotField(slot.id, { status: newStatus }); // Update status on the server
-        });
-        statusTd.appendChild(statusSelect);
-        tr.appendChild(statusTd);
+      // STATUS
+      const statusTd = document.createElement("td");
+      const statusSelect = document.createElement("select");
+      statusSelect.className = "statusSelect form-select form-select-sm";
+      statusSelect.innerHTML = `
+          <option value="completed" ${slot.status === 'completed' ? 'selected' : ''}>Completed</option>
+          <option value="in_progress" ${slot.status === 'in_progress' ? 'selected' : ''}>In Progress</option>
+          <option value="not_started" ${slot.status === 'not_started' ? 'selected' : ''}>Not Started</option>
+      `;
+      statusSelect.addEventListener("change", async () => {
+          const newStatus = statusSelect.value;
+          await updateTimeSlotField(slot.id, { status: newStatus });
+      });
+      statusTd.appendChild(statusSelect);
+      tr.appendChild(statusTd);
 
-        // TO-DO LIST (Task description)
-        const descTd = document.createElement("td");
-        descTd.textContent = slot.description;
-        tr.appendChild(descTd);
+      // TASK
+      const descTd = document.createElement("td");
+      descTd.textContent = slot.description;
+      tr.appendChild(descTd);
 
-        // REPORT (Min)
-        const reportTd = document.createElement("td");
-        const reportInput = document.createElement("input");
-        reportInput.type = "number";
-        reportInput.min = 0;
-        reportInput.value = reportedMinutes;
-        reportInput.className = "form-control form-control-sm";
-        reportInput.style.width = "80px";
-        reportInput.addEventListener("change", () => {
-            updateTimeSlotReport(slot.id, parseInt(reportInput.value), allottedMinutes);
-        });
-        reportTd.appendChild(reportInput);
-        tr.appendChild(reportTd);
+      // REPORT
+      const reportTd = document.createElement("td");
+      const reportInput = document.createElement("input");
+      reportInput.type = "number";
+      reportInput.min = 0;
+      reportInput.value = reportedMinutes;
+      reportInput.className = "form-control form-control-sm";
+      reportInput.style.width = "80px";
+      reportInput.addEventListener("change", () => {
+          updateTimeSlotReport(slot.id, parseInt(reportInput.value), allottedMinutes);
+      });
+      reportTd.appendChild(reportInput);
+      tr.appendChild(reportTd);
 
-        // PROGRESS (Progress bar)
-        const progressTd = document.createElement("td");
-        const progressDiv = document.createElement("div");
-        progressDiv.className = "progress";
-        const progressBar = document.createElement("div");
-        progressBar.className = "progress-bar";
-        progressBar.style.width = `${progressPercent}%`;
-        progressBar.textContent = `${progressPercent}%`;
-        progressDiv.appendChild(progressBar);
-        progressTd.appendChild(progressDiv);
-        tr.appendChild(progressTd);
+      // PROGRESS
+      const progressTd = document.createElement("td");
+      const progressDiv = document.createElement("div");
+      progressDiv.className = "progress";
+      const progressBar = document.createElement("div");
+      progressBar.className = "progress-bar";
+      progressBar.style.width = `${progressPercent}%`;
+      progressBar.textContent = `${progressPercent}%`;
+      progressDiv.appendChild(progressBar);
+      progressTd.appendChild(progressDiv);
+      tr.appendChild(progressTd);
 
-        // RATING (Stars)
-        const ratingTd = document.createElement("td");
-        ratingTd.textContent = ratingStars;
-        tr.appendChild(ratingTd);
+      // RATING
+      const ratingTd = document.createElement("td");
+      ratingTd.textContent = ratingStars;
+      tr.appendChild(ratingTd);
 
-        tableBody.appendChild(tr);
-    });
+      // ACTIONS
+      const actionsTd = document.createElement("td");
+      actionsTd.className = "text-end";
+      actionsTd.innerHTML = `
+          <div class="btn-group btn-group-sm">
+              <button class="btn btn-outline-primary edit-slot" title="Edit">
+                  <i class="fas fa-edit"></i>
+              </button>
+              <button class="btn btn-outline-danger delete-slot" title="Delete">
+                  <i class="fas fa-trash-alt"></i>
+              </button>
+          </div>
+      `;
+
+      // Add event listeners for edit and delete
+      const editBtn = actionsTd.querySelector('.edit-slot');
+      const deleteBtn = actionsTd.querySelector('.delete-slot');
+
+      editBtn.addEventListener('click', () => handleEdit(slot));
+      deleteBtn.addEventListener('click', () => handleDelete(slot.id));
+
+      tr.appendChild(actionsTd);
+      tableBody.appendChild(tr);
+  });
+}
+
+
+// Handle edit functionality
+// Handle edit functionality
+async function handleEdit(slot) {
+  // Convert ISO datetime to date and time parts
+  const startDateTime = new Date(slot.start_time);
+  const endDateTime = new Date(slot.end_time);
+  
+  // Set form values
+  document.getElementById('bookingDate').value = startDateTime.toISOString().split('T')[0];
+  document.getElementById('startTime').value = startDateTime.toTimeString().slice(0, 5);
+  document.getElementById('endTime').value = endDateTime.toTimeString().slice(0, 5);
+  document.getElementById('task').value = slot.description;
+
+  // Change form submit button
+  const submitBtn = document.querySelector('#timeSlotForm button[type="submit"]');
+  submitBtn.innerHTML = '<i class="fas fa-save me-2"></i>Update';
+  submitBtn.classList.remove('btn-primary');
+  submitBtn.classList.add('btn-success');
+  
+  // Store the slot ID being edited
+  timeSlotForm.dataset.editingId = slot.id;
+  
+  // Scroll to form
+  timeSlotForm.scrollIntoView({ behavior: 'smooth' });
+}
+
+// Handle delete functionality
+async function handleDelete(slotId) {
+  if (!confirm('Are you sure you want to delete this time slot?')) {
+      return;
+  }
+
+  const token = localStorage.getItem('access_token');
+  try {
+      const response = await fetch(`/api/time_slots/${slotId}`, {
+          method: 'DELETE',
+          headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+          }
+      });
+
+      if (response.status === 204) {  // No Content response
+          // Find and remove the row with animation
+          const row = document.querySelector(`tr[data-slot-id="${slotId}"]`);
+          if (row) {
+              row.style.transition = 'opacity 0.3s';
+              row.style.opacity = '0';
+              setTimeout(() => {
+                  row.remove();
+                  // Update analytics after successful deletion
+                  fetchTodayAnalytics();
+              }, 300);
+          }
+      } else {
+          const errorData = await response.json();
+          throw new Error(errorData.detail || 'Failed to delete time slot');
+      }
+  } catch (error) {
+      console.error('Error deleting time slot:', error);
+      alert(error.message || 'Failed to delete time slot. Please try again.');
+  }
 }
 
 
