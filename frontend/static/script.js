@@ -231,6 +231,12 @@ document.addEventListener("DOMContentLoaded", () => {
             const bookingDate = document.getElementById("bookingDate").value;
             const token = localStorage.getItem("access_token");
 
+            if (!token) {
+                alert("Please log in to book time slots");
+                window.location.href = "/login";
+                return;
+            }
+
             const payload = {
                 start_time: `${bookingDate}T${startTime}`,
                 end_time: `${bookingDate}T${endTime}`,
@@ -239,25 +245,34 @@ document.addEventListener("DOMContentLoaded", () => {
             };
 
             const isEditing = timeSlotForm.dataset.editingId;
+            // Remove the trailing slash and ensure the URL is correct
+            const baseUrl = window.location.origin; // Get the base URL dynamically
             const url = isEditing 
-                ? `/api/time_slots/${timeSlotForm.dataset.editingId}`
-                : "/api/time_slots";  // Remove trailing slash
+                ? `${baseUrl}/api/time_slots/${timeSlotForm.dataset.editingId}`
+                : `${baseUrl}/api/time_slots`;
             const method = isEditing ? "PUT" : "POST";
 
             try {
+                console.log('Sending request to:', url); // Debug log
+                console.log('Payload:', payload); // Debug log
+
                 const response = await fetch(url, {
                     method: method,
                     headers: {
                         "Content-Type": "application/json",
                         "Authorization": `Bearer ${token}`,
                     },
+                    credentials: 'include', // Include cookies if needed
                     body: JSON.stringify(payload),
                 });
 
                 if (!response.ok) {
                     const errorData = await response.json();
-                    throw new Error(errorData.detail || 'Failed to save time slot');
+                    throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
                 }
+
+                const result = await response.json();
+                console.log('Success:', result); // Debug log
 
                 // Reset form and update table
                 timeSlotForm.reset();
@@ -273,11 +288,18 @@ document.addEventListener("DOMContentLoaded", () => {
                 document.getElementById("bookingDate").value = bookingDate;
                 await loadTimeSlotsByDate(bookingDate);
                 
-                // Update analytics after successful save
+                // Update analytics
                 fetchTodayAnalytics();
+
             } catch (error) {
-                console.error('Error saving time slot:', error);
-                alert(error.message || 'Failed to save time slot. Please try again.');
+                console.error('Error details:', error); // Detailed error logging
+                
+                // Handle specific error cases
+                if (error.message.includes('Failed to fetch')) {
+                    alert('Network error: Please check your internet connection and try again.');
+                } else {
+                    alert(`Failed to save time slot: ${error.message}`);
+                }
             }
         });
     }
