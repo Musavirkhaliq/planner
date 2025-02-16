@@ -1,5 +1,63 @@
 // frontend/static/script.js
 
+// Add this function at the beginning of the file
+function parseJwt(token) {
+    try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+
+        return JSON.parse(jsonPayload);
+    } catch(e) {
+        return null;
+    }
+}
+
+function isTokenExpired(token) {
+    if (!token) return true;
+    
+    const decodedToken = parseJwt(token);
+    if (!decodedToken) return true;
+
+    const currentTime = Date.now() / 1000;
+    return decodedToken.exp < currentTime;
+}
+
+// Add this function to check auth state
+function checkAuthState() {
+    const token = localStorage.getItem('access_token');
+    const currentPath = window.location.pathname;
+    const publicPaths = ['/login', '/register', '/verify-email'];
+    
+    if (isTokenExpired(token)) {
+        localStorage.removeItem('access_token');
+        
+        // Only redirect if not already on a public path
+        if (!publicPaths.some(path => currentPath.startsWith(path))) {
+            window.location.href = '/login';
+        }
+        return false;
+    }
+    return true;
+}
+
+// Add this immediately after existing DOMContentLoaded listeners
+document.addEventListener('DOMContentLoaded', () => {
+    checkAuthState();
+});
+
+// Add visibility change handler to check token on tab focus
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+        checkAuthState();
+    }
+});
+
+// Check auth state every 5 minutes
+setInterval(checkAuthState, 5 * 60 * 1000);
+
 // ---------- LOGIN & REGISTER FUNCTIONS -----------
 async function submitForm(e, url, formData, isJson = true) {
     e.preventDefault();
@@ -52,11 +110,9 @@ document.getElementById("registerForm")?.addEventListener("submit", async (e) =>
 
 // ---------- DASHBOARD FUNCTIONS -----------
 async function fetchWithAuth(url, options = {}) {
+    if (!checkAuthState()) return;
+    
     const token = localStorage.getItem("access_token");
-    if (!token) {
-        window.location.href = "/login";
-        return;
-    }
     options.headers = {
         ...(options.headers || {}),
         "Authorization": `Bearer ${token}`
@@ -245,11 +301,12 @@ document.addEventListener("DOMContentLoaded", () => {
             };
 
             const isEditing = timeSlotForm.dataset.editingId;
-            // Remove the trailing slash and ensure the URL is correct
-            const baseUrl = window.location.origin; // Get the base URL dynamically
-            const url = isEditing 
-                ? `${baseUrl}/api/time_slots/${timeSlotForm.dataset.editingId}`
-                : `${baseUrl}/api/time_slots`;
+            // Ensure URL ends with trailing slash and use window.location.origin
+            const baseUrl = window.location.origin;
+            const apiPath = isEditing 
+                ? `/api/time_slots/${timeSlotForm.dataset.editingId}/`
+                : '/api/time_slots/';
+            const url = `${baseUrl}${apiPath}`;
             const method = isEditing ? "PUT" : "POST";
 
             try {
@@ -264,15 +321,21 @@ document.addEventListener("DOMContentLoaded", () => {
                     },
                     credentials: 'include', // Include cookies if needed
                     body: JSON.stringify(payload),
+                    redirect: 'follow', // Handle redirects automatically
                 });
 
+                // Check if the response was redirected
+                if (response.redirected) {
+                    console.log('Request was redirected to:', response.url);
+                }
+
                 if (!response.ok) {
-                    const errorData = await response.json();
+                    const errorData = await response.json().catch(() => ({}));
                     throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
                 }
 
                 const result = await response.json();
-                console.log('Success:', result); // Debug log
+                console.log('Success:', result);
 
                 // Reset form and update table
                 timeSlotForm.reset();
@@ -292,11 +355,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 fetchTodayAnalytics();
 
             } catch (error) {
-                console.error('Error details:', error); // Detailed error logging
+                console.error('Error details:', error);
                 
-                // Handle specific error cases
                 if (error.message.includes('Failed to fetch')) {
-                    alert('Network error: Please check your internet connection and try again.');
+                    alert('Connection error. Please try again.');
                 } else {
                     alert(`Failed to save time slot: ${error.message}`);
                 }
@@ -737,23 +799,26 @@ document.addEventListener("DOMContentLoaded", () => {
 async function loadTimeSlotsByDate(date) {
   const token = localStorage.getItem("access_token");
   try {
-      const response = await fetch(`/api/time_slots/?date=${date}`, {
+      const baseUrl = window.location.origin;
+      const response = await fetch(`${baseUrl}/api/time_slots/?date=${date}`, {
           headers: { 
               Authorization: `Bearer ${token}`,
               'Accept': 'application/json'
-          }
+          },
+          credentials: 'include',
+          redirect: 'follow'
       });
       
       if (response.ok) {
           const slots = await response.json();
           renderTimeSlotTable(slots); // Render the table with status
       } else {
-          const error = await response.json();
+          const error = await response.json().catch(() => ({}));
           alert(`Failed to load time slots: ${error.detail || 'Unknown error'}`);
       }
   } catch (error) {
       console.error("Error loading time slots:", error);
-      alert("Failed to load time slots. Please try again.");
+      alert("Failed to load time slots. Please check your connection and try again.");
   }
 }
 

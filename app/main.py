@@ -18,7 +18,11 @@ app = FastAPI()
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://planner.sukoonsphere.org",
+        "http://localhost:9000",
+        "http://127.0.0.1:9000"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
