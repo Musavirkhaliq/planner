@@ -776,8 +776,8 @@ document.addEventListener("DOMContentLoaded", () => {
 // check if the element exists
 if (document.querySelector('.hours')) {
   function updateDigitalClock() {
-      const now = new Date();
-      const hours = String(now.getHours()).padStart(2, '0');
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
     const minutes = String(now.getMinutes()).padStart(2, '0');
     const seconds = String(now.getSeconds()).padStart(2, '0');
 
@@ -790,14 +790,44 @@ if (document.querySelector('.hours')) {
   setInterval(updateDigitalClock, 1000);
   updateDigitalClock(); // Initial update
 
-  // Minimize/Maximize functionality
+  // Minimize/Maximize functionality with localStorage and responsive behavior
   const minimizeBtn = document.querySelector('.minimize-btn');
   const timerSection = document.querySelector('.timer-section');
 
-  minimizeBtn.addEventListener('click', () => {
-    timerSection.style.display = timerSection.style.display === 'none' ? 'block' : 'none';
-    minimizeBtn.innerHTML = timerSection.style.display === 'none' ? 
+  function checkWindowSize() {
+    // Consider devices below 768px as mobile
+    const isMobile = window.innerWidth < 768;
+    
+    // Get stored preference, defaulting to minimized on mobile
+    const storedState = localStorage.getItem('timerSectionMinimized');
+    const shouldMinimize = storedState === null ? isMobile : storedState === 'true';
+    
+    timerSection.style.display = shouldMinimize ? 'none' : 'block';
+    minimizeBtn.innerHTML = shouldMinimize ? 
         '<i class="fas fa-plus"></i>' : '<i class="fas fa-minus"></i>';
+        
+    // Store initial state
+    localStorage.setItem('timerSectionMinimized', shouldMinimize);
+  }
+
+  // Check on load
+  checkWindowSize();
+
+  // Check on resize
+  let resizeTimeout;
+  window.addEventListener('resize', () => {
+    // Debounce the resize event
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(checkWindowSize, 250);
+  });
+
+  minimizeBtn.addEventListener('click', () => {
+    const willMinimize = timerSection.style.display !== 'none';
+    timerSection.style.display = willMinimize ? 'none' : 'block';
+    minimizeBtn.innerHTML = willMinimize ? 
+        '<i class="fas fa-plus"></i>' : '<i class="fas fa-minus"></i>';
+    // Save state to localStorage
+    localStorage.setItem('timerSectionMinimized', willMinimize);
   });
 }
 
