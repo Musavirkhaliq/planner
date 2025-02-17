@@ -5,6 +5,9 @@ const momentum = {
         currentLevel: document.getElementById('current-level'),
         levelTitle: document.getElementById('level-title'),
         levelProgress: document.getElementById('level-progress'),
+        profileLevel: document.getElementById('profile-level'),
+        profileLevelTitle: document.getElementById('profile-level-title'),
+        profileLevelProgress: document.getElementById('profile-level-progress'),
         levelProgressText: document.getElementById('level-progress-text'),
         totalPoints: document.getElementById('total-points'),
         weeklyPoints: document.getElementById('weekly-points'),
@@ -75,6 +78,16 @@ const momentum = {
         if (this.elements.levelProgressText) {
             this.elements.levelProgressText.textContent = `${points_to_next_level} points to next level`;
         }
+        if (this.elements.profileLevelProgress) {
+            this.elements.profileLevelProgress.style.width = `${completion_percentage}%`;
+        }
+        if (this.elements.profileLevel) {
+            this.elements.profileLevel.textContent = current_level.level_number;
+        }
+        if (this.elements.profileLevelTitle) {
+            this.elements.profileLevelTitle.textContent = current_level.title;
+        }
+        
         if (this.elements.totalPoints) {
             this.elements.totalPoints.textContent = total_points.toLocaleString();
         }
