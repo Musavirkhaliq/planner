@@ -600,19 +600,19 @@ let lastTimestamp;
 let ws;
 
 // WebSocket setup
-function initializeWebSocket() {
-  ws = new WebSocket('wss://your-websocket-server.com'); //  WebSocket server
+// function initializeWebSocket() {
+//   ws = new WebSocket('wss://your-websocket-server.com'); //  WebSocket server
 
-  ws.onmessage = (event) => {
-    const data = JSON.parse(event.data);
-    syncTimerState(data);
-  };
+//   ws.onmessage = (event) => {
+//     const data = JSON.parse(event.data);
+//     syncTimerState(data);
+//   };
 
-  ws.onclose = () => {
-    // Attempt to reconnect
-    setTimeout(initializeWebSocket, 1000);
-  };
-}
+//   ws.onclose = () => {
+//     // Attempt to reconnect
+//     setTimeout(initializeWebSocket, 1000);
+//   };
+// }
 
 // Timer state management
 function saveTimerState(remainingTime, isWorking, isActive) {

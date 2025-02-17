@@ -79,6 +79,9 @@ class LeaderboardEntry(BaseModel):
     achievements_count: int
     longest_streak: int
 
+    class Config:
+        from_attributes = True
+
 class MomentumStats(BaseModel):
     total_achievements: int
     total_points: int

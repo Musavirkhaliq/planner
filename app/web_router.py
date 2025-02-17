@@ -48,3 +48,11 @@ async def read_dashboard(request: Request):
 @router.get("/analytics", response_class=HTMLResponse)
 async def read_dashboard(request: Request):
     return templates.TemplateResponse("analytics.html", {"request": request}) 
+
+@router.get("/momentum", response_class=HTMLResponse)
+async def momentum_page(request: Request):
+    """Render the momentum profile page"""
+    return templates.TemplateResponse(
+        "momentum.html",
+        {"request": request}
+    ) 

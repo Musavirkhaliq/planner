@@ -3,11 +3,12 @@
 from sqlalchemy.orm import Session
 import logging
 from sqlalchemy import func
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional, List, Dict
 from .. import models
 from . import schemas
 from .momentum import POINT_EVENTS, ACHIEVEMENTS, LEVELS, CriteriaType
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -125,6 +126,66 @@ class MomentumService:
         """Get detailed progress information for a user"""
         user = self.db.query(models.User).filter(models.User.id == user_id).first()
         
+        # Initialize user's points if not set
+        if user.total_points is None:
+            user.total_points = 0
+            user.weekly_points = 0
+            user.monthly_points = 0
+        
+        # Initialize user's level if not set
+        if not user.current_level_id:
+            level_1 = self.db.query(models.Level).filter(
+                models.Level.level_number == 1
+            ).first()
+            
+            if not level_1:
+                # Create level 1 if it doesn't exist
+                perks = {
+                    "can_create_goals": True,
+                    "can_track_time": True,
+                    "can_earn_achievements": True,
+                    "can_view_analytics": True
+                }
+                level_1 = models.Level(
+                    level_number=1,
+                    points_required=0,
+                    title=LEVELS[0]['title'],
+                    perks=json.dumps(perks)  # Serialize perks to JSON string
+                )
+                self.db.add(level_1)
+                self.db.commit()
+                self.db.refresh(level_1)
+            else:
+                # Ensure perks is a JSON string
+                if isinstance(level_1.perks, dict):
+                    level_1.perks = json.dumps(level_1.perks)
+                    self.db.commit()
+                elif level_1.perks is None:
+                    level_1.perks = json.dumps({
+                        "can_create_goals": True,
+                        "can_track_time": True,
+                        "can_earn_achievements": True,
+                        "can_view_analytics": True
+                    })
+                    self.db.commit()
+            
+            user.current_level_id = level_1.id
+            self.db.commit()
+            self.db.refresh(user)
+        
+        # Ensure current level perks is properly serialized
+        if user.current_level.perks is None:
+            user.current_level.perks = json.dumps({
+                "can_create_goals": True,
+                "can_track_time": True,
+                "can_earn_achievements": True,
+                "can_view_analytics": True
+            })
+            self.db.commit()
+        elif isinstance(user.current_level.perks, dict):
+            user.current_level.perks = json.dumps(user.current_level.perks)
+            self.db.commit()
+        
         # Get next level information
         next_level = self.db.query(models.Level).filter(
             models.Level.points_required > user.total_points
@@ -134,7 +195,7 @@ class MomentumService:
         points_to_next = next_level.points_required - user.total_points if next_level else 0
         total_points_in_level = (next_level.points_required - user.current_level.points_required) if next_level else 1
         points_earned_in_level = user.total_points - user.current_level.points_required
-        completion_percentage = (points_earned_in_level / total_points_in_level) * 100
+        completion_percentage = (points_earned_in_level / total_points_in_level) * 100 if total_points_in_level > 0 else 100
         
         # Get recent achievements
         recent_achievements = self.db.query(models.UserAchievement).filter(
@@ -142,14 +203,37 @@ class MomentumService:
             models.UserAchievement.completed == True
         ).order_by(models.UserAchievement.completed_at.desc()).limit(5).all()
         
+        # Initialize achievements if none exist
+        if not recent_achievements:
+            await self.get_user_achievements(user_id)
+            recent_achievements = []
+        
         # Get active streaks
         active_streaks = self.db.query(models.Streak).filter(
             models.Streak.user_id == user_id,
             models.Streak.current_count > 0
         ).all()
         
+        # Initialize streaks if none exist
+        if not active_streaks:
+            await self.get_user_streaks(user_id)
+            active_streaks = []
+        
+        # Create a copy of the current level with deserialized perks
+        current_level = user.current_level
+        if isinstance(current_level.perks, str):
+            try:
+                current_level.perks = json.loads(current_level.perks)
+            except json.JSONDecodeError:
+                current_level.perks = {
+                    "can_create_goals": True,
+                    "can_track_time": True,
+                    "can_earn_achievements": True,
+                    "can_view_analytics": True
+                }
+        
         return schemas.UserProgress(
-            current_level=user.current_level,
+            current_level=current_level,
             total_points=user.total_points,
             points_to_next_level=points_to_next,
             completion_percentage=completion_percentage,
@@ -172,10 +256,10 @@ class MomentumService:
             points_column = models.User.total_points
             
         leaderboard = self.db.query(
-            models.User.id,
+            models.User.id.label('user_id'),
             models.User.username,
             points_column.label('points'),
-            models.Level.level_number,
+            models.Level.level_number.label('level'),
             func.count(models.UserAchievement.id).label('achievements_count'),
             func.max(models.Streak.longest_count).label('longest_streak')
         ).join(
@@ -194,7 +278,20 @@ class MomentumService:
             models.Level.level_number
         ).order_by(points_column.desc()).limit(limit).all()
         
-        return [schemas.LeaderboardEntry.from_orm(entry) for entry in leaderboard]
+        # Convert SQLAlchemy Row objects to dictionaries with proper field names
+        leaderboard_entries = []
+        for entry in leaderboard:
+            entry_dict = {
+                'user_id': entry.user_id,
+                'username': entry.username,
+                'points': entry.points or 0,  # Handle None values
+                'level': entry.level,
+                'achievements_count': entry.achievements_count or 0,
+                'longest_streak': entry.longest_streak or 0
+            }
+            leaderboard_entries.append(schemas.LeaderboardEntry(**entry_dict))
+        
+        return leaderboard_entries
 
     async def get_momentum_stats(self, user_id: int) -> schemas.MomentumStats:
         """Get comprehensive momentum statistics for a user"""
@@ -394,3 +491,210 @@ class MomentumService:
             if category is None or achievement['category'] == category
         ]
         return filtered_achievements
+
+    async def _check_count_criteria(self, user_id: int, achievement: Dict) -> bool:
+        """Check if count-based achievement criteria are met"""
+        if achievement['category'] == 'productivity':
+            count = self.db.query(models.Task).filter(
+                models.Task.owner_id == user_id,
+                models.Task.completed == True
+            ).count()
+        elif achievement['category'] == 'time_management':
+            count = self.db.query(models.TimeSlot).filter(
+                models.TimeSlot.owner_id == user_id,
+                models.TimeSlot.status == 'completed'
+            ).count()
+        else:
+            count = 0
+        return count >= achievement['criteria_value']
+
+    async def _check_streak_criteria(self, user_id: int, achievement: Dict) -> bool:
+        """Check if streak-based achievement criteria are met"""
+        streak = self.db.query(models.Streak).filter(
+            models.Streak.user_id == user_id,
+            models.Streak.streak_type == achievement['name'].lower()
+        ).first()
+        
+        if not streak:
+            return False
+            
+        return streak.longest_count >= achievement['criteria_value']
+
+    async def _check_time_criteria(self, user_id: int, achievement: Dict) -> bool:
+        """Check if time-based achievement criteria are met"""
+        total_time = self.db.query(func.sum(models.Task.time_spent)).filter(
+            models.Task.owner_id == user_id,
+            models.Task.completed == True
+        ).scalar() or 0
+        
+        return total_time >= achievement['criteria_value']
+
+    async def _check_specific_time_criteria(self, user_id: int, achievement: Dict) -> bool:
+        """Check if specific time-based achievement criteria are met"""
+        if achievement['name'] == 'Early Riser':
+            count = self.db.query(models.Task).filter(
+                models.Task.owner_id == user_id,
+                models.Task.completed == True,
+                func.extract('hour', models.Task.created_at) < 9
+            ).count()
+            return count >= achievement['criteria_value']
+        return False
+
+    async def _check_compound_criteria(self, user_id: int, achievement: Dict) -> bool:
+        """Check if compound achievement criteria are met"""
+        if achievement['name'] == 'Goal Strategist':
+            # Count goals with 5+ steps that are completed
+            complex_goals = self.db.query(models.Goal).filter(
+                models.Goal.owner_id == user_id,
+                models.Goal.completed == True
+            ).join(models.GoalStep).group_by(models.Goal.id).having(
+                func.count(models.GoalStep.id) >= 5
+            ).count()
+            return complex_goals >= achievement['criteria_value']
+            
+        elif achievement['name'] == 'Productivity Pioneer':
+            # Check if user has used all features in a week
+            week_ago = datetime.utcnow() - timedelta(days=7)
+            has_tasks = self.db.query(models.Task).filter(
+                models.Task.owner_id == user_id,
+                models.Task.created_at >= week_ago
+            ).first() is not None
+            
+            has_goals = self.db.query(models.Goal).filter(
+                models.Goal.owner_id == user_id,
+                models.Goal.created_at >= week_ago
+            ).first() is not None
+            
+            has_time_slots = self.db.query(models.TimeSlot).filter(
+                models.TimeSlot.owner_id == user_id,
+                models.TimeSlot.created_at >= week_ago
+            ).first() is not None
+            
+            return has_tasks and has_goals and has_time_slots
+            
+        elif achievement['name'] == 'Leaderboard Legend':
+            # Check if user is #1 on weekly leaderboard
+            top_user = self.db.query(models.User).order_by(
+                models.User.weekly_points.desc()
+            ).first()
+            return top_user and top_user.id == user_id
+            
+        return False
+
+    async def _award_achievement(self, user_id: int, achievement: Dict) -> schemas.Achievement:
+        """Award an achievement to a user"""
+        # Get or create achievement record
+        db_achievement = self.db.query(models.Achievement).filter(
+            models.Achievement.name == achievement['name']
+        ).first()
+        
+        if not db_achievement:
+            db_achievement = models.Achievement(
+                name=achievement['name'],
+                description=achievement['description'],
+                points=achievement['points'],
+                category=achievement['category'],
+                criteria_type=achievement['criteria_type'],
+                criteria_value=achievement['criteria_value'],
+                icon_name=achievement['icon_name']
+            )
+            self.db.add(db_achievement)
+            self.db.commit()
+            self.db.refresh(db_achievement)
+        
+        # Create user achievement record
+        user_achievement = models.UserAchievement(
+            user_id=user_id,
+            achievement_id=db_achievement.id,
+            progress=achievement['criteria_value'],
+            completed=True,
+            completed_at=datetime.utcnow()
+        )
+        self.db.add(user_achievement)
+        
+        # Award points to user
+        user = self.db.query(models.User).filter(models.User.id == user_id).first()
+        user.total_points += achievement['points']
+        user.weekly_points += achievement['points']
+        user.monthly_points += achievement['points']
+        
+        self.db.commit()
+        self.db.refresh(user_achievement)
+        
+        return schemas.Achievement.from_orm(db_achievement)
+
+    async def get_user_streaks(self, user_id: int) -> List[schemas.Streak]:
+        """Get all active streaks for a user"""
+        streaks = self.db.query(models.Streak).filter(
+            models.Streak.user_id == user_id
+        ).all()
+        
+        if not streaks:
+            # Initialize default streaks if none exist
+            default_streak_types = ['daily_tasks', 'weekly_goals', 'focused_sessions']
+            streaks = []
+            
+            for streak_type in default_streak_types:
+                streak = models.Streak(
+                    user_id=user_id,
+                    streak_type=streak_type,
+                    current_count=0,
+                    longest_count=0,
+                    last_activity_date=datetime.utcnow().date()
+                )
+                self.db.add(streak)
+                streaks.append(streak)
+            
+            self.db.commit()
+            for streak in streaks:
+                self.db.refresh(streak)
+        
+        return [schemas.Streak.from_orm(streak) for streak in streaks]
+
+    async def get_user_achievements(self, user_id: int) -> List[schemas.UserAchievement]:
+        """Get all achievements and their status for a user"""
+        # First, ensure all achievements exist in the database
+        for achievement_data in ACHIEVEMENTS:
+            achievement = self.db.query(models.Achievement).filter(
+                models.Achievement.name == achievement_data['name']
+            ).first()
+            
+            if not achievement:
+                achievement = models.Achievement(
+                    name=achievement_data['name'],
+                    description=achievement_data['description'],
+                    points=achievement_data['points'],
+                    category=achievement_data['category'],
+                    criteria_type=achievement_data['criteria_type'],
+                    criteria_value=achievement_data['criteria_value'],
+                    icon_name=achievement_data['icon_name']
+                )
+                self.db.add(achievement)
+                self.db.commit()
+                self.db.refresh(achievement)
+            
+            # Create user achievement tracking if not exists
+            user_achievement = self.db.query(models.UserAchievement).filter(
+                models.UserAchievement.user_id == user_id,
+                models.UserAchievement.achievement_id == achievement.id
+            ).first()
+            
+            if not user_achievement:
+                user_achievement = models.UserAchievement(
+                    user_id=user_id,
+                    achievement_id=achievement.id,
+                    progress=0,
+                    completed=False
+                )
+                self.db.add(user_achievement)
+        
+        self.db.commit()
+        
+        # Get all user achievements with their related achievement data
+        user_achievements = self.db.query(models.UserAchievement).filter(
+            models.UserAchievement.user_id == user_id
+        ).join(
+            models.Achievement
+        ).all()
+        
+        return [schemas.UserAchievement.from_orm(ua) for ua in user_achievements]

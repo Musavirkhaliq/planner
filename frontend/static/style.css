@@ -1396,3 +1396,183 @@ canvas {
   padding: 2rem 0;
   margin-top: 4rem;
 }
+
+/* Momentum Styles */
+.level-badge {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #6b21a8 0%, #3b82f6 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.achievement-icon {
+    width: 60px;
+    height: 60px;
+    background-color: #f8f9fa;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+}
+
+.streak-item {
+    padding: 1rem;
+    border-radius: 0.5rem;
+    background-color: #f8f9fa;
+    transition: transform 0.2s;
+}
+
+.streak-item:hover {
+    transform: translateY(-2px);
+}
+
+.streak-icon {
+    width: 40px;
+    height: 40px;
+    background-color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.leaderboard-item {
+    padding: 1rem;
+    border-radius: 0.5rem;
+    background-color: #f8f9fa;
+    transition: all 0.2s;
+}
+
+.leaderboard-item:hover {
+    transform: translateX(5px);
+    background-color: #e9ecef;
+}
+
+.leaderboard-item.top-three {
+    background: linear-gradient(135deg, rgba(107, 33, 168, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
+}
+
+.text-bronze {
+    color: #cd7f32;
+}
+
+/* Achievement Card Styles */
+.achievement-card {
+    transition: transform 0.2s;
+}
+
+.achievement-card:hover {
+    transform: translateY(-5px);
+}
+
+.achievement-card.completed {
+    border-color: #10b981;
+}
+
+.achievement-card.completed .achievement-icon {
+    background-color: #ecfdf5;
+}
+
+/* Progress Bar Animations */
+.progress-bar {
+    transition: width 0.6s ease;
+}
+
+/* Level Badge Animations */
+@keyframes levelUp {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.level-up {
+    animation: levelUp 0.6s ease-in-out;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .level-badge {
+        width: 50px;
+        height: 50px;
+        font-size: 1.25rem;
+    }
+    
+    .achievement-icon {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .streak-icon {
+        width: 35px;
+        height: 35px;
+    }
+}
+
+/* Button Group Styles */
+.btn-group .btn-outline-primary {
+    border-color: #e9ecef;
+    color: #6b7280;
+}
+
+.btn-group .btn-outline-primary:hover,
+.btn-group .btn-outline-primary.active {
+    background-color: #3b82f6;
+    border-color: #3b82f6;
+    color: white;
+}
+
+/* Card Hover Effects */
+.card {
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+/* Achievement Progress Animation */
+@keyframes progressFill {
+    from {
+        width: 0;
+    }
+}
+
+.progress-bar {
+    animation: progressFill 1s ease-out;
+}
+
+/* Leaderboard Rank Styles */
+.rank {
+    min-width: 40px;
+    text-align: center;
+}
+
+/* Stats Counter Animation */
+@keyframes countUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.stats-counter {
+    animation: countUp 0.5s ease-out;
+}

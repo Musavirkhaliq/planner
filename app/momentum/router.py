@@ -18,6 +18,13 @@ async def get_user_progress(
     db: Session = Depends(get_db)
 ):
     """Get current user's progress information"""
+
+    # from app.momentum.init_momentum import init_all_users_momentum
+    # from app.database import SessionLocal
+
+    # db = SessionLocal()
+    # await init_all_users_momentum(db)
+
     momentum_service = MomentumService(db)
     return await momentum_service.get_user_progress(current_user.id)
 
