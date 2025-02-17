@@ -15,6 +15,13 @@ class User(Base):
     tasks = relationship("Task", back_populates="owner")
     goals = relationship("Goal", back_populates="owner")
     time_slots = relationship("TimeSlot", back_populates="owner")
+    current_level_id = Column(Integer, ForeignKey("levels.id"))
+    current_level = relationship("Level")
+    achievements = relationship("UserAchievement", back_populates="user")
+    streaks = relationship("Streak", back_populates="user")
+    total_points = Column(Integer, default=0)
+    weekly_points = Column(Integer, default=0)
+    monthly_points = Column(Integer, default=0)
     created_at = Column(DateTime, default=datetime.utcnow)
 
 class Task(Base):
@@ -72,3 +79,44 @@ class EmailVerification(Base):
     is_used = Column(Boolean, default=False)
     
 
+class Achievement(Base):
+    __tablename__ = "achievements"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True, index=True)
+    description = Column(String)
+    points = Column(Integer, default=0)
+    category = Column(String)  # e.g., 'productivity', 'consistency', 'milestone'
+    criteria_type = Column(String)  # e.g., 'count', 'streak', 'time'
+    criteria_value = Column(Integer)  # value needed to unlock
+    icon_name = Column(String)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+class UserAchievement(Base):
+    __tablename__ = "user_achievements"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    achievement_id = Column(Integer, ForeignKey("achievements.id"))
+    progress = Column(Integer, default=0)  # Current progress towards achievement
+    completed = Column(Boolean, default=False)
+    completed_at = Column(DateTime, nullable=True)
+    user = relationship("User", back_populates="achievements")
+    achievement = relationship("Achievement")
+
+class Streak(Base):
+    __tablename__ = "streaks"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    streak_type = Column(String)  # e.g., 'daily_tasks', 'weekly_goals'
+    current_count = Column(Integer, default=0)
+    longest_count = Column(Integer, default=0)
+    last_activity_date = Column(Date)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    user = relationship("User", back_populates="streaks")
+
+class Level(Base):
+    __tablename__ = "levels"
+    id = Column(Integer, primary_key=True, index=True)
+    level_number = Column(Integer, unique=True)
+    points_required = Column(Integer)
+    title = Column(String)  # e.g., 'Productivity Ninja'
+    perks = Column(String)  # JSON string of perks unlocked at this level
