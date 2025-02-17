@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query,status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import date
@@ -29,7 +29,7 @@ def create_time_slot(
     return services.create_time_slot(db=db, time_slot=time_slot, owner_id=current_user.id)
 
 @router.patch("/{slot_id}", response_model=schemas.TimeSlot)
-def update_time_slot(
+async def update_time_slot(
     slot_id: int,
     update: schemas.TimeSlotUpdate,
     db: Session = Depends(get_db),
@@ -38,10 +38,7 @@ def update_time_slot(
     slot = services.get_time_slot(db, slot_id, current_user.id)
     if not slot:
         raise HTTPException(status_code=404, detail="Time slot not found")
-    return services.update_time_slot(db, slot, update)
-
-
-
+    return await services.update_time_slot(db, slot, update)
 
 @router.put("/{slot_id}", response_model=schemas.TimeSlot)
 async def update_time_slot(
@@ -62,20 +59,7 @@ async def update_time_slot(
             detail="Time slot not found"
         )
     
-    # Update the slot with new values
-    for key, value in slot_update.dict(exclude_unset=True).items():
-        setattr(db_slot, key, value)
-    
-    try:
-        db.commit()
-        db.refresh(db_slot)
-        return db_slot
-    except Exception as e:
-        db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+    return await services.update_time_slot(db, db_slot, slot_update)
 
 # Delete time slot endpoint
 @router.delete("/{slot_id}", status_code=status.HTTP_204_NO_CONTENT)

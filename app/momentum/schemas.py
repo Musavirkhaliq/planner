@@ -1,9 +1,10 @@
 # schemas.py
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional, Dict, List
 from datetime import datetime, date
 from .momentum import AchievementCategory, CriteriaType
+import json
 
 class AchievementBase(BaseModel):
     name: str
@@ -55,13 +56,41 @@ class LevelBase(BaseModel):
     level_number: int
     points_required: int
     title: str
-    perks: Dict[str, bool]
+    perks: Dict[str, bool] = Field(default_factory=lambda: {
+        "can_create_goals": True,
+        "can_track_time": True,
+        "can_earn_achievements": True,
+        "can_view_analytics": True
+    })
 
 class Level(LevelBase):
     id: int
 
     class Config:
         from_attributes = True
+
+    @classmethod
+    def from_orm(cls, obj):
+        if obj is None:
+            return None
+        if isinstance(obj.perks, str):
+            try:
+                obj.perks = json.loads(obj.perks)
+            except json.JSONDecodeError:
+                obj.perks = {
+                    "can_create_goals": True,
+                    "can_track_time": True,
+                    "can_earn_achievements": True,
+                    "can_view_analytics": True
+                }
+        elif obj.perks is None:
+            obj.perks = {
+                "can_create_goals": True,
+                "can_track_time": True,
+                "can_earn_achievements": True,
+                "can_view_analytics": True
+            }
+        return super().from_orm(obj)
 
 class UserProgress(BaseModel):
     current_level: Level

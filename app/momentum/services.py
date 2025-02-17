@@ -113,15 +113,91 @@ class MomentumService:
     async def check_level_up(self, user_id: int) -> Optional[schemas.Level]:
         """Check if user has leveled up and update if necessary"""
         user = self.db.query(models.User).filter(models.User.id == user_id).first()
+        
+        # Initialize user's level if not set
+        if not user.current_level_id or not user.current_level:
+            level_1 = self.db.query(models.Level).filter(
+                models.Level.level_number == 1
+            ).first()
+            
+            if not level_1:
+                # Create level 1 if it doesn't exist
+                perks = {
+                    "can_create_goals": True,
+                    "can_track_time": True,
+                    "can_earn_achievements": True,
+                    "can_view_analytics": True
+                }
+                level_1 = models.Level(
+                    level_number=1,
+                    points_required=0,
+                    title=LEVELS[0]['title'],
+                    perks=json.dumps(perks)
+                )
+                self.db.add(level_1)
+                self.db.commit()
+                self.db.refresh(level_1)
+            
+            user.current_level_id = level_1.id
+            self.db.commit()
+            self.db.refresh(user)
+        
         current_level = user.current_level
+        if not current_level:
+            logger.error(f"Failed to initialize current_level for user {user_id}")
+            return None
         
         for level in LEVELS:
             if (level['level_number'] > current_level.level_number and 
                 user.total_points >= level['points_required']):
-                user.current_level_id = level['level_number']
+                # Get or create the level in the database
+                db_level = self.db.query(models.Level).filter(
+                    models.Level.level_number == level['level_number']
+                ).first()
+                
+                if not db_level:
+                    db_level = models.Level(
+                        level_number=level['level_number'],
+                        points_required=level['points_required'],
+                        title=level['title'],
+                        perks=json.dumps(level['perks'])
+                    )
+                    self.db.add(db_level)
+                    self.db.commit()
+                    self.db.refresh(db_level)
+                
+                user.current_level_id = db_level.id
                 self.db.commit()
-                return schemas.Level.from_orm(user.current_level)
-            
+                self.db.refresh(user)
+                
+                # Ensure perks is properly formatted before conversion
+                if isinstance(db_level.perks, str):
+                    try:
+                        db_level.perks = json.loads(db_level.perks)
+                    except json.JSONDecodeError:
+                        db_level.perks = {
+                            "can_create_goals": True,
+                            "can_track_time": True,
+                            "can_earn_achievements": True,
+                            "can_view_analytics": True
+                        }
+                elif db_level.perks is None:
+                    db_level.perks = {
+                        "can_create_goals": True,
+                        "can_track_time": True,
+                        "can_earn_achievements": True,
+                        "can_view_analytics": True
+                    }
+                
+                return schemas.Level(
+                    id=db_level.id,
+                    level_number=db_level.level_number,
+                    points_required=db_level.points_required,
+                    title=db_level.title,
+                    perks=db_level.perks
+                )
+        return None
+
     async def get_user_progress(self, user_id: int) -> schemas.UserProgress:
         """Get detailed progress information for a user"""
         user = self.db.query(models.User).filter(models.User.id == user_id).first()
@@ -155,36 +231,40 @@ class MomentumService:
                 self.db.add(level_1)
                 self.db.commit()
                 self.db.refresh(level_1)
-            else:
-                # Ensure perks is a JSON string
-                if isinstance(level_1.perks, dict):
-                    level_1.perks = json.dumps(level_1.perks)
-                    self.db.commit()
-                elif level_1.perks is None:
-                    level_1.perks = json.dumps({
-                        "can_create_goals": True,
-                        "can_track_time": True,
-                        "can_earn_achievements": True,
-                        "can_view_analytics": True
-                    })
-                    self.db.commit()
             
             user.current_level_id = level_1.id
             self.db.commit()
             self.db.refresh(user)
         
-        # Ensure current level perks is properly serialized
-        if user.current_level.perks is None:
-            user.current_level.perks = json.dumps({
+        # Ensure current level perks is properly formatted
+        current_level = user.current_level
+        if current_level.perks is None:
+            current_level.perks = json.dumps({
                 "can_create_goals": True,
                 "can_track_time": True,
                 "can_earn_achievements": True,
                 "can_view_analytics": True
             })
             self.db.commit()
-        elif isinstance(user.current_level.perks, dict):
-            user.current_level.perks = json.dumps(user.current_level.perks)
-            self.db.commit()
+        
+        # Convert perks from JSON string to dict if needed
+        if isinstance(current_level.perks, str):
+            try:
+                perks_dict = json.loads(current_level.perks)
+            except json.JSONDecodeError:
+                perks_dict = {
+                    "can_create_goals": True,
+                    "can_track_time": True,
+                    "can_earn_achievements": True,
+                    "can_view_analytics": True
+                }
+        else:
+            perks_dict = current_level.perks or {
+                "can_create_goals": True,
+                "can_track_time": True,
+                "can_earn_achievements": True,
+                "can_view_analytics": True
+            }
         
         # Get next level information
         next_level = self.db.query(models.Level).filter(
@@ -193,8 +273,8 @@ class MomentumService:
         
         # Calculate progress to next level
         points_to_next = next_level.points_required - user.total_points if next_level else 0
-        total_points_in_level = (next_level.points_required - user.current_level.points_required) if next_level else 1
-        points_earned_in_level = user.total_points - user.current_level.points_required
+        total_points_in_level = (next_level.points_required - current_level.points_required) if next_level else 1
+        points_earned_in_level = user.total_points - current_level.points_required
         completion_percentage = (points_earned_in_level / total_points_in_level) * 100 if total_points_in_level > 0 else 100
         
         # Get recent achievements
@@ -219,21 +299,17 @@ class MomentumService:
             await self.get_user_streaks(user_id)
             active_streaks = []
         
-        # Create a copy of the current level with deserialized perks
-        current_level = user.current_level
-        if isinstance(current_level.perks, str):
-            try:
-                current_level.perks = json.loads(current_level.perks)
-            except json.JSONDecodeError:
-                current_level.perks = {
-                    "can_create_goals": True,
-                    "can_track_time": True,
-                    "can_earn_achievements": True,
-                    "can_view_analytics": True
-                }
+        # Create Level model with properly formatted data
+        level_model = schemas.Level(
+            id=current_level.id,
+            level_number=current_level.level_number,
+            points_required=current_level.points_required,
+            title=current_level.title,
+            perks=perks_dict
+        )
         
         return schemas.UserProgress(
-            current_level=current_level,
+            current_level=level_model,
             total_points=user.total_points,
             points_to_next_level=points_to_next,
             completion_percentage=completion_percentage,
@@ -368,7 +444,7 @@ class MomentumService:
             return await self._check_compound_criteria(user_id, achievement)
         return False
     
-    async def _calculate_points(self, event_type: str, metadata: Dict) -> int:
+    def _calculate_points(self, event_type: str, metadata: Dict) -> int:
         """
         Calculate points for a given event type with metadata
         Returns the total points earned for the event

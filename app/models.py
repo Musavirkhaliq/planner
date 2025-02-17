@@ -1,8 +1,9 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, DateTime, Float
+from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, DateTime, Float, event
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from .database import Base
 from sqlalchemy import Date
+from .json_utils import serialize_json, deserialize_json
 
 class User(Base):
     __tablename__ = "users"
@@ -15,8 +16,8 @@ class User(Base):
     tasks = relationship("Task", back_populates="owner")
     goals = relationship("Goal", back_populates="owner")
     time_slots = relationship("TimeSlot", back_populates="owner")
-    current_level_id = Column(Integer, ForeignKey("levels.id"))
-    current_level = relationship("Level")
+    current_level_id = Column(Integer, ForeignKey("levels.id"), nullable=True)
+    current_level = relationship("Level", back_populates="users", lazy="joined")
     achievements = relationship("UserAchievement", back_populates="user")
     streaks = relationship("Streak", back_populates="user")
     total_points = Column(Integer, default=0)
@@ -116,7 +117,34 @@ class Streak(Base):
 class Level(Base):
     __tablename__ = "levels"
     id = Column(Integer, primary_key=True, index=True)
-    level_number = Column(Integer, unique=True)
-    points_required = Column(Integer)
-    title = Column(String)  # e.g., 'Productivity Ninja'
-    perks = Column(String)  # JSON string of perks unlocked at this level
+    level_number = Column(Integer, unique=True, nullable=False)
+    points_required = Column(Integer, nullable=False)
+    title = Column(String, nullable=False)
+    perks = Column(String, nullable=False, default='{"can_create_goals":true,"can_track_time":true,"can_earn_achievements":true,"can_view_analytics":true}')
+    users = relationship("User", back_populates="current_level", lazy="noload")
+
+    def __init__(self, *args, **kwargs):
+        if 'perks' in kwargs:
+            kwargs['perks'] = serialize_json(kwargs['perks'])
+        super().__init__(*args, **kwargs)
+
+    @property
+    def perks_dict(self):
+        """Get perks as a dictionary."""
+        return deserialize_json(self.perks)
+
+    @perks_dict.setter
+    def perks_dict(self, value):
+        """Set perks from a dictionary."""
+        self.perks = serialize_json(value)
+
+# Add event listeners to handle JSON serialization
+@event.listens_for(Level, 'before_update')
+def receive_before_update(mapper, connection, target):
+    if isinstance(target.perks, dict):
+        target.perks = serialize_json(target.perks)
+
+@event.listens_for(Level, 'load')
+def receive_load(target, context):
+    if target.perks:
+        target._perks_dict = deserialize_json(target.perks)

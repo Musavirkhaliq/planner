@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from .. import models
 from .momentum import LEVELS, ACHIEVEMENTS
 from datetime import datetime
+from ..json_utils import serialize_json
 
 async def init_user_momentum(db: Session, user_id: int):
     """Initialize momentum data for an existing user"""
@@ -9,23 +10,55 @@ async def init_user_momentum(db: Session, user_id: int):
     if not user:
         return
         
+    # Initialize points if not set
+    if user.total_points is None:
+        user.total_points = 0
+    if user.weekly_points is None:
+        user.weekly_points = 0
+    if user.monthly_points is None:
+        user.monthly_points = 0
+        
     # Initialize level if not set
     if not user.current_level_id:
         level_1 = db.query(models.Level).filter(models.Level.level_number == 1).first()
         if not level_1:
             # Create level 1 if it doesn't exist
+            perks = {
+                "can_create_goals": True,
+                "can_track_time": True,
+                "can_earn_achievements": True,
+                "can_view_analytics": True
+            }
             level_1 = models.Level(
                 level_number=1,
                 points_required=0,
                 title=LEVELS[0]['title'],
-                perks=str(LEVELS[0]['perks'])
+                perks=serialize_json(perks)
             )
             db.add(level_1)
             db.commit()
             db.refresh(level_1)
         
         user.current_level_id = level_1.id
+        db.commit()
         
+    # Initialize all levels if they don't exist
+    for level_data in LEVELS:
+        level = db.query(models.Level).filter(
+            models.Level.level_number == level_data['level_number']
+        ).first()
+        
+        if not level:
+            level = models.Level(
+                level_number=level_data['level_number'],
+                points_required=level_data['points_required'],
+                title=level_data['title'],
+                perks=serialize_json(level_data['perks'])
+            )
+            db.add(level)
+            
+    db.commit()
+            
     # Initialize achievements
     for achievement_data in ACHIEVEMENTS:
         achievement = db.query(models.Achievement).filter(
@@ -78,21 +111,6 @@ async def init_user_momentum(db: Session, user_id: int):
                 last_activity_date=datetime.utcnow().date()
             )
             db.add(streak)
-            
-    # Initialize all levels if they don't exist
-    for level_data in LEVELS:
-        level = db.query(models.Level).filter(
-            models.Level.level_number == level_data['level_number']
-        ).first()
-        
-        if not level:
-            level = models.Level(
-                level_number=level_data['level_number'],
-                points_required=level_data['points_required'],
-                title=level_data['title'],
-                perks=str(level_data['perks'])
-            )
-            db.add(level)
             
     db.commit()
 

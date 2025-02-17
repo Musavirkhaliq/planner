@@ -756,7 +756,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const resetBtn = document.getElementById("resetBtn");
 
   // Initialize WebSocket connection
-  initializeWebSocket();
+  // initializeWebSocket();
   
   // Load saved settings
   loadSettings();
@@ -1244,4 +1244,75 @@ verifyOtpForm.addEventListener('submit', async (e) => {
     } finally {
         e.target.querySelector('button[type="submit"]').classList.remove('loading');
     }
+});
+
+// Add this after the existing DOMContentLoaded listeners
+document.addEventListener('DOMContentLoaded', async () => {
+    if (checkAuthState()) {
+        await loadMomentumData();
+        
+        // Update username from token
+        const token = localStorage.getItem('access_token');
+        if (token) {
+            const payload = parseJwt(token);
+            const usernameElement = document.getElementById('username');
+            if (usernameElement) {
+                usernameElement.textContent = payload.sub.split('@')[0];
+            }
+        }
+    }
+});
+
+async function loadMomentumData() {
+    try {
+        const response = await fetchWithAuth('/momentum/progress');
+        if (response.ok) {
+            const data = await response.json();
+            updateMomentumUI(data);
+        }
+    } catch (error) {
+        console.error('Error loading momentum data:', error);
+    }
+}
+
+function updateMomentumUI(data) {
+    // Update level information
+    const levelElement = document.getElementById('current-level');
+    const levelTitleElement = document.getElementById('level-title');
+    const levelProgressElement = document.getElementById('level-progress');
+    const totalPointsElement = document.getElementById('total-points');
+    const achievementsCountElement = document.getElementById('achievements-count');
+    const leaderboardRankElement = document.getElementById('leaderboard-rank');
+
+    if (levelElement) {
+        levelElement.textContent = data.current_level.level_number;
+    }
+    if (levelTitleElement) {
+        levelTitleElement.textContent = data.current_level.title;
+    }
+    if (levelProgressElement) {
+        levelProgressElement.style.width = `${data.completion_percentage}%`;
+    }
+    if (totalPointsElement) {
+        totalPointsElement.textContent = data.total_points.toLocaleString();
+    }
+    if (achievementsCountElement) {
+        achievementsCountElement.textContent = data.recent_achievements.length;
+    }
+    if (leaderboardRankElement) {
+        // Get leaderboard position
+        fetchWithAuth('/momentum/stats').then(async response => {
+            if (response.ok) {
+                const stats = await response.json();
+                leaderboardRankElement.textContent = stats.leaderboard_position || '-';
+            }
+        });
+    }
+}
+
+// Add logout functionality
+document.getElementById('logoutBtn')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    localStorage.removeItem('access_token');
+    window.location.href = '/login';
 });

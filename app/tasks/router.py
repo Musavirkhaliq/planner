@@ -25,7 +25,7 @@ def read_tasks(
     return services.get_tasks(db=db, user_id=current_user.id)
 
 @router.patch("/{task_id}", response_model=schemas.Task)
-def update_task(
+async def update_task(
     task_id: int,
     task_update: schemas.TaskUpdate,
     db: Session = Depends(get_db),
@@ -34,4 +34,4 @@ def update_task(
     db_task = services.get_task(db, task_id=task_id, user_id=current_user.id)
     if not db_task:
         raise HTTPException(status_code=404, detail="Task not found")
-    return services.update_task(db=db, task=db_task, task_update=task_update) 
+    return await services.update_task(db=db, task=db_task, task_update=task_update) 

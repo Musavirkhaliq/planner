@@ -21,7 +21,32 @@
                         <i class="fas fa-user me-1"></i>
                         <span id="username">User</span>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown" style="width: 300px;">
+                        <!-- Momentum Widget -->
+                        <li>
+                            <div class="px-3 py-2">
+                                <div class="d-flex align-items-center mb-2">
+                                    <div class="level-badge me-2" style="width: 40px; height: 40px;">
+                                        <span id="current-level" class="h5 mb-0">1</span>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h6 id="level-title" class="mb-1" style="font-size: 0.9rem;">Loading...</h6>
+                                        <div class="progress" style="height: 6px;">
+                                            <div id="level-progress" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-between text-muted" style="font-size: 0.8rem;">
+                                    <span><i class="fas fa-star me-1"></i><span id="total-points">0</span> pts</span>
+                                    <span><i class="fas fa-trophy me-1"></i><span id="achievements-count">0</span></span>
+                                    <span><i class="fas fa-crown me-1"></i>#<span id="leaderboard-rank">0</span></span>
+                                </div>
+                            </div>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/dashboard">
+                            <i class="fas fa-columns me-2"></i>Dashboard
+                        </a></li>
                         <li><a class="dropdown-item" href="#">
                             <i class="fas fa-user-cog me-2"></i>Profile Settings
                         </a></li>
@@ -46,17 +71,17 @@
                     <div class="card-body">
                         <div class="d-flex align-items-center">
                             <div class="level-badge me-4">
-                                <span id="current-level" class="display-4">1</span>
+                                <span id="profile-level" class="display-4">1</span>
                             </div>
                             <div class="flex-grow-1">
-                                <h2 id="level-title" class="mb-2">Loading...</h2>
+                                <h2 id="profile-level-title" class="mb-2">Loading...</h2>
                                 <div class="progress mb-2" style="height: 10px;">
-                                    <div id="level-progress" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+                                    <div id="profile-level-progress" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
                                 </div>
                                 <small id="level-progress-text" class="text-muted">0 / 100 points to next level</small>
                             </div>
                             <div class="text-end ms-4">
-                                <h3 id="total-points" class="mb-1">0</h3>
+                                <h3 id="profile-total-points" class="mb-1">0</h3>
                                 <small class="text-muted">Total Points</small>
                             </div>
                         </div>
