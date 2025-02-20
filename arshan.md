@@ -19,7 +19,7 @@
 
 ## current status: stuck at:
 
-- env varibles: 
+- env values: 
 SECRET_KEY, GOOGLE_CLIENT_ID etc
 
 
