@@ -1,284 +1,458 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Productivity Planner</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Ultimate Productivity Planner</title>
 
-  <!-- Bootstrap CSS -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- Custom CSS -->
-  <link rel="stylesheet" href="static/style.css">
+    <!-- CDN Dependencies -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 
-  <style>
-    .content-wrapper {
-      display: none;
-    }
-    
-    .loading-spinner {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-    }
-
-    .auth-buttons, .user-menu {
-      display: none;
-    }
-  </style>
-
-  <!-- Authentication Scripts -->
-  <script>
-    function isAuthenticated() {
-        return !!localStorage.getItem("access_token"); // Returns true if token exists
-    }
-
-    function handleLogout() {
-        localStorage.removeItem("access_token");
-        window.location.href = "/login";
-    }
-
-    // New function to handle Get Started button click
-    async function handleGetStarted(event) {
-        event.preventDefault();
-        const token = localStorage.getItem("access_token");
-        
-        if (!token) {
-            window.location.href = '/login';
-            return;
+    <style>
+        :root {
+            --primary: #5E43FF;
+            --secondary: #FF6F61;
+            --dark: #1F2526;
+            --light: #F8F9FA;
+            --gradient: linear-gradient(135deg, #5E43FF, #FF6F61);
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
         }
-        else {
-          window.location.href = '/dashboard';
-        }
-    }
 
-    async function updateNavigation() {
-        const token = localStorage.getItem("access_token");
-        const authButtons = document.getElementById('auth-buttons');
-        const userMenu = document.getElementById('user-menu');
-        
-        if (token) {
-            authButtons.style.display = 'none';
-            userMenu.style.display = 'block';
-            
-            try {
-                const response = await isAuthenticated();
-                if (response && response.ok) {
-                    const userData = await response.json();
-                    document.getElementById('username').textContent = userData.name || 'User';
-                }
-            } catch (error) {
-                console.error('Error fetching user info:', error);
-            }
-        } else {
-            authButtons.style.display = 'block';
-            userMenu.style.display = 'none';
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--light);
+            color: var(--dark);
+            line-height: 1.6;
+            overflow-x: hidden;
+            background: linear-gradient(to bottom, #f8f9fa, #ebedff);
         }
-    }
 
-    async function checkAuth() {
-        try {
-            const token = localStorage.getItem("access_token");
-            if (token) {
-                const response = await isAuthenticated();
-                if (response && response.ok) {
-                    await updateNavigation();
-                    window.location.href = '/dashboard';
-                    return;
-                }
-            }
-            await updateNavigation();
-            document.getElementById('loading-spinner').style.display = 'none';
-            document.getElementById('content-wrapper').style.display = 'block';
-        } catch (error) {
-            await updateNavigation();
-            document.getElementById('loading-spinner').style.display = 'none';
-            document.getElementById('content-wrapper').style.display = 'block';
+        /* Enhanced Navigation */
+        .navbar {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(15px);
+            box-shadow: var(--shadow);
+            padding: 1.2rem 3rem;
+            transition: all 0.4s ease;
         }
-    }
 
-    // Initialize all event listeners when page loads
-    document.addEventListener('DOMContentLoaded', () => {
-        checkAuth();
-        
-        // Add event listener to Get Started button
-        const getStartedBtn = document.getElementById('getStartedBtn');
-        if (getStartedBtn) {
-            getStartedBtn.addEventListener('click', handleGetStarted);
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.8rem;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
-    });
-  </script>
+
+        .navbar-brand i {
+            color: var(--secondary);
+            transform: scale(1.2);
+            transition: transform 0.5s ease;
+        }
+
+        .navbar-brand:hover i {
+            transform: scale(1.4) rotate(360deg);
+        }
+
+        .btn {
+            padding: 0.8rem 2rem;
+            border-radius: 50px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.4s ease;
+        }
+
+        .btn-primary {
+            background: var(--gradient);
+            border: none;
+            box-shadow: 0 5px 15px rgba(94, 67, 255, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(94, 67, 255, 0.6);
+        }
+
+        /* Hero Section with Parallax */
+        .hero-section {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: url('https://images.unsplash.com/photo-1503551723145-6c040742065b') center/cover no-repeat fixed;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(31, 37, 38, 0.75);
+            z-index: 1;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            color: white;
+            padding: 2rem;
+        }
+
+        .hero-title {
+            font-size: 5rem;
+            font-weight: 700;
+            line-height: 1.1;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: bounceIn 1.5s ease;
+        }
+
+        .hero-subtitle {
+            font-size: 1.8rem;
+            max-width: 700px;
+            margin: 2rem auto;
+            color: rgba(255, 255, 255, 0.9);
+            animation: fadeInUp 2s ease;
+        }
+
+        /* Quotes Section */
+        .quotes-section {
+            padding: 5rem 0;
+            background: var(--gradient);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quote-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            transition: transform 0.4s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .quote-card:hover {
+            transform: scale(1.05);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .quote-text {
+            font-size: 1.5rem;
+            font-style: italic;
+            margin-bottom: 1rem;
+        }
+
+        .quote-author {
+            font-size: 1rem;
+            font-weight: 600;
+            opacity: 0.9;
+        }
+
+        /* Features Section */
+        .features-section {
+            padding: 5rem 0;
+            background: white;
+            position: relative;
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2.5rem;
+            text-align: center;
+            box-shadow: var(--shadow);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: var(--gradient);
+            opacity: 0;
+            transition: all 0.5s ease;
+            transform: rotate(30deg);
+        }
+
+        .feature-card:hover::before {
+            opacity: 0.1;
+            top: 0;
+            left: 0;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-15px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .feature-card i {
+            font-size: 3rem;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-title {
+            font-weight: 700;
+            font-size: 1.8rem;
+            color: var(--dark);
+        }
+
+        /* Preview Dashboard */
+        .dashboard-preview {
+            padding: 5rem 0;
+            background: var(--light);
+            text-align: center;
+        }
+
+        .dashboard-img {
+            max-width: 80%;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            transition: transform 0.5s ease;
+        }
+
+        .dashboard-img:hover {
+            transform: scale(1.05);
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--dark);
+            color: white;
+            padding: 3rem 0;
+            text-align: center;
+            position: relative;
+        }
+
+        .footer a {
+            color: var(--secondary);
+            transition: color 0.3s ease;
+        }
+
+        .footer a:hover {
+            color: var(--primary);
+        }
+
+        /* Animations */
+        @keyframes bounceIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            60% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes fadeInUp {
+            from { transform: translateY(30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .hero-title { font-size: 3rem; }
+            .hero-subtitle { font-size: 1.3rem; }
+            .quote-text { font-size: 1.2rem; }
+            .feature-title { font-size: 1.5rem; }
+        }
+    </style>
 </head>
 <body>
-  <!-- Loading Spinner -->
-  <div id="loading-spinner" class="loading-spinner">
-    <div class="spinner-border text-primary" role="status">
-      <span class="visually-hidden">Loading...</span>
-    </div>
-  </div>
-
-  <!-- Main Content Wrapper -->
-  <div id="content-wrapper" class="content-wrapper">
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-light fixed-top">
-      <div class="container-fluid">
-        <a class="navbar-brand" href="/">
-          <i class="fas fa-chart-line me-2"></i>Productivity Planner
-        </a>
-        <!-- Auth Buttons (shown when logged out) -->
-        <div id="auth-buttons" class="ms-auto auth-buttons">
-          <a href="/login" class="btn btn-outline-primary btn-sm">
-            <i class="fas fa-sign-in-alt me-1"></i>Log In
-          </a>
-          <a href="/register" class="btn btn-primary btn-sm ms-2">
-            <i class="fas fa-user-plus me-1"></i>Sign Up
-          </a>
+        <div class="container-fluid px-4">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-star me-2"></i>Ultimate Planner
+            </a>
+            <div id="auth-buttons" class="ms-auto auth-buttons" style="display: none;">
+                <a href="/login" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-sign-in-alt me-1"></i>Log In
+                </a>
+                <a href="/register" class="btn btn-primary">
+                    <i class="fas fa-user-plus me-1"></i>Sign Up
+                </a>
+            </div>
+            <div id="user-menu" class="ms-auto user-menu" style="display: none;">
+                <div class="dropdown">
+                    <button class="btn btn-primary dropdown-toggle" type="button" id="userDropdown" 
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-user me-1"></i>
+                        <span id="username">User</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                        <li><a class="dropdown-item" href="/dashboard">
+                            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                        </a></li>
+                        <li><a class="dropdown-item" href="#">
+                            <i class="fas fa-user-cog me-2"></i>Profile
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#" onclick="handleLogout()">
+                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
         </div>
-        <!-- User Menu (shown when logged in) -->
-        <div id="user-menu" class="ms-auto user-menu">
-          <div class="dropdown">
-            <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-              <i class="fas fa-user me-1"></i>
-              <span id="username">User</span>
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-              <li><a class="dropdown-item" href="/dashboard">
-                <i class="fas fa-tachometer-alt me-2"></i>Dashboard
-              </a></li>
-              <li><a class="dropdown-item" href="#">
-                <i class="fas fa-user-cog me-2"></i>Profile
-              </a></li>
-              <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item" href="#" onclick="handleLogout()">
-                <i class="fas fa-sign-out-alt me-2"></i>Logout
-              </a></li>
-            </ul>
-          </div>
-        </div>
-      </div>
     </nav>
-
-    <section class="leaderboard mt-4">
-      <div class="container">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h2 class="mb-0">🏆 Top Users</h2>
-          <button
-            class="btn btn-outline-secondary"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#leaderboardContent"
-            aria-expanded="true"
-            aria-controls="leaderboardContent"
-            id="toggleLeaderboard"
-          >
-            Hide
-          </button>
-        </div>
-        <div class="collapse show" id="leaderboardContent">
-          <div class="row">
-            <div class="col-md-4 mb-3">
-              <div class="card shadow-sm">
-                <div class="card-header text-center fw-bold">Daily</div>
-                <ul id="top-users-daily" class="list-group list-group-flush"></ul>
-              </div>
-            </div>
-            <div class="col-md-4 mb-3">
-              <div class="card shadow-sm">
-                <div class="card-header text-center fw-bold">Weekly</div>
-                <ul id="top-users-weekly" class="list-group list-group-flush"></ul>
-              </div>
-            </div>
-            <div class="col-md-4 mb-3">
-              <div class="card shadow-sm">
-                <div class="card-header text-center fw-bold">Monthly</div>
-                <ul id="top-users-monthly" class="list-group list-group-flush"></ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-    
-    <!-- Optional JavaScript to update button text based on collapse state -->
-    <script>
-      document.addEventListener("DOMContentLoaded", function() {
-        const leaderboardCollapse = document.getElementById("leaderboardContent");
-        const toggleButton = document.getElementById("toggleLeaderboard");
-    
-        leaderboardCollapse.addEventListener("hidden.bs.collapse", function () {
-          toggleButton.textContent = "Show";
-        });
-    
-        leaderboardCollapse.addEventListener("shown.bs.collapse", function () {
-          toggleButton.textContent = "Hide";
-        });
-      });
-    </script>
-    
-
 
     <!-- Hero Section -->
     <section class="hero-section">
-      <div class="container">
-        <h1 class="hero-title">Master Your Time</h1>
-        <p class="hero-subtitle">
-          Transform your productivity with our intelligent planning tools.
-          Stay organized, focused, and achieve more every day.
-        </p>
-        <div class="d-flex justify-content-center gap-3">
-          <a href="/dashboard" class="btn btn-primary" id="getStartedBtn">
-            <i class="fas fa-rocket me-2"></i>Get Started
-          </a>
-          <a href="#" class="btn btn-outline-primary">
-            <i class="fas fa-lightbulb me-2"></i>Explore Features
-          </a>
+        <div class="hero-content">
+            <h1 class="hero-title">Plan Like a Pro</h1>
+            <p class="hero-subtitle">
+                Unleash your potential with the ultimate productivity planner designed to inspire, organize, and elevate your daily life.
+            </p>
+            <div class="d-flex justify-content-center gap-4 mt-5">
+                <a href="#" class="btn btn-primary" id="startPlanningBtn">
+                    <i class="fas fa-rocket me-2"></i>Start Planning
+                </a>
+                <a href="#features" class="btn btn-outline-light">
+                    <i class="fas fa-eye me-2"></i>Discover More
+                </a>
+            </div>
         </div>
-      </div>
     </section>
-    
+
+    <!-- Quotes Section -->
+    <section class="quotes-section">
+        <div class="container">
+            <h2 class="text-center mb-5 fw-bold" style="font-size: 2.5rem;">Inspiration for Planning</h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="quote-card">
+                        <p class="quote-text">"The key is not to prioritize what’s on your schedule, but to schedule your priorities."</p>
+                        <p class="quote-author">- Stephen Covey</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="quote-card">
+                        <p class="quote-text">"A goal without a plan is just a wish."</p>
+                        <p class="quote-author">- Antoine de Saint-Exupéry</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="quote-card">
+                        <p class="quote-text">"By failing to prepare, you are preparing to fail."</p>
+                        <p class="quote-author">- Benjamin Franklin</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
     <!-- Features Section -->
-    <section class="py-5">
-      <div class="container">
-        <div class="row g-4">
-          <div class="col-md-4">
-            <div class="feature-card">
-              <i class="fas fa-stopwatch"></i>
-              <h3>Smart Time Tracking</h3>
-              <p>Monitor daily activities and gain insights into your productivity trends.</p>
+    <section class="features-section" id="features">
+        <div class="container">
+            <h2 class="text-center mb-5 fw-bold" style="color: var(--primary); font-size: 2.5rem;">Unmatched Features</h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <i class="fas fa-brain"></i>
+                        <h3 class="feature-title">AI-Powered Insights</h3>
+                        <p>Get personalized recommendations to optimize your schedule and boost productivity.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <i class="fas fa-sync-alt"></i>
+                        <h3 class="feature-title">Real-Time Sync</h3>
+                        <p>Access your planner across all devices with seamless cloud synchronization.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <i class="fas fa-palette"></i>
+                        <h3 class="feature-title">Custom Themes</h3>
+                        <p>Personalize your planner with stunning themes and layouts that inspire creativity.</p>
+                    </div>
+                </div>
             </div>
-          </div>
-          <div class="col-md-4">
-            <div class="feature-card">
-              <i class="fas fa-hourglass-start"></i>
-              <h3>Focus Timer</h3>
-              <p>Use the Pomodoro technique to stay focused and maximize efficiency.</p>
-            </div>
-          </div>
-          <div class="col-md-4">
-            <div class="feature-card">
-              <i class="fas fa-chart-line"></i>
-              <h3>Analytics Dashboard</h3>
-              <p>Visualize your progress and optimize your workflow with detailed analytics.</p>
-            </div>
-          </div>
         </div>
-      </div>
+    </section>
+
+    <!-- Dashboard Preview -->
+    <section class="dashboard-preview">
+        <div class="container">
+            <h2 class="fw-bold mb-4" style="color: var(--dark); font-size: 2.5rem;">Sneak Peek: Your Dashboard</h2>
+            <p class="text-muted mb-5" style="font-size: 1.3rem;">Experience a beautifully crafted interface designed for success.</p>
+            <img src="https://images.unsplash.com/photo-1512758017271-d69019509c2d" alt="Dashboard Preview" class="dashboard-img">
+        </div>
     </section>
 
     <!-- Footer -->
     <footer class="footer">
-      <div class="container">
-        <p>&copy; 2025 Productivity Planner. All rights reserved.</p>
-      </div>
+        <div class="container">
+            <p>© 2025 Ultimate Productivity Planner. Crafted with <i class="fas fa-heart" style="color: var(--secondary);"></i> by xAI.</p>
+            <p><a href="#">Privacy</a> | <a href="#">Terms</a> | <a href="#">Support</a></p>
+        </div>
     </footer>
-  </div>
 
-  <!-- Bootstrap Bundle JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="static/time-slot-manager.js"></script>
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Authentication Functions
+        function isAuthenticated() {
+            return !!localStorage.getItem("access_token"); // Returns true if token exists
+        }
 
+        function handleLogout() {
+            localStorage.removeItem("access_token");
+            updateNavigation();
+            window.location.href = "/login";
+        }
+
+        function updateNavigation() {
+            const authButtons = document.getElementById("auth-buttons");
+            const userMenu = document.getElementById("user-menu");
+            const usernameSpan = document.getElementById("username");
+
+            if (isAuthenticated()) {
+                authButtons.style.display = "none";
+                userMenu.style.display = "block";
+                // For demo purposes, set a default username; replace with actual user data from API in production
+                usernameSpan.textContent = "User"; 
+            } else {
+                authButtons.style.display = "block";
+                userMenu.style.display = "none";
+            }
+        }
+
+        // Handle Start Planning Button Click
+        function handleStartPlanning(event) {
+            event.preventDefault();
+            if (isAuthenticated()) {
+                window.location.href = "/dashboard";
+            } else {
+                window.location.href = "/login";
+            }
+        }
+
+        // Initialize Page
+        document.addEventListener("DOMContentLoaded", () => {
+            updateNavigation();
+
+            // Attach event listener to Start Planning button
+            const startPlanningBtn = document.getElementById("startPlanningBtn");
+            if (startPlanningBtn) {
+                startPlanningBtn.addEventListener("click", handleStartPlanning);
+            }
+        });
+    </script>
 </body>
 </html>

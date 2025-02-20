@@ -3,79 +3,257 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verify Email | Productivity Planner</title>
+    <title>Verify Email | Ultimate Productivity Planner</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/static/style.css">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #5E43FF;
+            --secondary: #FF6F61;
+            --dark: #1F2526;
+            --light: #F8F9FA;
+            --gradient: linear-gradient(135deg, #5E43FF, #FF6F61);
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(to bottom, #f8f9fa, #ebedff);
+            color: var(--dark);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+        }
+
+        .verify-container {
+            max-width: 500px;
+            width: 100%;
+            margin: 2rem;
+        }
+
+        .verify-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            padding: 2.5rem;
+            transition: transform 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .verify-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .verify-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: var(--gradient);
+            opacity: 0;
+            transition: all 0.5s ease;
+            transform: rotate(30deg);
+        }
+
+        .verify-card:hover::before {
+            opacity: 0.05;
+            top: 0;
+            left: 0;
+        }
+
+        .auth-logo {
+            max-width: 60px;
+            animation: bounceIn 1s ease;
+        }
+
+        h4 {
+            font-weight: 700;
+            font-size: 2rem;
+            color: var(--dark);
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .btn {
+            padding: 0.8rem 2rem;
+            border-radius: 50px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.4s ease;
+            position: relative;
+        }
+
+        .btn-primary {
+            background: var(--gradient);
+            border: none;
+            box-shadow: 0 5px 15px rgba(94, 67, 255, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(94, 67, 255, 0.6);
+        }
+
+        .btn-link {
+            color: var(--secondary);
+            padding: 0;
+        }
+
+        .btn-link:hover {
+            color: var(--primary);
+        }
+
+        .form-control {
+            border-radius: 10px;
+            padding: 0.75rem 1.25rem;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s ease;
+            font-size: 1.2rem;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 0.2rem rgba(94, 67, 255, 0.25);
+        }
+
+        .alert-info {
+            background: rgba(94, 67, 255, 0.1);
+            border-color: var(--primary);
+            color: var(--dark);
+            font-weight: 600;
+        }
+
+        .alert-danger {
+            background: rgba(255, 107, 97, 0.1);
+            border-color: var(--secondary);
+            color: var(--dark);
+        }
+
+        .loader {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .btn.loading .loader {
+            display: inline-block;
+        }
+
+        .btn.loading span {
+            opacity: 0;
+        }
+
+        /* Animations */
+        @keyframes bounceIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            60% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes fadeInUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .fade-in-up {
+            animation: fadeInUp 0.8s ease;
+        }
+
+        @keyframes spin {
+            0% { transform: translateY(-50%) rotate(0deg); }
+            100% { transform: translateY(-50%) rotate(360deg); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 576px) {
+            .verify-card {
+                padding: 1.5rem;
+            }
+            h4 {
+                font-size: 1.5rem;
+            }
+            .btn {
+                padding: 0.6rem 1.5rem;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <div class="row justify-content-center align-items-center min-vh-100">
-            <div class="col-md-6">
-                <div class="card shadow-lg">
-                    <div class="card-body p-5 text-center">
-                        <img src="/static/img/planner_logo_100x100.png" alt="Planner Logo" class="auth-logo mb-4">
-                        <h4 class="mb-3">Email Verification</h4>
-                        
-                        <!-- Display email prominently -->
-                        <div class="alert alert-info mb-4">
-                            <i class="fas fa-envelope me-2"></i>
-                            <strong>{{ email }}</strong>
-                        </div>
-                        
-                        <div id="sendOtpSection">
-                            <p class="text-muted mb-4">
-                                To continue using Productivity Planner, please verify your email address.
-                            </p>
-                            <button id="sendOtpBtn" class="btn btn-primary w-100 mb-3">
-                                <i class="fas fa-paper-plane me-2"></i><span id = "sendOtpBtnText">Send Verification Code</span>
-                                <div class="loader"></div>
-                            </button>
-                        </div>
-
-                        <div id="verifyOtpSection" class="d-none">
-                            <p class="text-muted mb-4">
-                                Please enter the verification code sent to your email.
-                            </p>
-                            <form id="verifyOtpForm">
-                                <div class="mb-4">
-                                    <input type="text" 
-                                           class="form-control form-control-lg text-center" 
-                                           id="otp" 
-                                           name="otp" 
-                                           placeholder="Enter verification code"
-                                           maxlength="6"
-                                           required>
-                                </div>
-                                <button type="submit" class="btn btn-primary w-100 mb-3">
-                                    <i class="fas fa-check-circle me-2"></i> Verify Code
-                                    <div class="loader"></div>
-                                </button>
-                            </form>
-                            <p class="mb-0">
-                                <button id="resendOtpBtn" class="btn btn-link text-decoration-none">
-                                    <i class="fas fa-redo me-2"></i>Resend verification code
-                                    <div class="loader"></div>
-                                </button>
-                            </p>
-                            <small class="text-muted mt-2">
-                                Note: Maximum 3 attempts allowed per hour
-                            </small>
-                        </div>
-
-                        <!-- Error message container -->
-                        <div id="errorMessage" class="alert alert-danger mt-3 d-none">
-                        </div>
-                    </div>
-                </div>
+    <div class="verify-container">
+        <div class="verify-card text-center">
+            <img src="/static/img/planner_logo_100x100.png" alt="Planner Logo" class="auth-logo mb-4">
+            <h4 class="mb-3">Email Verification</h4>
+            <div class="alert alert-info mb-4 fade-in-up">
+                <i class="fas fa-envelope me-2"></i>
+                <strong id="emailDisplay">{{ email }}</strong>
             </div>
+
+            <div id="sendOtpSection" class="fade-in-up">
+                <p class="text-muted mb-4">
+                    To continue using Ultimate Productivity Planner, please verify your email address.
+                </p>
+                <button id="sendOtpBtn" class="btn btn-primary w-100 mb-3">
+                    <i class="fas fa-paper-plane me-2"></i><span id="sendOtpBtnText">Send Verification Code</span>
+                    <div class="loader"></div>
+                </button>
+            </div>
+
+            <div id="verifyOtpSection" class="d-none fade-in-up">
+                <p class="text-muted mb-4">
+                    Please enter the verification code sent to your email.
+                </p>
+                <form id="verifyOtpForm">
+                    <div class="mb-4">
+                        <input type="text" 
+                               class="form-control form-control-lg text-center" 
+                               id="otp" 
+                               name="otp" 
+                               placeholder="Enter code"
+                               maxlength="6"
+                               required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 mb-3">
+                        <i class="fas fa-check-circle me-2"></i><span>Verify Code</span>
+                        <div class="loader"></div>
+                    </button>
+                </form>
+                <p class="mb-0">
+                    <button id="resendOtpBtn" class="btn btn-link text-decoration-none">
+                        <i class="fas fa-redo me-2"></i><span>Resend Verification Code</span>
+                        <div class="loader"></div>
+                    </button>
+                </p>
+                <small class="text-muted mt-2">
+                    Note: Maximum 3 attempts allowed per hour
+                </small>
+            </div>
+
+            <div id="errorMessage" class="alert alert-danger mt-3 d-none"></div>
         </div>
     </div>
 
     <script>
-        const email = "{{ email }}";
+        const email = "{{ email }}"; // This should be replaced by backend templating
+        document.getElementById('emailDisplay').textContent = email;
     </script>
-    <script src="static/script.js"></script>
+    <script src="/static/script.js"></script>
 </body>
 </html>
