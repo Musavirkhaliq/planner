@@ -19,4 +19,4 @@
 
 ### detailed concepts on rdbms
 
-### how it
+### how to integrate the integrate different features
