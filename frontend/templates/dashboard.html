@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Dashboard | Ultimate Productivity Planner</title>
+    <title>Dashboard | Productivity Planner</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+    <!-- <link rel="stylesheet" href="static/style.css"> -->
     <style>
         :root {
             --primary: #5E43FF;
@@ -80,18 +80,20 @@
             padding: 2rem;
         }
 
-        /* Floating Pomodoro Timer */
+        /* Floating Pomodoro Timer - Updated */
         .floating-timer {
             position: fixed;
             bottom: 20px;
             right: 20px;
-            background: white;
-            border-radius: 20px;
-            box-shadow: var(--shadow);
-            padding: 1.5rem;
-            width: 300px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 25px;
+            box-shadow: 0 10px 40px rgba(94, 67, 255, 0.15);
+            padding: 1.8rem;
+            width: 320px;
             z-index: 1000;
             transition: all 0.3s ease;
+            border: 1px solid rgba(94, 67, 255, 0.1);
+            backdrop-filter: blur(10px);
         }
 
         .floating-timer.minimized {
@@ -116,11 +118,15 @@
         }
 
         .digital-clock {
-            font-size: 1.5rem;
-            font-weight: 600;
+            font-size: 2rem;
+            font-weight: 700;
             text-align: center;
-            margin-bottom: 1rem;
-            color: var(--primary);
+            margin-bottom: 1.2rem;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .timer-section h2 {
@@ -157,37 +163,42 @@
             text-align: center;
         }
 
-        #time {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 0.5rem;
+        .timer-display #time {
+            font-size: 3rem;
+            font-weight: 800;
+            margin: 1rem 0;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .progress-container {
-            background: #e0e0e0;
-            border-radius: 10px;
-            height: 10px;
-            margin-bottom: 1rem;
+            background: rgba(94, 67, 255, 0.1);
+            border-radius: 15px;
+            height: 12px;
+            margin: 1.5rem 0;
+            overflow: hidden;
         }
 
-        #progress {
-            background: var(--gradient);
-            height: 100%;
-            border-radius: 10px;
-            transition: width 0.3s ease;
-        }
-
-        .timer-controls .btn-timer {
-            padding: 0.5rem 1.5rem;
-            margin: 0 0.5rem;
+        .btn-timer {
+            padding: 0.8rem 2rem;
             border-radius: 50px;
-            font-size: 0.9rem;
+            font-weight: 600;
+            border: none;
+            transition: all 0.3s ease;
+            margin: 0 0.5rem;
         }
 
         .btn-start {
             background: var(--gradient);
             color: white;
+            box-shadow: 0 5px 15px rgba(94, 67, 255, 0.3);
+        }
+
+        .btn-start:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(94, 67, 255, 0.4);
         }
 
         .btn-reset {
@@ -236,43 +247,140 @@
             box-shadow: 0 0 0 0.2rem rgba(94, 67, 255, 0.25);
         }
 
+        /* Task Table - Updated */
         .task-table {
             width: 100%;
-            border-collapse: collapse;
-        }
-
-        .task-table th, .task-table td {
-            padding: 1rem;
-            text-align: left;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 1.5rem 0;
         }
 
         .task-table th {
-            background: var(--light);
-            font-weight: 600;
-            color: var(--dark);
-        }
-
-        .task-table tr {
-            border-bottom: 1px solid #e0e0e0;
-            transition: background 0.3s ease;
-        }
-
-        .task-table tr:hover {
-            background: #f8f9fa;
-        }
-
-        .progress {
-            height: 10px;
-            border-radius: 5px;
-        }
-
-        .progress-bar {
             background: var(--gradient);
+            color: white;
+            font-weight: 600;
+            padding: 1.4rem;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            border: none;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
         }
 
-        .btn-group button {
-            padding: 0.5rem;
-            border-radius: 50%;
+        .task-table td {
+            padding: 1.4rem;
+            background: white;
+            border-bottom: 1px solid rgba(94, 67, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .task-table tbody tr {
+            transition: all 0.3s ease;
+        }
+
+        .task-table tbody tr:hover td {
+            background: rgba(94, 67, 255, 0.02);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(94, 67, 255, 0.05);
+        }
+
+        /* Status cell - Updated */
+        .status-cell {
+            font-weight: 600;
+            padding: 0.6rem 1.2rem;
+            border-radius: 50px;
+            display: inline-block;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .status-pending {
+            background: linear-gradient(135deg, #fff4e5, #ffe0b2);
+            color: #f57c00;
+        }
+
+        .status-in-progress {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            color: #1976d2;
+        }
+
+        .status-completed {
+            background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+            color: #2e7d32;
+        }
+
+        /* Table Progress Bar - Updated */
+        .table-progress {
+            height: 10px;
+            border-radius: 10px;
+            background: rgba(94, 67, 255, 0.1);
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .table-progress-bar {
+            height: 100%;
+            background: var(--gradient);
+            transition: width 0.5s ease;
+            border-radius: 10px;
+            box-shadow: 0 2px 6px rgba(94, 67, 255, 0.2);
+        }
+
+        /* Rating stars */
+        .rating-stars {
+            color: #ffd700;
+            font-size: 1.1rem;
+        }
+
+        /* Action Buttons - Updated */
+        .action-buttons {
+            display: flex;
+            gap: 0.8rem;
+        }
+
+        .action-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .edit-btn {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            color: #1976d2;
+        }
+
+        .delete-btn {
+            background: linear-gradient(135deg, #ffebee, #ffcdd2);
+            color: #d32f2f;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Table responsive behavior */
+        @media (max-width: 768px) {
+            .table-responsive {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .task-table th, .task-table td {
+                padding: 0.8rem;
+                font-size: 0.9rem;
+            }
         }
 
         /* Analytics Section */
