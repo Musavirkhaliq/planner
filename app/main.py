@@ -42,4 +42,14 @@ app.include_router(web_router)
 app.include_router(api_router)
 app.include_router(analytics_router)
 
+# Initialize momentum scheduler for periodic checks
+from .momentum.scheduler import initialize_scheduler
+import asyncio
+
+@app.on_event("startup")
+async def startup_event():
+    # Initialize the momentum scheduler
+    await initialize_scheduler()
+    print("Momentum scheduler initialized")
+
 

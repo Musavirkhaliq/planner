@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -15,7 +15,13 @@
                 <img src="/static/img/planner_logo_100x100.png" alt="Planner Logo" class="navbar-logo" style="max-width: 35px;">
                 Planner Dashboard
             </a>
-            <div class="ms-auto">
+            <div class="ms-auto d-flex align-items-center">
+                <!-- Dark Mode Toggle -->
+                <button id="themeToggle" class="theme-toggle me-3" aria-label="Toggle dark mode">
+                    <i class="fas fa-moon fa-lg"></i>
+                    <i class="fas fa-sun fa-lg"></i>
+                </button>
+                
                 <div class="dropdown">
                     <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="fas fa-user me-1"></i>
@@ -63,27 +69,27 @@
         </div>
     </nav>
 
-    <main class="container py-4" style="margin-top: 6rem;">
+    <main class="container py-4 momentum-container" style="margin-top: 6rem;">
         <!-- Profile Header -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="level-badge me-4">
+        <div class="profile-header mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="profile-info">
+                        <div class="level-badge-container">
+                            <div class="level-badge">
                                 <span id="profile-level" class="display-4">1</span>
                             </div>
-                            <div class="flex-grow-1">
-                                <h2 id="profile-level-title" class="mb-2">Loading...</h2>
-                                <div class="progress mb-2" style="height: 10px;">
-                                    <div id="profile-level-progress" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
-                                </div>
-                                <small id="level-progress-text" class="text-muted">0 / 100 points to next level</small>
+                        </div>
+                        <div class="profile-details">
+                            <h2 id="profile-level-title" class="mb-2">Loading...</h2>
+                            <div class="progress mb-2" style="height: 10px;">
+                                <div id="profile-level-progress" class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
                             </div>
-                            <div class="text-end ms-4">
-                                <h3 id="profile-total-points" class="mb-1">0</h3>
-                                <small class="text-muted">Total Points</small>
-                            </div>
+                            <small id="level-progress-text" class="text-muted">0 / 100 points to next level</small>
+                        </div>
+                        <div class="profile-points">
+                            <h3 id="profile-total-points" class="mb-1">0</h3>
+                            <small class="text-muted">Total Points</small>
                         </div>
                     </div>
                 </div>
@@ -91,24 +97,24 @@
         </div>
 
         <!-- Stats & Streaks -->
-        <div class="row mb-4">
+        <div class="stats-streaks-container mb-4">
             <!-- Stats -->
-            <div class="col-md-6 mb-4 mb-md-0">
+            <div class="stats-card mb-4 mb-md-0">
                 <div class="card shadow-sm h-100">
                     <div class="card-header bg-transparent">
                         <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Stats</h5>
                     </div>
                     <div class="card-body">
-                        <div class="row text-center">
-                            <div class="col-4 mb-3">
+                        <div class="stats-grid">
+                            <div class="stats-item mb-3">
                                 <h6 class="text-muted mb-1">Weekly Points</h6>
                                 <span id="weekly-points" class="h4">0</span>
                             </div>
-                            <div class="col-4 mb-3">
+                            <div class="stats-item mb-3">
                                 <h6 class="text-muted mb-1">Monthly Points</h6>
                                 <span id="monthly-points" class="h4">0</span>
                             </div>
-                            <div class="col-4 mb-3">
+                            <div class="stats-item mb-3">
                                 <h6 class="text-muted mb-1">Rank</h6>
                                 <span id="leaderboard-rank" class="h4">#0</span>
                             </div>
@@ -117,7 +123,7 @@
                 </div>
             </div>
             <!-- Streaks -->
-            <div class="col-md-6">
+            <div class="streaks-card">
                 <div class="card shadow-sm h-100">
                     <div class="card-header bg-transparent">
                         <h5 class="mb-0"><i class="fas fa-fire me-2"></i>Active Streaks</h5>
@@ -134,9 +140,9 @@
         <!-- Achievements -->
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-transparent">
-                <div class="d-flex justify-content-between align-items-center">
+                <div class="achievement-header">
                     <h5 class="mb-0"><i class="fas fa-trophy me-2"></i>Achievements</h5>
-                    <div class="btn-group">
+                    <div class="achievement-filters">
                         <button type="button" class="btn btn-outline-primary btn-sm active" data-category="all">All</button>
                         <button type="button" class="btn btn-outline-primary btn-sm" data-category="productivity">Productivity</button>
                         <button type="button" class="btn btn-outline-primary btn-sm" data-category="consistency">Consistency</button>
@@ -146,7 +152,7 @@
                 </div>
             </div>
             <div class="card-body">
-                <div id="achievements-container" class="row g-4">
+                <div id="achievements-container" class="achievements-grid">
                     <!-- Achievements will be populated here -->
                 </div>
             </div>
@@ -155,9 +161,9 @@
         <!-- Leaderboard -->
         <div class="card shadow-sm">
             <div class="card-header bg-transparent">
-                <div class="d-flex justify-content-between align-items-center">
+                <div class="leaderboard-header-controls">
                     <h5 class="mb-0"><i class="fas fa-crown me-2"></i>Leaderboard</h5>
-                    <div class="btn-group">
+                    <div class="leaderboard-filters">
                         <button type="button" class="btn btn-outline-primary btn-sm active" data-timeframe="weekly">Weekly</button>
                         <button type="button" class="btn btn-outline-primary btn-sm" data-timeframe="monthly">Monthly</button>
                         <button type="button" class="btn btn-outline-primary btn-sm" data-timeframe="all-time">All Time</button>
@@ -165,7 +171,7 @@
                 </div>
             </div>
             <div class="card-body">
-                <div id="leaderboard-container">
+                <div id="leaderboard-container" class="leaderboard-container">
                     <!-- Leaderboard will be populated here -->
                 </div>
             </div>
@@ -175,5 +181,21 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/static/script.js"></script>
     <script src="/static/momentum.js"></script>
+    <script>
+        // Theme toggling functionality
+        const themeToggle = document.getElementById('themeToggle');
+        
+        // Check for saved theme preference
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        });
+    </script>
 </body>
 </html> 

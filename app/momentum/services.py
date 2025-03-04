@@ -308,8 +308,28 @@ class MomentumService:
             perks=perks_dict
         )
         
+        # Create Next Level model if available
+        next_level_model = None
+        if next_level:
+            if isinstance(next_level.perks, str):
+                try:
+                    next_perks_dict = json.loads(next_level.perks)
+                except json.JSONDecodeError:
+                    next_perks_dict = perks_dict.copy()
+            else:
+                next_perks_dict = next_level.perks or perks_dict.copy()
+            
+            next_level_model = schemas.Level(
+                id=next_level.id,
+                level_number=next_level.level_number,
+                points_required=next_level.points_required,
+                title=next_level.title,
+                perks=next_perks_dict
+            )
+        
         return schemas.UserProgress(
             current_level=level_model,
+            next_level=next_level_model,
             total_points=user.total_points,
             points_to_next_level=points_to_next,
             completion_percentage=completion_percentage,
@@ -475,16 +495,16 @@ class MomentumService:
 
         # Weekend bonus (if applicable)
         if metadata.get('is_weekend'):
-            multiplier *= 1.2
+            multiplier *= 1.1  # Reduced from 1.2
 
         # First task of the day bonus
         if metadata.get('is_first_task'):
-            multiplier *= 1.1
+            multiplier *= 1.05  # Reduced from 1.1
 
         # Streak bonus (increases with streak length)
         if streak_length := metadata.get('current_streak', 0):
-            # Cap the streak multiplier at 2.0 (achieved at 20-day streak)
-            streak_bonus = min(1 + (streak_length * 0.05), 2.0)
+            # Cap the streak multiplier at 1.5 (achieved at 25-day streak)
+            streak_bonus = min(1 + (streak_length * 0.02), 1.5)  # Reduced from 0.05 and max 2.0
             multiplier *= streak_bonus
 
         # Apply time-based bonuses
@@ -492,10 +512,10 @@ class MomentumService:
             hour = completion_time.hour
             # Early bird bonus (before 9 AM)
             if 5 <= hour < 9:
-                multiplier *= 1.15
+                multiplier *= 1.07  # Reduced from 1.15
             # Night owl bonus (after 9 PM)
             elif 21 <= hour < 24:
-                multiplier *= 1.15
+                multiplier *= 1.07  # Reduced from 1.15
 
         # Special event bonus (if any active)
         if metadata.get('special_event_multiplier'):
@@ -774,3 +794,151 @@ class MomentumService:
         ).all()
         
         return [schemas.UserAchievement.from_orm(ua) for ua in user_achievements]
+
+    async def check_perfect_week(self, user_id: int) -> bool:
+        """
+        Check if a user has completed all their planned tasks for the week
+        Returns True if they've achieved a perfect week
+        """
+        # Get the start of the current week (Monday)
+        today = datetime.utcnow().date()
+        start_of_week = today - timedelta(days=today.weekday())
+        end_of_week = start_of_week + timedelta(days=6)
+        
+        # Get all tasks due this week
+        weekly_tasks = self.db.query(models.Task).filter(
+            models.Task.owner_id == user_id,
+            models.Task.due_date >= start_of_week,
+            models.Task.due_date <= end_of_week
+        ).all()
+        
+        # If no tasks were planned, no perfect week
+        if not weekly_tasks or len(weekly_tasks) < 3:  # Require at least 3 tasks to get perfect week
+            return False
+        
+        # Check if all tasks were completed
+        incomplete_tasks = [task for task in weekly_tasks if not task.completed]
+        
+        # Perfect week if all tasks were completed
+        is_perfect = len(incomplete_tasks) == 0
+        
+        if is_perfect:
+            # Check if we've already awarded perfect week this week
+            last_perfect_week = self.db.query(models.MomentumEvent).filter(
+                models.MomentumEvent.user_id == user_id,
+                models.MomentumEvent.event_type == 'perfect_week',
+                models.MomentumEvent.timestamp >= start_of_week
+            ).first()
+            
+            if not last_perfect_week:
+                # Award perfect week points
+                await self.process_event(
+                    user_id=user_id,
+                    event_type='perfect_week',
+                    metadata={
+                        'completion_time': datetime.utcnow(),
+                        'week_start': start_of_week.isoformat(),
+                        'week_end': end_of_week.isoformat()
+                    }
+                )
+                return True
+        
+        return False
+
+    async def check_perfect_month(self, user_id: int) -> bool:
+        """
+        Check if a user has completed all their planned tasks for the month
+        Returns True if they've achieved a perfect month
+        """
+        # Get the start of the current month
+        today = datetime.utcnow().date()
+        start_of_month = today.replace(day=1)
+        
+        # Get the end of the month (start of next month - 1 day)
+        if today.month == 12:
+            end_of_month = datetime(today.year + 1, 1, 1).date() - timedelta(days=1)
+        else:
+            end_of_month = datetime(today.year, today.month + 1, 1).date() - timedelta(days=1)
+        
+        # Get all tasks due this month
+        monthly_tasks = self.db.query(models.Task).filter(
+            models.Task.owner_id == user_id,
+            models.Task.due_date >= start_of_month,
+            models.Task.due_date <= end_of_month
+        ).all()
+        
+        # If no tasks were planned, no perfect month
+        if not monthly_tasks or len(monthly_tasks) < 10:  # Require at least 10 tasks to get perfect month
+            return False
+        
+        # Check if all tasks were completed
+        incomplete_tasks = [task for task in monthly_tasks if not task.completed]
+        
+        # Perfect month if all tasks were completed
+        is_perfect = len(incomplete_tasks) == 0
+        
+        if is_perfect:
+            # Check if we've already awarded perfect month this month
+            last_perfect_month = self.db.query(models.MomentumEvent).filter(
+                models.MomentumEvent.user_id == user_id,
+                models.MomentumEvent.event_type == 'perfect_month',
+                models.MomentumEvent.timestamp >= start_of_month
+            ).first()
+            
+            if not last_perfect_month:
+                # Award perfect month points
+                await self.process_event(
+                    user_id=user_id,
+                    event_type='perfect_month',
+                    metadata={
+                        'completion_time': datetime.utcnow(),
+                        'month_start': start_of_month.isoformat(),
+                        'month_end': end_of_month.isoformat()
+                    }
+                )
+                return True
+        
+        return False
+
+    async def schedule_weekly_and_monthly_checks(self):
+        """
+        Run weekly and monthly checks for all users
+        This method should be scheduled to run once a day
+        """
+        # Get all active users
+        users = self.db.query(models.User).filter(models.User.is_active == True).all()
+        
+        today = datetime.utcnow().date()
+        
+        for user in users:
+            # If today is Sunday, check for perfect week
+            if today.weekday() == 6:  # Sunday is 6
+                await self.check_perfect_week(user.id)
+            
+            # If today is the last day of the month, check for perfect month
+            tomorrow = today + timedelta(days=1)
+            if tomorrow.day == 1:  # Tomorrow is the first day of a new month
+                await self.check_perfect_month(user.id)
+            
+            # Reset points if needed
+            await self.reset_periodic_points(user.id)
+    
+    async def reset_periodic_points(self, user_id: int):
+        """
+        Reset weekly and monthly points when appropriate
+        """
+        user = self.db.query(models.User).filter(models.User.id == user_id).first()
+        if not user:
+            return
+        
+        today = datetime.utcnow().date()
+        
+        # Reset weekly points on Monday
+        if today.weekday() == 0:  # Monday is 0
+            user.weekly_points = 0
+        
+        # Reset monthly points on the first day of the month
+        if today.day == 1:
+            user.monthly_points = 0
+        
+        self.db.commit()

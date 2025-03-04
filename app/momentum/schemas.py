@@ -94,6 +94,7 @@ class Level(LevelBase):
 
 class UserProgress(BaseModel):
     current_level: Level
+    next_level: Optional[Level] = None
     total_points: int
     points_to_next_level: int
     completion_percentage: float

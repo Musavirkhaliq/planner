@@ -1,6 +1,6 @@
 # router.py
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 from typing import List, Optional
 
@@ -93,3 +93,41 @@ async def get_available_achievements(
     """Get all available achievements, optionally filtered by category"""
     momentum_service = MomentumService(db)
     return await momentum_service.get_available_achievements(category)
+
+@router.post("/admin/run-scheduled-checks", response_model=dict)
+async def run_scheduled_checks(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Admin endpoint to manually trigger the scheduled checks for weekly/monthly goals
+    This can also be called by a cron job or scheduler
+    """
+    # Check admin status (implement proper authorization as needed)
+    if not getattr(current_user, 'is_admin', False):
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    momentum_service = MomentumService(db)
+    await momentum_service.schedule_weekly_and_monthly_checks()
+    
+    return {"status": "success", "message": "Scheduled checks completed"}
+
+@router.post("/check-perfect-week/{user_id}", response_model=dict)
+async def check_perfect_week(
+    user_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Check if a user has completed a perfect week and award points if applicable"""
+    # Only allow users to check their own perfect week status or admins
+    if current_user.id != user_id and not getattr(current_user, 'is_admin', False):
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    momentum_service = MomentumService(db)
+    is_perfect = await momentum_service.check_perfect_week(user_id)
+    
+    return {
+        "user_id": user_id,
+        "perfect_week": is_perfect,
+        "message": "Perfect week achieved!" if is_perfect else "Perfect week not achieved"
+    }

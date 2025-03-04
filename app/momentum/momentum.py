@@ -19,20 +19,20 @@ class CriteriaType(str, Enum):
     SPECIFIC_TIME = "specific_time"
 
 POINT_EVENTS = {
-    'task_completion': 10,
-    'goal_completion': 50,
-    'goal_step_completion': 15,
-    'time_slot_completion': 20,
-    'perfect_week': 100,
-    'first_task_of_day': 5,
-    'weekend_warrior': 30,
-    'early_bird': 15,
-    'night_owl': 15,
-    'focused_session': lambda duration: duration * 1,  # 1 point per focused minute
-    'streak_milestone': lambda streak: streak * 10,
-    'goal_streak': lambda streak: streak * 15,
-    'perfect_month': 500,
-    'task_complexity': lambda complexity: complexity * 20,  # Based on task complexity rating
+    'task_completion': 3,
+    'goal_completion': 15,
+    'goal_step_completion': 5,
+    'time_slot_completion': 7,
+    'perfect_week': 30,
+    'first_task_of_day': 2,
+    'weekend_warrior': 10,
+    'early_bird': 5,
+    'night_owl': 5,
+    'focused_session': lambda duration: max(1, duration // 3),
+    'streak_milestone': lambda streak: streak * 3,
+    'goal_streak': lambda streak: streak * 5,
+    'perfect_month': 150,
+    'task_complexity': lambda complexity: complexity * 7,
 }
 
 ACHIEVEMENTS = [
