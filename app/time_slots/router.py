@@ -1,13 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from datetime import date
+from datetime import date, datetime
 from ..dependencies import get_db
 from ..auth.dependencies import get_current_user
 from . import services
 from . import schemas
 from ..users.schemas import User
 from ..models import TimeSlot
+from ..momentum.services import MomentumService
 
 
 router = APIRouter(prefix="/time_slots", tags=["time_slots"])
@@ -81,6 +82,36 @@ async def delete_time_slot(
         )
     
     try:
+        # If the time slot was completed, we need to revert the points
+        if db_slot.status == "completed":
+            momentum_service = MomentumService(db)
+            
+            # Calculate duration in minutes
+            duration = int((db_slot.end_time - db_slot.start_time).total_seconds() / 60)
+            
+            # Revert time slot completion event
+            await momentum_service.revert_event(
+                user_id=db_slot.owner_id,
+                event_type='time_slot_completion',
+                metadata={
+                    'duration': duration,
+                    'completion_time': db_slot.updated_at or datetime.utcnow(),
+                    'is_weekend': (db_slot.updated_at or datetime.utcnow()).weekday() >= 5
+                }
+            )
+            
+            # If it was a focused session, revert that too
+            if duration >= 25:
+                await momentum_service.revert_event(
+                    user_id=db_slot.owner_id,
+                    event_type='focused_session',
+                    metadata={
+                        'duration': duration,
+                        'completion_time': db_slot.updated_at or datetime.utcnow()
+                    }
+                )
+        
+        # Now delete the time slot
         db.delete(db_slot)
         db.commit()
         return None

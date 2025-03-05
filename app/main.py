@@ -7,6 +7,7 @@ from . import models, database
 from .web_router import router as web_router
 from .api_router import router as api_router
 from .analytics.router import router as analytics_router
+from .tafakur.router import router as tafakur_router
 
 from .config import settings
 
@@ -41,6 +42,7 @@ app.mount("/static", StaticFiles(directory="frontend/static"), name="static")
 app.include_router(web_router)
 app.include_router(api_router)
 app.include_router(analytics_router)
+app.include_router(tafakur_router, prefix="/api")
 
 # Initialize momentum scheduler for periodic checks
 from .momentum.scheduler import initialize_scheduler

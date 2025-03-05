@@ -55,4 +55,8 @@ async def momentum_page(request: Request):
     return templates.TemplateResponse(
         "momentum.html",
         {"request": request}
-    ) 
+    )
+
+@router.get("/tafakur", response_class=HTMLResponse)
+async def tafakur_page(request: Request):
+    return templates.TemplateResponse("tafakur.html", {"request": request}) 

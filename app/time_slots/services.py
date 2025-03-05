@@ -28,10 +28,37 @@ async def update_time_slot(db: Session, time_slot: models.TimeSlot, update: sche
     for key, value in update.model_dump(exclude_unset=True).items():  # Updated for Pydantic v2
         setattr(time_slot, key, value)
     
-    # Check if status changed to completed
-    if update.status == "completed" and old_status != "completed":
-        momentum_service = MomentumService(db)
+    momentum_service = MomentumService(db)
+    
+    # Check if status changed from completed to something else (task was uncompleted)
+    if old_status == "completed" and update.status and update.status != "completed":
+        # Calculate duration in minutes
+        duration = int((time_slot.end_time - time_slot.start_time).total_seconds() / 60)
         
+        # Revert time slot completion event
+        await momentum_service.revert_event(
+            user_id=time_slot.owner_id,
+            event_type='time_slot_completion',
+            metadata={
+                'duration': duration,
+                'completion_time': datetime.utcnow(),
+                'is_weekend': datetime.utcnow().weekday() >= 5
+            }
+        )
+        
+        # If it was a focused session, revert that too
+        if duration >= 25:  # Assuming focused sessions are 25+ minutes
+            await momentum_service.revert_event(
+                user_id=time_slot.owner_id,
+                event_type='focused_session',
+                metadata={
+                    'duration': duration,
+                    'completion_time': datetime.utcnow()
+                }
+            )
+    
+    # Check if status changed to completed
+    elif update.status == "completed" and old_status != "completed":
         # Calculate duration in minutes
         duration = int((time_slot.end_time - time_slot.start_time).total_seconds() / 60)
         

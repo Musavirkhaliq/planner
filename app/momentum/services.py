@@ -41,6 +41,56 @@ class MomentumService:
             "level_up": level_up
         }
 
+    async def revert_event(self, user_id: int, event_type: str, metadata: Dict = None) -> Dict:
+        """
+        Revert a momentum event (e.g., when a completed task or time slot is uncompleted or deleted)
+        This removes the points that were previously awarded for the event
+        """
+        metadata = metadata or {}
+        points = self._calculate_points(event_type, metadata)
+        
+        # Deduct points 
+        user_stats = await self.deduct_points(user_id, points)
+        
+        # We don't revert streaks as that would be complex and potentially confusing to users
+        # Instead we simply stop incrementing them on future events if the streak is broken
+        
+        return {
+            "points_deducted": points,
+            "user_stats": user_stats,
+            "message": f"Reverted {event_type} event, deducted {points} points"
+        }
+
+    async def deduct_points(self, user_id: int, points: int) -> Dict:
+        """Deduct points from user's various point counters, ensuring they don't go below zero"""
+        user = self.db.query(models.User).filter(models.User.id == user_id).first()
+        
+        # Deduct points, ensuring we don't go below zero
+        user.total_points = max(0, user.total_points - points)
+        user.weekly_points = max(0, user.weekly_points - points)
+        user.monthly_points = max(0, user.monthly_points - points)
+        
+        # Check if level should be adjusted
+        current_level = user.current_level
+        if current_level and current_level.level_number > 1:
+            # Get previous level
+            previous_level = self.db.query(models.Level).filter(
+                models.Level.level_number == current_level.level_number - 1
+            ).first()
+            
+            # If user's points are now below current level requirement, demote them
+            if user.total_points < current_level.points_required and previous_level:
+                user.current_level_id = previous_level.id
+        
+        self.db.commit()
+        
+        return {
+            "total_points": user.total_points,
+            "weekly_points": user.weekly_points,
+            "monthly_points": user.monthly_points,
+            "current_level": user.current_level.level_number if user.current_level else 1
+        }
+
     async def award_points(self, user_id: int, points: int) -> Dict:
         """Award points to user and update various point counters"""
         user = self.db.query(models.User).filter(models.User.id == user_id).first()
@@ -202,6 +252,44 @@ class MomentumService:
         """Get detailed progress information for a user"""
         user = self.db.query(models.User).filter(models.User.id == user_id).first()
         
+        # Handle case when user is not found
+        if user is None:
+            beginner_level = schemas.Level(
+                id=1, 
+                level_number=1,
+                points_required=0,
+                title="Beginner",
+                perks={
+                    "can_create_goals": True,
+                    "can_track_time": True,
+                    "can_earn_achievements": True,
+                    "can_view_analytics": True
+                }
+            )
+            
+            intermediate_level = schemas.Level(
+                id=2, 
+                level_number=2,
+                points_required=101,
+                title="Intermediate",
+                perks={
+                    "can_create_goals": True,
+                    "can_track_time": True,
+                    "can_earn_achievements": True,
+                    "can_view_analytics": True
+                }
+            )
+            
+            return schemas.UserProgress(
+                current_level=beginner_level,
+                next_level=intermediate_level,
+                total_points=0,
+                points_to_next_level=100,
+                completion_percentage=0.0,
+                recent_achievements=[],
+                active_streaks=[]
+            )
+
         # Initialize user's points if not set
         if user.total_points is None:
             user.total_points = 0

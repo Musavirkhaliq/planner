@@ -20,6 +20,7 @@ class User(Base):
     current_level = relationship("Level", back_populates="users", lazy="joined")
     achievements = relationship("UserAchievement", back_populates="user")
     streaks = relationship("Streak", back_populates="user")
+    reflections = relationship("Reflection", back_populates="user", cascade="all, delete-orphan")
     total_points = Column(Integer, default=0)
     weekly_points = Column(Integer, default=0)
     monthly_points = Column(Integer, default=0)

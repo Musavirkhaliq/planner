@@ -33,6 +33,12 @@ POINT_EVENTS = {
     'goal_streak': lambda streak: streak * 5,
     'perfect_month': 150,
     'task_complexity': lambda complexity: complexity * 7,
+    'streak_day': 2,
+    'early_start': 2,
+    'focus_session': 2,
+    'reflection_completion': 5,
+    'reflection_streak': 10,
+    'weekly_reflection': 15,
 }
 
 ACHIEVEMENTS = [
@@ -54,6 +60,62 @@ ACHIEVEMENTS = [
         'criteria_type': CriteriaType.COUNT,
         'criteria_value': 10,
         'icon_name': 'target'
+    },
+    
+    # Reflection Achievements
+    {
+        'name': 'Self-Aware',
+        'description': 'Complete your first reflection',
+        'points': 100,
+        'category': AchievementCategory.GROWTH,
+        'criteria_type': CriteriaType.COUNT,
+        'criteria_value': 1,
+        'icon_name': 'book-open'
+    },
+    {
+        'name': 'Reflection Seeker',
+        'description': 'Complete 10 daily reflections',
+        'points': 500,
+        'category': AchievementCategory.GROWTH,
+        'criteria_type': CriteriaType.COUNT,
+        'criteria_value': 10,
+        'icon_name': 'smile'
+    },
+    {
+        'name': 'Contemplation Master',
+        'description': 'Complete 30 daily reflections',
+        'points': 1000,
+        'category': AchievementCategory.GROWTH,
+        'criteria_type': CriteriaType.COUNT,
+        'criteria_value': 30,
+        'icon_name': 'user-check'
+    },
+    {
+        'name': 'Reflection Streak',
+        'description': 'Complete daily reflections for 7 consecutive days',
+        'points': 700,
+        'category': AchievementCategory.CONSISTENCY,
+        'criteria_type': CriteriaType.STREAK,
+        'criteria_value': 7,
+        'icon_name': 'repeat'
+    },
+    {
+        'name': 'Deep Thinker',
+        'description': 'Write reflection entries totaling 10,000 words',
+        'points': 1500,
+        'category': AchievementCategory.GROWTH,
+        'criteria_type': CriteriaType.COUNT,
+        'criteria_value': 10000,
+        'icon_name': 'edit-3'
+    },
+    {
+        'name': 'Gratitude Attitude',
+        'description': 'Express gratitude in 15 reflections',
+        'points': 800,
+        'category': AchievementCategory.GROWTH,
+        'criteria_type': CriteriaType.COUNT,
+        'criteria_value': 15,
+        'icon_name': 'heart'
     },
     
     # Consistency Achievements
@@ -182,31 +244,31 @@ LEVELS = [
     },
     {
         'level_number': 6,
-        'points_required': 3000,
+        'points_required': 6000,
         'title': 'Time Lord',
         'perks': {'all_features': True, 'special_badge': True}
     },
     {
         'level_number': 7,
-        'points_required': 6000,
+        'points_required': 18000,
         'title': 'Efficiency Emperor',
         'perks': {'all_features': True, 'special_badge': True, 'mentor_status': True}
     },
     {
         'level_number': 8,
-        'points_required': 12000,
+        'points_required': 36000,
         'title': 'Productivity Legend',
         'perks': {'all_features': True, 'special_badge': True, 'mentor_status': True, 'custom_achievements': True}
     },
     {
         'level_number': 9,
-        'points_required': 24000,
+        'points_required': 72000,
         'title': 'Momentum Master',
         'perks': {'all_features': True, 'special_badge': True, 'mentor_status': True, 'custom_achievements': True}
     },
     {
         'level_number': 10,
-        'points_required': 50000,
+        'points_required': 145000,
         'title': 'Ultimate Achiever',
         'perks': {'all_features': True, 'special_badge': True, 'mentor_status': True, 'custom_achievements': True, 'legendary_status': True}
     }
