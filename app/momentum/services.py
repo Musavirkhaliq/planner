@@ -112,12 +112,22 @@ class MomentumService:
         user = self.db.query(models.User).filter(models.User.id == user_id).first()
         
         for achievement in ACHIEVEMENTS:
-            user_achievement = self.db.query(models.UserAchievement).filter(
-                models.UserAchievement.user_id == user_id,
-                models.UserAchievement.achievement.has(name=achievement['name'])
+            # Get the achievement record from the database
+            db_achievement = self.db.query(models.Achievement).filter(
+                models.Achievement.name == achievement['name']
             ).first()
             
-            if not user_achievement or not user_achievement.completed:
+            if not db_achievement:
+                continue
+                
+            # Check if user already has this achievement completed
+            user_achievement = self.db.query(models.UserAchievement).filter(
+                models.UserAchievement.user_id == user_id,
+                models.UserAchievement.achievement_id == db_achievement.id,
+                models.UserAchievement.completed == True
+            ).first()
+            
+            if not user_achievement:
                 if await self._check_achievement_criteria(user_id, achievement):
                     new_achievement = await self._award_achievement(user_id, achievement)
                     new_achievements.append(new_achievement)
@@ -758,6 +768,19 @@ class MomentumService:
             
         elif achievement['name'] == 'Leaderboard Legend':
             # Check if user is #1 on weekly leaderboard
+            # First check if the user already has this achievement to prevent duplicates
+            existing_achievement = self.db.query(models.UserAchievement).join(
+                models.Achievement,
+                models.UserAchievement.achievement_id == models.Achievement.id
+            ).filter(
+                models.UserAchievement.user_id == user_id,
+                models.Achievement.name == 'Leaderboard Legend',
+                models.UserAchievement.completed == True
+            ).first()
+            
+            if existing_achievement:
+                return False
+                
             top_user = self.db.query(models.User).order_by(
                 models.User.weekly_points.desc()
             ).first()
@@ -785,6 +808,17 @@ class MomentumService:
             self.db.add(db_achievement)
             self.db.commit()
             self.db.refresh(db_achievement)
+        
+        # Check if user already has this achievement to prevent duplicates
+        existing = self.db.query(models.UserAchievement).filter(
+            models.UserAchievement.user_id == user_id,
+            models.UserAchievement.achievement_id == db_achievement.id,
+            models.UserAchievement.completed == True
+        ).first()
+        
+        if existing:
+            # Return the existing achievement without creating a duplicate
+            return schemas.Achievement.from_orm(db_achievement)
         
         # Create user achievement record
         user_achievement = models.UserAchievement(

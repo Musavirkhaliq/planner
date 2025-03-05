@@ -60,7 +60,7 @@ async def update_task(db: Session, task: Task, task_update: TaskUpdate):
         completed_today = db.query(Task).filter(
             Task.owner_id == task.owner_id,
             Task.completed == True,
-            Task.updated_at >= today_start
+            func.date(Task.updated_at) == func.date(datetime.utcnow())
         ).count()
         
         is_first_task = completed_today == 0
