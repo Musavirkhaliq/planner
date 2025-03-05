@@ -116,7 +116,7 @@ const tafakur = {
     // Load reflection for a specific date
     async loadReflectionForDate(dateStr) {
         try {
-            const response = await fetchWithAuth(`/api/tafakur/reflections/date/${dateStr}`);
+            const response = await fetchWithAuth(`/tafakur/reflections/date/${dateStr}`);
             
             if (response.ok) {
                 const reflection = await response.json();
@@ -139,7 +139,7 @@ const tafakur = {
     // Load today's reflection
     async loadTodayReflection() {
         try {
-            const response = await fetchWithAuth('/api/tafakur/reflections/today');
+            const response = await fetchWithAuth('/tafakur/reflections/today');
             
             if (response.ok) {
                 const reflection = await response.json();
@@ -225,7 +225,7 @@ const tafakur = {
         };
         
         try {
-            const response = await fetchWithAuth('/api/tafakur/reflections', {
+            const response = await fetchWithAuth('/tafakur/reflections', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -281,7 +281,7 @@ const tafakur = {
     // Load user's streak information
     async loadCurrentStreak() {
         try {
-            const response = await fetchWithAuth('/api/tafakur/streak');
+            const response = await fetchWithAuth('/tafakur/streak');
             
             if (response.ok) {
                 const streakData = await response.json();
@@ -329,7 +329,7 @@ const tafakur = {
     // Load reflection history
     async loadReflectionHistory() {
         try {
-            const response = await fetchWithAuth('/api/tafakur/reflections?limit=10');
+            const response = await fetchWithAuth('/tafakur/reflections?limit=10');
             
             if (response.ok) {
                 const reflections = await response.json();
