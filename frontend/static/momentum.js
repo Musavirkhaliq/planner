@@ -10,6 +10,7 @@ const momentum = {
         profileLevelProgress: document.getElementById('profile-level-progress'),
         levelProgressText: document.getElementById('level-progress-text'),
         totalPoints: document.getElementById('total-points'),
+        profileTotalPoints: document.getElementById('profile-total-points'),
         weeklyPoints: document.getElementById('weekly-points'),
         monthlyPoints: document.getElementById('monthly-points'),
         leaderboardRank: document.getElementById('leaderboard-rank'),
@@ -86,7 +87,7 @@ const momentum = {
             // Show formatted points_to_next_level or "Max Level" if at max level
             const pointsText = next_level 
                 ? `${points_to_next_level.toLocaleString()} points to next level`
-                : "Maximum level reached!";
+                : `Highest level achieved! (${total_points.toLocaleString()} total points)`;
             this.elements.levelProgressText.textContent = pointsText;
         }
         
@@ -106,8 +107,10 @@ const momentum = {
             this.elements.totalPoints.textContent = total_points.toLocaleString();
         }
         
-        if (this.elements.profileTotalPoints) {
-            this.elements.profileTotalPoints.textContent = total_points.toLocaleString();
+        // Directly update the profile-total-points element, even if it's not in the elements object
+        const profileTotalPoints = document.getElementById('profile-total-points');
+        if (profileTotalPoints) {
+            profileTotalPoints.textContent = total_points.toLocaleString();
         }
         
         // Check if this is an update with a level up from previous state

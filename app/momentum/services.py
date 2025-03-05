@@ -371,9 +371,30 @@ class MomentumService:
         
         # Calculate progress to next level
         points_to_next = next_level.points_required - user.total_points if next_level else 0
-        total_points_in_level = (next_level.points_required - current_level.points_required) if next_level else 1
+        
+        # If at max level, set total_points_in_level to something reasonable
+        if next_level:
+            total_points_in_level = next_level.points_required - current_level.points_required
+        else:
+            # For max level, use a multiple of current level's points to show better progress
+            max_level_points = current_level.points_required
+            # If reached max level with substantial points beyond requirement, show appropriate percentage
+            if user.total_points > max_level_points:
+                # Use points beyond requirement to calculate percentage within max level
+                excess_points = user.total_points - max_level_points
+                # Set total_points_in_level to a value that will show meaningful progress
+                total_points_in_level = max_level_points  # This gives 100% when user has double the requirement
+            else:
+                total_points_in_level = 1  # Default fallback, should not happen much
+        
         points_earned_in_level = user.total_points - current_level.points_required
-        completion_percentage = (points_earned_in_level / total_points_in_level) * 100 if total_points_in_level > 0 else 100
+        
+        # Ensure completion percentage is between 0-100
+        if next_level:
+            completion_percentage = min(100, max(0, (points_earned_in_level / total_points_in_level) * 100)) if total_points_in_level > 0 else 100
+        else:
+            # For max level, always show 100% completion
+            completion_percentage = 100
         
         # Get recent achievements
         recent_achievements = self.db.query(models.UserAchievement).filter(
