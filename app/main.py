@@ -44,14 +44,23 @@ app.include_router(api_router)
 app.include_router(analytics_router)
 app.include_router(tafakur_router, prefix="/api")
 
-# Initialize momentum scheduler for periodic checks
-from .momentum.scheduler import initialize_scheduler
-import asyncio
+# The momentum scheduler has been moved to an external system (systemd timer or cron)
+# See the following files for details:
+#  - /scripts/run_momentum_checks.py - The standalone script that runs the checks
+#  - /systemd/momentum-checks.service - The systemd service definition
+#  - /systemd/momentum-checks.timer - The systemd timer definition
+#  - /scripts/momentum-crontab - The crontab entry for momentum checks
 
-@app.on_event("startup")
-async def startup_event():
-    # Initialize the momentum scheduler
-    await initialize_scheduler()
-    print("Momentum scheduler initialized")
+# If you need to enable the in-process scheduler (not recommended for production),
+# uncomment the following:
+# 
+# from .momentum.scheduler import initialize_scheduler
+# import asyncio
+# 
+# @app.on_event("startup")
+# async def startup_event():
+#     # Initialize the momentum scheduler
+#     await initialize_scheduler()
+#     print("Momentum scheduler initialized")
 
 

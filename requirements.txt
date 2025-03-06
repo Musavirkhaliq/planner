@@ -12,3 +12,5 @@ email-validator>=2.1.0.post1
 itsdangerous
 authlib
 httpx
+pytest
+pytz

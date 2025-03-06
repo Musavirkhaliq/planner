@@ -13,6 +13,7 @@ class User(Base):
     hashed_password = Column(String)
     is_active = Column(Boolean, default=True)
     is_email_verified = Column(Boolean, default=False)
+    timezone = Column(String, default="Asia/Kolkata")
     tasks = relationship("Task", back_populates="owner")
     goals = relationship("Goal", back_populates="owner")
     time_slots = relationship("TimeSlot", back_populates="owner")

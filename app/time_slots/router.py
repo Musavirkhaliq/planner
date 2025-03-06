@@ -9,7 +9,7 @@ from . import schemas
 from ..users.schemas import User
 from ..models import TimeSlot
 from ..momentum.services import MomentumService
-
+from ..momentum.momentum import FOCUSED_SESSION_THRESHOLD
 
 router = APIRouter(prefix="/time_slots", tags=["time_slots"])
 
@@ -95,19 +95,19 @@ async def delete_time_slot(
                 event_type='time_slot_completion',
                 metadata={
                     'duration': duration,
-                    'completion_time': db_slot.updated_at or datetime.utcnow(),
-                    'is_weekend': (db_slot.updated_at or datetime.utcnow()).weekday() >= 5
+                    'completion_time': db_slot.updated_at or datetime.now(datetime.UTC),
+                    'is_weekend': (db_slot.updated_at or datetime.now(datetime.UTC)).weekday() >= 5
                 }
             )
             
             # If it was a focused session, revert that too
-            if duration >= 25:
+            if duration >= FOCUSED_SESSION_THRESHOLD:
                 await momentum_service.revert_event(
                     user_id=db_slot.owner_id,
                     event_type='focused_session',
                     metadata={
                         'duration': duration,
-                        'completion_time': db_slot.updated_at or datetime.utcnow()
+                        'completion_time': db_slot.updated_at or datetime.now(datetime.UTC)
                     }
                 )
         

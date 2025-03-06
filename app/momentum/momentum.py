@@ -2,6 +2,9 @@
 
 from enum import Enum
 
+FOCUSED_SESSION_THRESHOLD = 120
+REFLECTION_STREAK_MILESTONES = [3, 7, 14, 30, 60, 90]
+
 class AchievementCategory(str, Enum):
     PRODUCTIVITY = "productivity"
     CONSISTENCY = "consistency"
@@ -162,7 +165,7 @@ ACHIEVEMENTS = [
     {
         'name': 'Deep Work Master',
         'description': 'Complete 10 focused sessions of 2+ hours',
-        'points': 1500,
+        'points': 500,
         'category': AchievementCategory.FOCUS,
         'criteria_type': CriteriaType.COUNT,
         'criteria_value': 10,
@@ -202,7 +205,7 @@ ACHIEVEMENTS = [
     {
         'name': 'Leaderboard Legend',
         'description': 'Reach #1 on weekly leaderboard',
-        'points': 2000,
+        'points': 200,
         'category': AchievementCategory.SOCIAL,
         'criteria_type': CriteriaType.COMPOUND,
         'criteria_value': 1,

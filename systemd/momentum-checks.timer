@@ -1,0 +1,16 @@
+[Unit]
+Description=Run Planner App Momentum Checks Daily
+Requires=momentum-checks.service
+
+[Timer]
+# Run daily at 2:00 AM
+OnCalendar=*-*-* 02:00:00
+# Add randomized delay to avoid all timers starting at the same time
+RandomizedDelaySec=300
+# Ensure timer is persistent across reboots
+Persistent=true
+# Don't catch up on missed runs (optional, remove if you want to catch up on missed runs)
+#AccuracySec=1h
+
+[Install]
+WantedBy=timers.target 

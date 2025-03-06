@@ -8,6 +8,8 @@ import re
 from app.tafakur import models, schemas
 from app.tafakur.models import Reflection, ReflectionTag
 from app import models as app_models
+from app.momentum.services import MomentumService
+from app.momentum.momentum import REFLECTION_STREAK_MILESTONES 
 
 class TafakurService:
     def __init__(self, db: Session):
@@ -272,7 +274,6 @@ class TafakurService:
         """Award momentum points for completing reflections"""
         # Try to get MomentumService to award points
         try:
-            from app.momentum.services import MomentumService
             
             momentum_service = MomentumService(self.db)
             # Award points for completing a reflection
@@ -282,8 +283,7 @@ class TafakurService:
             streak_info = self.get_reflection_streak(user_id)
             
             # If reflection streak hits certain thresholds, award bonus points
-            streak_milestones = [3, 7, 14, 30, 60, 90]
-            for milestone in streak_milestones:
+            for milestone in REFLECTION_STREAK_MILESTONES:
                 if streak_info.current_streak == milestone:
                     await momentum_service.process_event(
                         user_id, 

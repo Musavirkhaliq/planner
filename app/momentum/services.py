@@ -9,6 +9,8 @@ from .. import models
 from . import schemas
 from .momentum import POINT_EVENTS, ACHIEVEMENTS, LEVELS, CriteriaType
 import json
+from fastapi import HTTPException
+import pytz
 
 logger = logging.getLogger(__name__)
 
@@ -136,39 +138,75 @@ class MomentumService:
 
     async def update_streaks(self, user_id: int, event_type: str) -> Dict:
         """Update user streaks based on activity"""
-        streak = self.db.query(models.Streak).filter(
-            models.Streak.user_id == user_id,
-            models.Streak.streak_type == event_type
-        ).first()
+        streak_updates = {}
         
-        if not streak:
-            streak = models.Streak(
-                user_id=user_id,
-                streak_type=event_type,
-                current_count=1,
-                longest_count=1,
-                last_activity_date=datetime.utcnow().date()
-            )
-            self.db.add(streak)
-        else:
-            last_date = streak.last_activity_date
-            current_date = datetime.utcnow().date()
+        # Get the user to access their timezone
+        user = self.db.query(models.User).filter(models.User.id == user_id).first()
+        if not user:
+            return streak_updates
             
-            if (current_date - last_date).days == 1:
-                streak.current_count += 1
-                if streak.current_count > streak.longest_count:
-                    streak.longest_count = streak.current_count
-            elif (current_date - last_date).days > 1:
-                streak.current_count = 1
-            
-            streak.last_activity_date = current_date
+        user_timezone = pytz.timezone(user.timezone if user.timezone else "Asia/Kolkata")
         
-        self.db.commit()
-        return {
-            "streak_type": streak.streak_type,
-            "current_count": streak.current_count,
-            "longest_count": streak.longest_count
-        }
+        # Get current date in user's timezone
+        now_utc = datetime.utcnow().replace(tzinfo=pytz.UTC)
+        user_local_time = now_utc.astimezone(user_timezone)
+        current_date = user_local_time.date()
+        
+        # Update relevant streak
+        for streak_type, events in {
+            'daily_tasks': ['task_completion', 'first_task_of_day'],
+            'weekly_goals': ['goal_completion'],
+            'focused_sessions': ['focused_session']
+        }.items():
+            if event_type in events:
+                streak = self.db.query(models.Streak).filter(
+                    models.Streak.user_id == user_id,
+                    models.Streak.streak_type == streak_type
+                ).first()
+                
+                if not streak:
+                    streak = models.Streak(
+                        user_id=user_id,
+                        streak_type=streak_type,
+                        current_count=1,
+                        longest_count=1,
+                        last_activity_date=current_date
+                    )
+                    self.db.add(streak)
+                    self.db.commit()
+                    streak_updates[streak_type] = {'current': 1, 'longest': 1, 'increased': True}
+                else:
+                    last_date = streak.last_activity_date
+                    
+                    # Convert last_date to user's timezone if it's a datetime
+                    if isinstance(last_date, datetime):
+                        last_date_utc = last_date.replace(tzinfo=pytz.UTC)
+                        last_date = last_date_utc.astimezone(user_timezone).date()
+                    
+                    if (current_date - last_date).days == 1:
+                        # Activity on consecutive days - streak continues
+                        streak.current_count += 1
+                        if streak.current_count > streak.longest_count:
+                            streak.longest_count = streak.current_count
+                        streak_updates[streak_type] = {
+                            'current': streak.current_count, 
+                            'longest': streak.longest_count,
+                            'increased': True
+                        }
+                    elif (current_date - last_date).days > 1:
+                        # Gap in activity - reset streak
+                        streak.current_count = 1
+                        streak_updates[streak_type] = {
+                            'current': 1, 
+                            'longest': streak.longest_count,
+                            'increased': False,
+                            'reset': True
+                        }
+                    
+                    streak.last_activity_date = current_date
+                    self.db.commit()
+        
+        return streak_updates
 
     async def check_level_up(self, user_id: int) -> Optional[schemas.Level]:
         """Check if user has leveled up and update if necessary"""
@@ -264,40 +302,10 @@ class MomentumService:
         
         # Handle case when user is not found
         if user is None:
-            beginner_level = schemas.Level(
-                id=1, 
-                level_number=1,
-                points_required=0,
-                title="Beginner",
-                perks={
-                    "can_create_goals": True,
-                    "can_track_time": True,
-                    "can_earn_achievements": True,
-                    "can_view_analytics": True
-                }
-            )
-            
-            intermediate_level = schemas.Level(
-                id=2, 
-                level_number=2,
-                points_required=101,
-                title="Intermediate",
-                perks={
-                    "can_create_goals": True,
-                    "can_track_time": True,
-                    "can_earn_achievements": True,
-                    "can_view_analytics": True
-                }
-            )
-            
-            return schemas.UserProgress(
-                current_level=beginner_level,
-                next_level=intermediate_level,
-                total_points=0,
-                points_to_next_level=100,
-                completion_percentage=0.0,
-                recent_achievements=[],
-                active_streaks=[]
+            logger.error(f"User with ID {user_id} not found when getting progress")
+            raise HTTPException(
+                status_code=404,
+                detail=f"User with ID {user_id} not found. User must be properly registered before accessing momentum data."
             )
 
         # Initialize user's points if not set
@@ -305,6 +313,7 @@ class MomentumService:
             user.total_points = 0
             user.weekly_points = 0
             user.monthly_points = 0
+            self.db.commit()
         
         # Initialize user's level if not set
         if not user.current_level_id:
@@ -614,11 +623,11 @@ class MomentumService:
 
         # Weekend bonus (if applicable)
         if metadata.get('is_weekend'):
-            multiplier *= 1.1  # Reduced from 1.2
+            multiplier *= 1.1 
 
         # First task of the day bonus
         if metadata.get('is_first_task'):
-            multiplier *= 1.05  # Reduced from 1.1
+            multiplier *= 1.05
 
         # Streak bonus (increases with streak length)
         if streak_length := metadata.get('current_streak', 0):
@@ -662,6 +671,8 @@ class MomentumService:
         """
         Calculate time-based bonus multiplier
         Returns 1.15 for early bird or night owl, 1.0 otherwise
+        
+        Note: Expects completion_time to already be in the user's timezone
         """
         hour = completion_time.hour
         if 5 <= hour < 9 or 21 <= hour < 24:
@@ -746,13 +757,35 @@ class MomentumService:
 
     async def _check_specific_time_criteria(self, user_id: int, achievement: Dict) -> bool:
         """Check if specific time-based achievement criteria are met"""
+        # Get user timezone
+        user = self.db.query(models.User).filter(models.User.id == user_id).first()
+        user_timezone = user.timezone if user and user.timezone else "Asia/Kolkata"
+        
         if achievement['name'] == 'Early Riser':
-            count = self.db.query(models.Task).filter(
+            # For Early Riser, we need to check tasks completed before 9 AM in the user's timezone
+            # This is complex with SQLite which doesn't handle timezones well
+            # We'll use a more manual approach to ensure accuracy
+            
+            # Get all completed tasks for this user
+            completed_tasks = self.db.query(models.Task).filter(
                 models.Task.owner_id == user_id,
-                models.Task.completed == True,
-                func.extract('hour', models.Task.created_at) < 9
-            ).count()
-            return count >= achievement['criteria_value']
+                models.Task.completed == True
+            ).all()
+            
+            # Count how many were completed before 9 AM in user's timezone
+            early_morning_count = 0
+            for task in completed_tasks:
+                if task.created_at:
+                    # Convert UTC time to user's timezone
+                    task_time_utc = task.created_at.replace(tzinfo=pytz.UTC)
+                    task_time_local = task_time_utc.astimezone(pytz.timezone(user_timezone))
+                    
+                    # Check if hour is before 9 AM
+                    if task_time_local.hour < 9:
+                        early_morning_count += 1
+            
+            return early_morning_count >= achievement['criteria_value']
+            
         return False
 
     async def _check_compound_criteria(self, user_id: int, achievement: Dict) -> bool:
@@ -788,24 +821,10 @@ class MomentumService:
             return has_tasks and has_goals and has_time_slots
             
         elif achievement['name'] == 'Leaderboard Legend':
-            # Check if user is #1 on weekly leaderboard
-            # First check if the user already has this achievement to prevent duplicates
-            existing_achievement = self.db.query(models.UserAchievement).join(
-                models.Achievement,
-                models.UserAchievement.achievement_id == models.Achievement.id
-            ).filter(
-                models.UserAchievement.user_id == user_id,
-                models.Achievement.name == 'Leaderboard Legend',
-                models.UserAchievement.completed == True
-            ).first()
-            
-            if existing_achievement:
-                return False
-                
-            top_user = self.db.query(models.User).order_by(
-                models.User.weekly_points.desc()
-            ).first()
-            return top_user and top_user.id == user_id
+            # Skip the manual check, this is now handled by the scheduler
+            # This prevents the achievement from being awarded twice
+            # and ensures it only happens at the end of the week
+            return False
             
         return False
 
@@ -939,149 +958,180 @@ class MomentumService:
         return [schemas.UserAchievement.from_orm(ua) for ua in user_achievements]
 
     async def check_perfect_week(self, user_id: int) -> bool:
-        """
-        Check if a user has completed all their planned tasks for the week
-        Returns True if they've achieved a perfect week
-        """
-        # Get the start of the current week (Monday)
-        today = datetime.utcnow().date()
+        """Check if user has completed all planned tasks for the week"""
+        # Get the user to access their timezone
+        user = self.db.query(models.User).filter(models.User.id == user_id).first()
+        if not user:
+            return False
+            
+        user_timezone = pytz.timezone(user.timezone if user.timezone else "Asia/Kolkata")
+        
+        # Calculate the start and end of the week in user's timezone
+        now_utc = datetime.utcnow().replace(tzinfo=pytz.UTC)
+        user_local_time = now_utc.astimezone(user_timezone)
+        today = user_local_time.date()
+        
+        # Get start of week (Monday) and end of week (Sunday)
         start_of_week = today - timedelta(days=today.weekday())
         end_of_week = start_of_week + timedelta(days=6)
         
-        # Get all tasks due this week
-        weekly_tasks = self.db.query(models.Task).filter(
+        # Check if all planned tasks for the week are completed
+        planned_tasks = self.db.query(models.Task).filter(
             models.Task.owner_id == user_id,
             models.Task.due_date >= start_of_week,
             models.Task.due_date <= end_of_week
         ).all()
         
-        # If no tasks were planned, no perfect week
-        if not weekly_tasks or len(weekly_tasks) < 3:  # Require at least 3 tasks to get perfect week
+        # If no tasks planned, return False
+        if not planned_tasks:
             return False
-        
-        # Check if all tasks were completed
-        incomplete_tasks = [task for task in weekly_tasks if not task.completed]
-        
-        # Perfect week if all tasks were completed
-        is_perfect = len(incomplete_tasks) == 0
-        
-        if is_perfect:
-            # Check if we've already awarded perfect week this week
-            last_perfect_week = self.db.query(models.MomentumEvent).filter(
-                models.MomentumEvent.user_id == user_id,
-                models.MomentumEvent.event_type == 'perfect_week',
-                models.MomentumEvent.timestamp >= start_of_week
-            ).first()
             
-            if not last_perfect_week:
-                # Award perfect week points
-                await self.process_event(
-                    user_id=user_id,
-                    event_type='perfect_week',
-                    metadata={
-                        'completion_time': datetime.utcnow(),
-                        'week_start': start_of_week.isoformat(),
-                        'week_end': end_of_week.isoformat()
-                    }
-                )
-                return True
+        # Check if all tasks are completed
+        all_completed = all(task.completed for task in planned_tasks)
         
+        # If all weekly tasks are completed, grant a perfect week achievement
+        if all_completed:
+            # Process the perfect_week event
+            await self.process_event(
+                user_id=user_id, 
+                event_type='perfect_week',
+                metadata={
+                    'week_start': start_of_week.isoformat(),
+                    'week_end': end_of_week.isoformat(),
+                    'completion_time': datetime.utcnow(),
+                    'task_count': len(planned_tasks)
+                }
+            )
+            return True
+            
         return False
 
     async def check_perfect_month(self, user_id: int) -> bool:
-        """
-        Check if a user has completed all their planned tasks for the month
-        Returns True if they've achieved a perfect month
-        """
-        # Get the start of the current month
-        today = datetime.utcnow().date()
+        """Check if user has completed all planned tasks for the month"""
+        # Get the user to access their timezone
+        user = self.db.query(models.User).filter(models.User.id == user_id).first()
+        if not user:
+            return False
+            
+        user_timezone = pytz.timezone(user.timezone if user.timezone else "Asia/Kolkata")
+        
+        # Calculate the start and end of the month in user's timezone
+        now_utc = datetime.utcnow().replace(tzinfo=pytz.UTC)
+        user_local_time = now_utc.astimezone(user_timezone)
+        today = user_local_time.date()
+        
+        # Get start and end of the month
         start_of_month = today.replace(day=1)
-        
-        # Get the end of the month (start of next month - 1 day)
+        # Calculate the last day of the month
         if today.month == 12:
-            end_of_month = datetime(today.year + 1, 1, 1).date() - timedelta(days=1)
+            end_of_month = today.replace(year=today.year + 1, month=1, day=1) - timedelta(days=1)
         else:
-            end_of_month = datetime(today.year, today.month + 1, 1).date() - timedelta(days=1)
+            end_of_month = today.replace(month=today.month + 1, day=1) - timedelta(days=1)
         
-        # Get all tasks due this month
-        monthly_tasks = self.db.query(models.Task).filter(
+        # Check if all planned tasks for the month are completed
+        planned_tasks = self.db.query(models.Task).filter(
             models.Task.owner_id == user_id,
             models.Task.due_date >= start_of_month,
             models.Task.due_date <= end_of_month
         ).all()
         
-        # If no tasks were planned, no perfect month
-        if not monthly_tasks or len(monthly_tasks) < 10:  # Require at least 10 tasks to get perfect month
+        # If no tasks planned, return False
+        if not planned_tasks:
             return False
-        
-        # Check if all tasks were completed
-        incomplete_tasks = [task for task in monthly_tasks if not task.completed]
-        
-        # Perfect month if all tasks were completed
-        is_perfect = len(incomplete_tasks) == 0
-        
-        if is_perfect:
-            # Check if we've already awarded perfect month this month
-            last_perfect_month = self.db.query(models.MomentumEvent).filter(
-                models.MomentumEvent.user_id == user_id,
-                models.MomentumEvent.event_type == 'perfect_month',
-                models.MomentumEvent.timestamp >= start_of_month
-            ).first()
             
-            if not last_perfect_month:
-                # Award perfect month points
-                await self.process_event(
-                    user_id=user_id,
-                    event_type='perfect_month',
-                    metadata={
-                        'completion_time': datetime.utcnow(),
-                        'month_start': start_of_month.isoformat(),
-                        'month_end': end_of_month.isoformat()
-                    }
-                )
-                return True
+        # Check if all tasks are completed
+        all_completed = all(task.completed for task in planned_tasks)
         
+        # Check if there are enough completed tasks (at least 10 for a perfect month)
+        if all_completed and len(planned_tasks) >= 10:
+            # Process the perfect_month event
+            await self.process_event(
+                user_id=user_id, 
+                event_type='perfect_month',
+                metadata={
+                    'month_start': start_of_month.isoformat(),
+                    'month_end': end_of_month.isoformat(),
+                    'completion_time': datetime.utcnow(),
+                    'task_count': len(planned_tasks)
+                }
+            )
+            return True
+            
         return False
 
     async def schedule_weekly_and_monthly_checks(self):
         """
         Run weekly and monthly checks for all users
         This method should be scheduled to run once a day
+        
+        The checks are:
+        - Reset weekly points on Monday (for each user's timezone)
+        - Reset monthly points on the first day of the month (for each user's timezone)
+        - Check for perfect week on Sunday
+        - Check for perfect month on the last day of the month
         """
         # Get all active users
         users = self.db.query(models.User).filter(models.User.is_active == True).all()
         
-        today = datetime.utcnow().date()
+        # Get the current UTC time
+        now_utc = datetime.utcnow().replace(tzinfo=pytz.UTC)
         
         for user in users:
-            # If today is Sunday, check for perfect week
-            if today.weekday() == 6:  # Sunday is 6
-                await self.check_perfect_week(user.id)
-            
-            # If today is the last day of the month, check for perfect month
-            tomorrow = today + timedelta(days=1)
-            if tomorrow.day == 1:  # Tomorrow is the first day of a new month
-                await self.check_perfect_month(user.id)
-            
-            # Reset points if needed
-            await self.reset_periodic_points(user.id)
+            try:
+                # Get user's timezone
+                user_timezone = pytz.timezone(user.timezone if user.timezone else "Asia/Kolkata")
+                
+                # Convert UTC time to user's local time
+                user_local_time = now_utc.astimezone(user_timezone)
+                today = user_local_time.date()
+                
+                # If today is Sunday in user's timezone, check for perfect week
+                if today.weekday() == 6:  # Sunday is 6
+                    await self.check_perfect_week(user.id)
+                
+                # If today is the last day of the month in user's timezone, check for perfect month
+                tomorrow = today + timedelta(days=1)
+                if tomorrow.day == 1:  # Tomorrow is the first day of a new month
+                    await self.check_perfect_month(user.id)
+                
+                # Reset points if needed
+                await self.reset_periodic_points(user.id, today)
+                
+            except Exception as e:
+                logger.error(f"Error processing scheduled checks for user {user.id}: {str(e)}")
+                continue
     
-    async def reset_periodic_points(self, user_id: int):
+    async def reset_periodic_points(self, user_id: int, today=None):
         """
         Reset weekly and monthly points when appropriate
+        
+        Args:
+            user_id: The ID of the user
+            today: Optional date to use instead of current date (for testing)
         """
         user = self.db.query(models.User).filter(models.User.id == user_id).first()
         if not user:
             return
         
-        today = datetime.utcnow().date()
+        if today is None:
+            # Get the current UTC time
+            now_utc = datetime.utcnow().replace(tzinfo=pytz.UTC)
+            
+            # Get user's timezone
+            user_timezone = pytz.timezone(user.timezone if user.timezone else "Asia/Kolkata")
+            
+            # Convert UTC time to user's local time
+            user_local_time = now_utc.astimezone(user_timezone)
+            today = user_local_time.date()
         
-        # Reset weekly points on Monday
+        # Reset weekly points on Monday in user's timezone
         if today.weekday() == 0:  # Monday is 0
             user.weekly_points = 0
+            logger.info(f"Reset weekly points for user {user_id}")
         
-        # Reset monthly points on the first day of the month
+        # Reset monthly points on the first day of the month in user's timezone
         if today.day == 1:
             user.monthly_points = 0
+            logger.info(f"Reset monthly points for user {user_id}")
         
         self.db.commit()
