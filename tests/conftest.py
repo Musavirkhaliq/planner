@@ -4,6 +4,8 @@ from sqlalchemy.orm import sessionmaker
 from fastapi.testclient import TestClient
 from datetime import datetime, date, timedelta
 import uuid
+from app.models import Reflection, ReflectionTag
+
 
 from app.main import app
 from app import models
@@ -149,7 +151,6 @@ def additional_users(db_session):
 @pytest.fixture(scope="function")
 def user_with_reflection(db_session, test_user_with_momentum):
     """Create a test user with a reflection"""
-    from app.tafakur.models import Reflection, ReflectionTag
     
     reflection = Reflection(
         user_id=test_user_with_momentum.id,

@@ -1,9 +1,11 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, DateTime, Float, event
+from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, DateTime, Float, event, Text
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from .database import Base
 from sqlalchemy import Date
 from .json_utils import serialize_json, deserialize_json
+from sqlalchemy.sql import func
+from datetime import date, datetime
 
 class User(Base):
     __tablename__ = "users"
@@ -150,3 +152,36 @@ def receive_before_update(mapper, connection, target):
 def receive_load(target, context):
     if target.perks:
         target._perks_dict = deserialize_json(target.perks)
+
+class Reflection(Base):
+    """Daily reflection/contemplation model"""
+    __tablename__ = "reflections"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    reflection_date = Column(Date, default=date.today, index=True)
+    mood = Column(String(50), nullable=True)
+    highlights = Column(Text, nullable=True)  # What went well
+    challenges = Column(Text, nullable=True)  # What could be improved
+    gratitude = Column(Text, nullable=True)  # What you're grateful for
+    lessons = Column(Text, nullable=True)  # What you learned
+    tomorrow_goals = Column(Text, nullable=True)  # Goals for tomorrow
+    private = Column(Boolean, default=True)  # Whether this reflection is private
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    user = relationship("User", back_populates="reflections")
+    tags = relationship("ReflectionTag", back_populates="reflection", cascade="all, delete-orphan")
+
+class ReflectionTag(Base):
+    """Tags for reflections to enable categorization and searching"""
+    __tablename__ = "reflection_tags"
+
+    id = Column(Integer, primary_key=True, index=True)
+    reflection_id = Column(Integer, ForeignKey("reflections.id"), nullable=False)
+    tag_name = Column(String(50), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relationships
+    reflection = relationship("Reflection", back_populates="tags")

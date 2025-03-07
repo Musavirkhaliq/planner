@@ -3,7 +3,7 @@ from datetime import date, datetime, timedelta
 import random
 
 from app.tafakur.services import TafakurService
-from app.tafakur.models import Reflection, ReflectionTag
+from app.models import Reflection, ReflectionTag
 from app.tafakur.schemas import ReflectionCreate, ReflectionUpdate, ReflectionStreak
 
 @pytest.mark.tafakur

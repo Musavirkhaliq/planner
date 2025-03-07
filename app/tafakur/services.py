@@ -5,9 +5,8 @@ from typing import List, Optional, Dict
 from collections import Counter
 import re
 
-from app.tafakur import models, schemas
-from app.tafakur.models import Reflection, ReflectionTag
-from app import models as app_models
+from app.tafakur import schemas
+from app.models import Reflection, ReflectionTag
 from app.momentum.services import MomentumService
 from app.momentum.momentum import REFLECTION_STREAK_MILESTONES 
 
