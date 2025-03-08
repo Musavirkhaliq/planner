@@ -1,0 +1,2 @@
+# Run momentum checks daily at 2:00 AM
+0 2 * * * cd /path/to/your/planner && /path/to/your/venv/bin/python /path/to/your/planner/scripts/run_momentum_checks.py >> /var/log/planner/momentum_cron.log 2>&1 

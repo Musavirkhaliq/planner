@@ -1,15 +1,18 @@
 from datetime import timedelta, datetime
-from fastapi import APIRouter, Depends, HTTPException, Request, Form
+from fastapi import APIRouter, Depends, HTTPException, Request, Form, status
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from ..dependencies import get_db
 from ..users import services as user_services
+from ..users.schemas import User, UserCreate
 from . import services, oauth
+from .schemas import Token, UserLogin
 from ..config import settings
 from typing import Optional
 import time
+from ..momentum.init_momentum import init_user_momentum
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 templates = Jinja2Templates(directory="frontend/templates")
@@ -42,7 +45,7 @@ def add_verification_attempt(email: str):
         verification_attempts[email] = []
     verification_attempts[email].append((now, 1))
 
-@router.post("/token")
+@router.post("/token", response_model=Token)
 async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = user_services.get_user_by_email(db, email=form_data.username)
     if not user:
@@ -154,4 +157,24 @@ async def auth_callback(request: Request, db: Session = Depends(get_db)):
                 "detail": str(e)
             },
             status_code=400
-        ) 
+        )
+
+@router.post("/register", response_model=User)
+async def register(user: UserCreate, db: Session = Depends(get_db)):
+    db_user = await services.create_user(db, user)
+    # Initialize momentum data for new user
+    await init_user_momentum(db, db_user.id)
+    return db_user
+
+@router.post("/login", response_model=Token)
+async def login(user_credentials: UserLogin, db: Session = Depends(get_db)):
+    user = await services.authenticate_user(db, user_credentials)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    # Initialize/update momentum data on login
+    await init_user_momentum(db, user.id)
+    return await services.create_token(user) 

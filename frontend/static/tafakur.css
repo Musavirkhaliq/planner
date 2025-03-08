@@ -1,0 +1,278 @@
+/* ============================================
+   Tafakur - Daily Reflection Styles
+   ============================================ */
+
+/* General Layout */
+.tafakur-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Streak Badge */
+.tafakur-streak-badge {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--primary-color) 0%, #6366F1 100%);
+    color: white;
+    border-radius: 50%;
+    width: 100px;
+    height: 100px;
+    padding: 1rem;
+    position: relative;
+    box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+    transition: all 0.3s ease;
+}
+
+.tafakur-streak-badge:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
+}
+
+.tafakur-streak-badge .streak-count {
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.tafakur-streak-badge .streak-label {
+    font-size: 0.8rem;
+    opacity: 0.9;
+}
+
+.tafakur-streak-badge i {
+    position: absolute;
+    bottom: -8px;
+    right: -8px;
+    font-size: 1.5rem;
+    color: #FF6B35;
+    filter: drop-shadow(0 2px 4px rgba(255, 107, 53, 0.4));
+}
+
+/* Mood Selector */
+.mood-selector {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.mood-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: var(--light-bg);
+    border: 2px solid transparent;
+    border-radius: var(--radius-md);
+    padding: 0.75rem 1rem;
+    min-width: 80px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    color: var(--text-color);
+}
+
+.mood-btn i {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+    transition: transform 0.2s ease;
+}
+
+.mood-btn:hover {
+    background: var(--background);
+    border-color: var(--border-color);
+}
+
+.mood-btn:hover i {
+    transform: scale(1.2);
+}
+
+.mood-btn.selected {
+    background: rgba(79, 70, 229, 0.1);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+/* Mood Icons Colors */
+.mood-btn[data-mood="Great"] i {
+    color: #22c55e;
+}
+
+.mood-btn[data-mood="Good"] i {
+    color: #3b82f6;
+}
+
+.mood-btn[data-mood="Okay"] i {
+    color: #f59e0b;
+}
+
+.mood-btn[data-mood="Down"] i {
+    color: #f97316;
+}
+
+.mood-btn[data-mood="Stressed"] i {
+    color: #ef4444;
+}
+
+/* Form Styling */
+#reflection-form textarea {
+    resize: none;
+    border-radius: var(--radius-sm);
+    border-color: var(--border);
+    transition: all 0.2s ease;
+}
+
+#reflection-form textarea:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+#reflection-form label i {
+    width: 20px;
+    text-align: center;
+}
+
+/* Date Selector */
+.date-selector {
+    min-width: 160px;
+}
+
+#reflection-date {
+    border-radius: var(--radius-sm);
+    border-color: var(--border);
+    font-size: 0.9rem;
+    padding: 0.4rem 0.75rem;
+}
+
+/* Tag Cloud */
+.tag-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.tag {
+    background: var(--light-bg);
+    border-radius: var(--radius-sm);
+    padding: 0.25rem 0.75rem;
+    font-size: 0.85rem;
+    color: var(--text-color);
+    border: 1px solid var(--border);
+    transition: all 0.2s ease;
+}
+
+.tag:hover {
+    background: var(--background);
+    transform: translateY(-2px);
+}
+
+.tag.size-1 { font-size: 0.8rem; opacity: 0.8; }
+.tag.size-2 { font-size: 0.9rem; opacity: 0.85; }
+.tag.size-3 { font-size: 1rem; opacity: 0.9; }
+.tag.size-4 { font-size: 1.1rem; opacity: 0.95; }
+.tag.size-5 { font-size: 1.2rem; opacity: 1; font-weight: 600; }
+
+/* Reflection History Items */
+.reflection-history-item {
+    border-bottom: 1px solid var(--border);
+    padding: 0.75rem 0;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.reflection-history-item:hover {
+    background-color: var(--light-bg);
+}
+
+.reflection-history-item:last-child {
+    border-bottom: none;
+}
+
+.reflection-history-item .date {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.reflection-history-item .mood {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.reflection-history-item .preview {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    margin-top: 0.25rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Canvas Container for Charts */
+.canvas-container {
+    height: 200px;
+    width: 100%;
+}
+
+/* Dark Mode Adjustments */
+[data-theme="dark"] .mood-btn {
+    background: var(--light-bg);
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .mood-btn:hover {
+    background: var(--background);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .mood-btn.selected {
+    background: rgba(99, 102, 241, 0.2);
+    border-color: var(--primary-color);
+}
+
+[data-theme="dark"] .tag {
+    background: var(--light-bg);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] .reflection-history-item:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 992px) {
+    .mood-selector {
+        justify-content: center;
+    }
+    
+    .tafakur-streak-badge {
+        margin-top: 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .mood-btn {
+        min-width: 65px;
+        padding: 0.5rem;
+    }
+    
+    .mood-btn i {
+        font-size: 1.2rem;
+    }
+    
+    .tafakur-streak-badge {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .tafakur-streak-badge .streak-count {
+        font-size: 1.8rem;
+    }
+    
+    .tafakur-streak-badge .streak-label {
+        font-size: 0.7rem;
+    }
+} 

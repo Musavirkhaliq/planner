@@ -87,4 +87,18 @@ def create_user(db: Session, user: UserCreate):
     return db_user
 
 def get_user_by_username(db: Session, username: str):
-    return db.query(User).filter(User.username == username).first() 
+    return db.query(User).filter(User.username == username).first()
+
+def update_user_timezone(db: Session, user_id: int, timezone: str = None):
+    """Update a user's timezone"""
+    user = db.query(User).filter(User.id == user_id).first()
+    
+    if not user:
+        return None
+        
+    if timezone:
+        user.timezone = timezone
+        
+    db.commit()
+    db.refresh(user)
+    return user 

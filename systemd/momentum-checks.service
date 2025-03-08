@@ -1,0 +1,21 @@
+[Unit]
+Description=Planner App Momentum Daily Checks
+After=network.target
+
+[Service]
+Type=oneshot
+User=www-data
+Group=www-data
+WorkingDirectory=/root/staging_planner
+ExecStart=/root/planner/venv/bin/python /root/staging_planner/scripts/run_momentum_checks.py
+EnvironmentFile=/root/staging_planner/.env
+StandardOutput=append:/var/log/planner/momentum-service.log
+StandardError=append:/var/log/planner/momentum-service.log
+
+# Security measures
+ProtectSystem=full
+PrivateTmp=true
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target 
